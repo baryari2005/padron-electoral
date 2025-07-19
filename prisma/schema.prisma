@@ -1,0 +1,236 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider     = "postgresql"
+  url          = env("DATABASE_URL")
+  relationMode = "prisma"
+}
+
+model Company {
+  id           String  @id @default(uuid())
+  userId       String
+  name         String  @db.Text
+  description  String? @db.Text
+  profileImage String? @db.Text
+  cif          String? @db.Text
+  phone        String? @db.Text
+  country      String? @db.Text
+  website      String? @db.Text
+
+  contacts Contact[]
+  events   Event[]
+
+  createAt  DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Contact {
+  id String @id @default(uuid())
+
+  Company   Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId String?
+  name      String   @db.Text
+  phone     String?  @db.Text
+  role      String   @db.Text
+  email     String   @db.Text
+  createAt  DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([companyId])
+}
+
+model Event {
+  id         String   @id @default(uuid())
+  Company    Company? @relation(fields: [companyId], references: [id])
+  companyId  String?
+  title      String
+  start      DateTime
+  allDay     Boolean
+  timeFormat String
+  createAt   DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([companyId])
+}
+
+model Circuito {
+  id              Int               @id @default(autoincrement())
+  codigo          String
+  nombre          String
+  createAt        DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  Establecimiento Establecimiento[]
+  PadronElectoral PadronElectoral[]
+
+  @@unique([codigo])
+}
+
+model Establecimiento {
+  id           Int               @id @default(autoincrement())
+  userId       String
+  nombre       String
+  direccion    String
+  padrones     PadronElectoral[] // relación 1:N
+  profileImage String?           @db.Text
+  circuitoId   Int
+  circuito     Circuito          @relation(fields: [circuitoId], references: [id])
+  createAt     DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  Mesa         Mesa[]
+
+  @@unique([nombre, direccion])
+  @@index([circuitoId])
+}
+
+model PadronElectoral {
+  id                Int             @id @default(autoincrement())
+  distrito          String
+  tipo_ejemplar     String
+  numero_matricula  String          @map("nu_matricula")
+  apellido          String
+  nombre            String
+  clase             Int
+  genero            String
+  domicilio         String
+  seccion           String
+  circuitoId        Int
+  circuito          Circuito        @relation(fields: [circuitoId], references: [id])
+  localidad         String
+  codigo_postal     String
+  tipo_nacionalidad String
+  numero_mesa       Int
+  orden_mesa        Int
+  establecimientoId Int
+  establecimiento   Establecimiento @relation(fields: [establecimientoId], references: [id])
+  voto_sino         String
+
+  @@unique([numero_matricula])
+  @@index([establecimientoId])
+  @@index([circuitoId])
+  @@index([apellido])
+  @@index([nombre])
+  @@index([voto_sino])
+  @@index([localidad])
+  @@index([voto_sino, localidad])
+}
+
+model Role {
+  id    Int     @id @default(autoincrement())
+  name  String  @unique
+  users User[]
+  Firma Firma[]
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  userId    String   @unique
+  password  String
+  name      String?
+  lastName  String?
+  avatarUrl String?
+  role      Role     @relation(fields: [roleId], references: [id])
+  roleId    Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([roleId])
+}
+
+model Resultado {
+  id           Int       @id @default(autoincrement())
+  mesaId       Int
+  categoria    Categoria @relation(fields: [categoriaId], references: [id])
+  categoriaId  Int
+  agrupacionId Int
+  votos        Int
+
+  mesa       Mesa               @relation(fields: [mesaId], references: [id])
+  agrupacion AgrupacionPolitica @relation(fields: [agrupacionId], references: [id])
+
+  @@index([agrupacionId])
+  @@index([mesaId])
+  @@index([categoriaId])
+}
+
+model Mesa {
+  id                Int             @id @default(autoincrement())
+  circuito          String
+  numero            String
+  establecimiento   Establecimiento @relation(fields: [establecimientoId], references: [id])
+  establecimientoId Int
+  seccion           String?
+  electoresVotaron  Int
+  sobresEnUrna      Int
+  diferencia        Int
+
+  resultados Resultado[]
+  totales    TotalesMesa?
+  firmas     Firma[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([numero, establecimientoId])
+  @@index([establecimientoId])
+}
+
+model AgrupacionPolitica {
+  id           Int     @id @default(autoincrement())
+  nombre       String  @unique
+  numero       Int     @unique
+  profileImage String? @db.Text
+
+  resultados Resultado[]
+  firmas     Firma[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([nombre])
+}
+
+model TotalesMesa {
+  id                    Int @id @default(autoincrement())
+  mesaId                Int @unique
+  votosNulos            Int
+  votosEnBlanco         Int
+  votosRecurridos       Int
+  votosImpugnados       Int
+  votosComandoElectoral Int
+
+  mesa Mesa @relation(fields: [mesaId], references: [id])
+
+  @@index([mesaId])
+}
+
+model Firma {
+  id           Int    @id @default(autoincrement())
+  mesaId       Int
+  role         Role   @relation(fields: [roleId], references: [id])
+  roleId       Int
+  nombre       String
+  dni          String
+  agrupacionId Int?
+
+  mesa       Mesa                @relation(fields: [mesaId], references: [id])
+  agrupacion AgrupacionPolitica? @relation(fields: [agrupacionId], references: [id])
+
+  @@index([mesaId])
+  @@index([agrupacionId])
+  @@index([roleId])
+}
+
+model Categoria {
+  id         Int         @id @default(autoincrement())
+  nombre     String      @unique
+  resultados Resultado[]
+}
