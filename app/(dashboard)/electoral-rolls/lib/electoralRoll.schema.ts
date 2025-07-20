@@ -24,7 +24,7 @@ export const electoralRollSchema = z.object({
   seccion: z.string().min(1,  "La sección es obligatoria."),
   circuitoId: z.coerce.number().int().min(1, "El circuito es obligatorio."),
   localidad: z.string().min(1, "La localidad es obligatoria."),
-  codigo_postal: z.string().optional(),
+  codigo_postal: z.string(),
   tipo_nacionalidad: z.string().min(1, "Nacionalidad es obligatorio."),
   numero_mesa: z.coerce.number().int().min(1, "El número de mesa es obligatorio").max(30, "El número de mesa no puede ser mayor a 30."),
   orden_mesa: z.coerce.number().int().min(1, "El número de orden es obligatorio").max(400, "El número de orden no puede ser mayor a 400."),

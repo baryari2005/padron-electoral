@@ -12,12 +12,13 @@ export async function GET(req: NextRequest) {
   const establecimientoId = searchParams.get("establecimientoId") || undefined;
   const page = parseInt(searchParams.get("page") || "1");
   const limit = parseInt(searchParams.get("limit") || "10");
-
-
   const skip = (page - 1) * limit;
 
-  try {
+  const terms = search.trim().split(" ").filter(Boolean);
+  const part1 = terms[0] ?? "";
+  const part2 = terms[1] ?? "";
 
+  try {
     const where = {
       AND: [
         {
@@ -25,6 +26,18 @@ export async function GET(req: NextRequest) {
             { numero_matricula: { contains: search } },
             { apellido: { startsWith: search, mode: Prisma.QueryMode.insensitive } },
             { nombre: { startsWith: search, mode: Prisma.QueryMode.insensitive } },
+            {
+              AND: [
+                { apellido: { contains: part1, mode: Prisma.QueryMode.insensitive } },
+                { nombre: { contains: part2, mode: Prisma.QueryMode.insensitive } },
+              ],
+            },
+            {
+              AND: [
+                { nombre: { contains: part1, mode: Prisma.QueryMode.insensitive } },
+                { apellido: { contains: part2, mode: Prisma.QueryMode.insensitive } },
+              ],
+            },
           ],
         },
         localidad ? { localidad } : {},

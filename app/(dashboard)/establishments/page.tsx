@@ -6,13 +6,16 @@ import { toast } from "sonner";
 import { EstablishmentHeader } from "./components/Header";
 import { EstablishmentsList } from "./components/List";
 import { EstablecimientoConCircuito } from "./components/List/columns"; // ✅ IMPORTANTE
+import { LoadingMessage } from "@/components/ui/loadingMessage";
 
 export default function EstablishmentPage() {
   const [establishments, setEstablishments] = useState<EstablecimientoConCircuito[]>([]); // ✅ CORREGIDO
   const [circuites, setCircuites] = useState<{ id: number; nombre: string, codigo: string }[]>([]);
   const [loadingCircuites, setLoadingCircuites] = useState(true);
+  const [loading, setLoading] = useState(true);
 
   const fetchEstablishments = async () => {
+    setLoading(true);
     try {
       const res = await axiosInstance.get("/api/establishments");
       setEstablishments(res.data.establishments); // ✅ res.data.establishments debe tener `circuito`
@@ -20,6 +23,9 @@ export default function EstablishmentPage() {
     catch (err: any) {
       const msg = err?.response?.data?.error || "Algo salió mal.";
       toast.error(msg);
+    }
+    finally {
+      setLoading(false);
     }
   };
 
@@ -49,10 +55,14 @@ export default function EstablishmentPage() {
         circuites={circuites}
         loadingCircuites={loadingCircuites}
       />
-      <EstablishmentsList
-        establishments={establishments}
-        setEstablishments={setEstablishments}
-      />
+      {loading ? (
+        <LoadingMessage text="Cargando establecimientos..." />
+      ) : (
+        <EstablishmentsList
+          establishments={establishments}
+          setEstablishments={setEstablishments}
+        />
+      )}
     </div>
   );
 }
