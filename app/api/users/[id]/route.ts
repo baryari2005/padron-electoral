@@ -34,10 +34,8 @@ export async function GET(req: NextRequest,
     }
 
     const user = await db.user.findFirst({
-      where: { userId: params.id },
+      where: { id: params.id },
     });
-
-    console.log("[USER ID]", user);
 
     if (!user) {
       return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 });
@@ -99,7 +97,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     }
 
     const updated = await db.user.update({
-      where: { userId: params.id },
+      where: { id: params.id },
       data: dataToUpdate,
     });
     
@@ -148,7 +146,7 @@ export async function DELETE(
     }
 
     await db.user.delete({
-      where: { userId: params.id },
+      where: { id: params.id },
     });
 
     return NextResponse.json({ message: "Usuario eliminado correctamente" });

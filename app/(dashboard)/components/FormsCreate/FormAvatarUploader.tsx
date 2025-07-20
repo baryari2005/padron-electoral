@@ -23,7 +23,7 @@ export function FormAvatarUploader({
 }: Props) {
   return (
     <>
-      <Separator className="my-4" />
+      {/* <Separator className="my-4" /> */}
       <div className="flex items-center gap-4">
         <div className="relative w-16 h-16">
           <Avatar className="w-16 h-16">
@@ -49,7 +49,7 @@ export function FormAvatarUploader({
           setIsUploading={setIsUploading}
         />
       </div>
-      <Separator className="my-4" />
+      {/* <Separator className="my-4" /> */}
     </>
   );
 }

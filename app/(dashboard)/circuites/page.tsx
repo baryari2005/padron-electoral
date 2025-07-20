@@ -6,22 +6,27 @@ import { toast } from "sonner";
 import { Circuito } from "@prisma/client";
 import { CircuitHeader } from "./components/CircuitHeader";
 import { CircuitList } from "./components/CircuitList";
+import { LoadingMessage } from "@/components/ui/loadingMessage";
 
 
 export default function CircuitsPage() {
   const [data, setData] = useState<Circuito[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const fetchCircuites = async () => {
-    try{
-      const res = await axiosInstance.get("/api/circuites");    
+    setLoading(true);
+    try {
+      const res = await axiosInstance.get("/api/circuites");
       setData(res.data.circuites);
     }
-    catch(err)
-    {
+    catch (err) {
       toast.error("Algo salió mal.")
     }
+    finally {
+      setLoading(false);
+    }
   }
-  
+
   useEffect(() => {
     fetchCircuites();
   }, []);
@@ -29,7 +34,12 @@ export default function CircuitsPage() {
   return (
     <div>
       <CircuitHeader onCircuitCreated={fetchCircuites} />
-      <CircuitList circuites={data} setCircuites={setData} /> 
+      {loading ? (
+        <LoadingMessage text="Cargando circuitos..." />
+      ) : (
+        <CircuitList circuites={data} setCircuites={setData} />
+      )}
+
     </div>
   )
 }
