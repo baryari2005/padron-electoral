@@ -1,21 +1,27 @@
 'use client';
 
-import { columns, EstablecimientoConCircuito } from "./columns";
-import { DataTable } from "./data-table";
+import { GenericDataTable, GenericListWithTable } from "@/app/(dashboard)/components";
+import { columns} from "./columns";
 
-interface EstablishmentsListProps {
-  establishments: EstablecimientoConCircuito[];
-  setEstablishments: React.Dispatch<React.SetStateAction<EstablecimientoConCircuito[]>>;
+interface Props {
+  search: string;
+  onDeleted?: () => void;
+  refresh?: boolean;
 }
-
-export function EstablishmentsList({
-  establishments,
-  setEstablishments,
-}: EstablishmentsListProps) {
-  return (
-    <DataTable<EstablecimientoConCircuito, unknown>
-      columns={columns(setEstablishments)}
-      data={establishments}
+export function EstablishmentsList({ search, onDeleted, refresh }: Props) {
+return (
+    <GenericListWithTable    
+      endpoint="/api/establishments"
+      columns={columns({ onDeleted })}      
+      externalSearch={search}
+      refreshToken={refresh}
+      pageSize={10}
+      DataTableComponent={(props) => (
+        <GenericDataTable
+          {...props}
+          searchPlaceholder="Filtrar por nombre del establecimiento..."
+        />
+      )}
     />
   );
 }

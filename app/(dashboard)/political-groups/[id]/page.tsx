@@ -7,7 +7,7 @@ import axiosInstance from "@/utils/axios";
 import { toast } from "sonner";
 
 import { Separator } from "@/components/ui/separator";
-import { ArrowBigLeft, BookUser } from "lucide-react";
+import { ArrowBigLeft, Compass } from "lucide-react";
 import Link from "next/link";
 import { FormPoliticalGroup } from "../components";
 
@@ -64,15 +64,16 @@ export default function PoliticalGroupIdPage({ params }: { params: { id: number 
 
       {/* Encabezado */}
       <div className="flex items-center mb-2 space-x-2">
-        <BookUser className="w-6 h-6 text-primary" />
-        <h2 className="text-2xl font-semibold">Editar Categoria</h2>
+        <Compass className="w-6 h-6 text-primary" />
+        <h2 className="text-2xl font-semibold">Editar Agrupación Política</h2>
       </div>
       <p className="text-muted-foreground mb-6">Modificar una Agrupación Política existente en el sistema</p>
 
       <Separator className="mb-6" />
 
-      {/* Formulario */}
-      <FormPoliticalGroup politicalGroup={politicalGroup} onSuccess={handleUpdated} />
+      <FormPoliticalGroup
+        politicalGroup={politicalGroup}
+        onSuccess={handleUpdated} />
     </div>
   );
 }

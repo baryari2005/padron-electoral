@@ -6,10 +6,13 @@ import { Form } from "@/components/ui/form";
 import { toast } from "sonner";
 import axiosInstance from "@/utils/axios";
 import { FormTextField, SubmitButton } from "@/app/(dashboard)/components/FormsCreate";
-import { categoryFormSchema, CategoryFormValues } from "./category-form.schema";
+import { categoryFormSchema, CategoryFormValues } from "../../lib";
 
 interface FormCategoryProps {
-  category?: { id: number; nombre: string };
+  category?: {
+    id: number;
+    nombre: string
+  };
   onSuccess: () => void;
   onClose?: () => void;
 }

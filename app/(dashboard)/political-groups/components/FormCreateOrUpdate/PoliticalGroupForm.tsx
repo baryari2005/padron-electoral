@@ -6,7 +6,7 @@ import { Form } from "@/components/ui/form";
 import { toast } from "sonner";
 import axiosInstance from "@/utils/axios";
 import { FormAvatarUploader, FormTextField, SubmitButton } from "@/app/(dashboard)/components/FormsCreate";
-import { politicalGroupFormSchema, PoliticalGroupFormValues } from "./politicalGroup-form.schema";
+import { politicalGroupFormSchema, PoliticalGroupFormValues } from "../../lib/";
 import { useState } from "react";
 
 interface FormPoliticalGroupProps {
@@ -34,8 +34,7 @@ export function FormPoliticalGroup({ politicalGroup, onSuccess, onClose }: FormP
   const { isSubmitting } = form.formState;
   const [isUploading, setIsUploading] = useState(false);
 
-  const onSubmit = async (values: PoliticalGroupFormValues) => {
-    console.log("Entre");
+  const onSubmit = async (values: PoliticalGroupFormValues) => {    
     try {
       if (politicalGroup) {
         await axiosInstance.put(`/api/political-groups/${politicalGroup.id}`, values);
@@ -62,12 +61,14 @@ export function FormPoliticalGroup({ politicalGroup, onSuccess, onClose }: FormP
             name="numero"
             label="Número"
             placeholder="Ej: 132"
+            uppercase
           />
           <FormTextField
             control={form.control}
             name="nombre"
             label="Nombre"
             placeholder="Ej: JUNTOS POR EL CAMBIO"
+            uppercase
           />
         </div>
 
@@ -83,7 +84,7 @@ export function FormPoliticalGroup({ politicalGroup, onSuccess, onClose }: FormP
 
         <div className="mt-4">
           <SubmitButton
-            loading={isSubmitting}
+            loading={isSubmitting || isUploading}
             label={politicalGroup ? "Actualizar" : "Crear"}
             icon={politicalGroup ? "pencil" : "plus"}
           />

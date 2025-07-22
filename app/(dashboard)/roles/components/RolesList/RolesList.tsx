@@ -1,20 +1,28 @@
-'use client'
+"use client";
 
-import { Role } from "@prisma/client";
-import { DataTable } from "./data-table";
+import { GenericListWithTable, GenericDataTable } from "@/app/(dashboard)/components";
 import { columns } from "./columns";
 
-interface RolesListProps {
-  roles: Role[];
-  setRoles: React.Dispatch<React.SetStateAction<Role[]>>;
+interface Props {
+  search: string;
+  onDeleted?: () => void;
+  refresh?: boolean;
 }
 
-export function RolesList({ roles, setRoles }: RolesListProps) {
-  console.log(roles);
+export function RolesList({ search, onDeleted, refresh }: Props) {
   return (
-    <DataTable
-      columns={columns(setRoles)}
-      data={roles}
+    <GenericListWithTable    
+      endpoint="/api/roles"
+      columns={columns({ onDeleted })}      
+      externalSearch={search}
+      refreshToken={refresh}
+      pageSize={10}
+      DataTableComponent={(props) => (
+        <GenericDataTable
+          {...props}
+          searchPlaceholder="Filtrar por rol..."
+        />
+      )}
     />
   );
 }

@@ -4,15 +4,44 @@ import { Prisma } from "@prisma/client";
 import { getAuthOrThrow } from "@/utils/auth";
 
 // Obtener todos los establecimientos
-export async function GET() {
-  const establishments = await db.establecimiento.findMany({    
-   include: {
-      circuito: true, // ✅ incluye toda la relación
-    },
-  });
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const search = searchParams.get("search") || "";
+  const page = parseInt(searchParams.get("page") || "1");
+  const limit = parseInt(searchParams.get("limit") || "10");
+  const skip = (page - 1) * limit;
 
-  console.log("[ESTABLECIMIENTOS GET]", JSON.stringify(establishments, null, 2));
-  return NextResponse.json({ establishments });
+  const terms = search.trim().split(/\s+/).filter(Boolean);
+
+  let where: Prisma.EstablecimientoWhereInput | undefined = undefined;
+
+  if (terms.length > 0) {
+    where =  {
+      AND: terms.map((term) => ({
+        OR: [
+          { nombre: { contains: term, mode: "insensitive" } },
+          { direccion: { contains: term, mode: "insensitive" } },
+          { circuito: { nombre: { contains: term, mode: "insensitive" } } },
+        ],
+      })),
+    };
+  }
+
+  const [establecimientos, total] = await Promise.all([
+    db.establecimiento.findMany({
+      where,
+      include: { circuito: true },
+      skip,
+      take: limit,
+      orderBy: { nombre: "asc" },
+    }),
+    db.establecimiento.count({ where }),
+  ]);
+
+  console.log("Establecimientos:", establecimientos);
+  console.log("Total:", total);
+
+  return NextResponse.json({ items: establecimientos, total });
 }
 
 export async function POST(req: NextRequest) {

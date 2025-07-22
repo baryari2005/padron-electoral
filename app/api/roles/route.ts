@@ -1,13 +1,41 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { Prisma } from "@prisma/client";
+import { Prisma, Role } from '@prisma/client';
 
 // Obtener todos los roles
-export async function GET() {
-  const roles = await db.role.findMany({
-    select: { id: true, name: true },
-  });
-  return NextResponse.json({ roles });
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const search = searchParams.get("search") || "";
+  const page = parseInt(searchParams.get("page") || "1");
+  const limit = parseInt(searchParams.get("limit") || "10");
+  const skip = (page - 1) * limit;
+
+  const terms = search.trim().split(" ").filter(Boolean);
+
+  let where: Prisma.RoleWhereInput | undefined = undefined;
+
+  if (terms.length > 0) {
+    where = {
+      OR: terms.map((term) => ({
+        name: { contains: term, mode: Prisma.QueryMode.insensitive },
+      })),
+    };
+  }
+
+  const [roles, total] = await Promise.all([
+    db.role.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy: { name: "asc" },
+    }),
+    db.role.count({ where }),
+  ]);
+
+  console.log("Roles:", roles);
+  console.log("Total:", total);
+
+  return NextResponse.json({ items: roles, total });
 }
 
 // Crear un nuevo rol

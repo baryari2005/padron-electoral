@@ -1,19 +1,29 @@
 'use client'
 
-import { Categoria } from "@prisma/client";
-import { DataTable } from "./data-table";
+import { GenericDataTable, GenericListWithTable } from "@/app/(dashboard)/components";
 import { columns } from "./columns";
 
-interface CategoryListProps {
-  categories: Categoria[];
-  setCategories: React.Dispatch<React.SetStateAction<Categoria[]>>;
+
+interface Props {
+  search: string;
+  onDeleted?: () => void;
+  refresh?: boolean;
 }
 
-export function CategoryList({ categories, setCategories }: CategoryListProps) {  
-  return (
-    <DataTable
-      columns={columns(setCategories)}
-      data={categories}
+export function CategoryList({ search, onDeleted, refresh }: Props) {
+return (
+    <GenericListWithTable    
+      endpoint="/api/categories"
+      columns={columns({ onDeleted })}      
+      externalSearch={search}
+      refreshToken={refresh}
+      pageSize={10}
+      DataTableComponent={(props) => (
+        <GenericDataTable
+          {...props}
+          searchPlaceholder="Filtrar por categoría..."
+        />
+      )}
     />
   );
 }

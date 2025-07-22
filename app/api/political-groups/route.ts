@@ -1,18 +1,40 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { Prisma } from "@prisma/client";
 
-// Obtener todos los politicalGroups
-export async function GET() {
-  const politicalGroups = await db.agrupacionPolitica.findMany({
-    select: {
-      id: true,
-      nombre: true,
-      numero: true,
-      profileImage: true
-    },
-  });
-  return NextResponse.json({ politicalGroups });
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const search = searchParams.get("search") || "";
+  const page = parseInt(searchParams.get("page") || "1");
+  const limit = parseInt(searchParams.get("limit") || "10");
+  const skip = (page - 1) * limit;
+
+  const terms = search.trim().split(" ").filter(Boolean);
+
+  let where: Prisma.AgrupacionPoliticaWhereInput | undefined = undefined;
+
+  if (terms.length > 0) {
+    where = {
+      OR: terms.map((term) => ({
+        nombre: { contains: term, mode: Prisma.QueryMode.insensitive },
+      })),
+    };
+  }
+
+  const [agrupaciones, total] = await Promise.all([
+    db.agrupacionPolitica.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy: { nombre: "asc" },
+    }),
+    db.agrupacionPolitica.count({ where }),
+  ]);
+
+  console.log("Agrupaciones:", agrupaciones);
+  console.log("Total:", total);
+
+  return NextResponse.json({ items: agrupaciones, total });
 }
 
 // Crear un nuevo rol

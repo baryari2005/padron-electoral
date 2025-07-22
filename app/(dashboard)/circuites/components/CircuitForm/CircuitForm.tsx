@@ -6,7 +6,7 @@ import { Form } from "@/components/ui/form";
 import { toast } from "sonner";
 import axiosInstance from "@/utils/axios";
 import { FormTextField, SubmitButton } from "@/app/(dashboard)/components/FormsCreate";
-import { circuitFormSchema, CircuitFormValues } from "./circuit-form.schema";
+import { circuitFormSchema, CircuitFormValues } from "../../lib";
 
 interface FormCircuitProps {
   circuit?: { id: number; nombre: string, codigo: string };

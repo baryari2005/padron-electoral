@@ -1,3 +1,3 @@
-export * from './PoliticalGroupForm';
-export * from './PoliticalGroupList';
-export * from './PoliticalGroupHeader';
+export * from './FormCreateOrUpdate';
+export * from './List';
+export * from './Header';

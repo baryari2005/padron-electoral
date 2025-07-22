@@ -1,19 +1,29 @@
 'use client'
 
-import { Circuito } from "@prisma/client";
-import { DataTable } from "./data-table";
+import { GenericDataTable, GenericListWithTable } from "@/app/(dashboard)/components";
 import { columns } from "./columns";
 
-interface CircuitListProps {
-  circuites: Circuito[];
-  setCircuites: React.Dispatch<React.SetStateAction<Circuito[]>>;
+
+interface Props {
+  search: string;
+  onDeleted?: () => void;
+  refresh?: boolean;
 }
 
-export function CircuitList({ circuites, setCircuites }: CircuitListProps) {  
-  return (
-    <DataTable
-      columns={columns(setCircuites)}
-      data={circuites}
+export function CircuitList({ search, onDeleted, refresh }: Props) {
+return (
+    <GenericListWithTable    
+      endpoint="/api/circuites"
+      columns={columns({ onDeleted })}      
+      externalSearch={search}
+      refreshToken={refresh}
+      pageSize={10}
+      DataTableComponent={(props) => (
+        <GenericDataTable
+          {...props}
+          searchPlaceholder="Filtrar por nombre del circuito..."
+        />
+      )}
     />
   );
 }

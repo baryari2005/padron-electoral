@@ -1,13 +1,41 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { Prisma } from "@prisma/client";
 
 // Obtener todos los categories
-export async function GET() {
-  const categories = await db.categoria.findMany({
-    select: { id: true, nombre: true },
-  });
-  return NextResponse.json({ categories });
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const search = searchParams.get("search") || "";
+  const page = parseInt(searchParams.get("page") || "1");
+  const limit = parseInt(searchParams.get("limit") || "10");
+  const skip = (page - 1) * limit;
+
+  const terms = search.trim().split(" ").filter(Boolean);
+
+  let where: Prisma.CategoriaWhereInput | undefined = undefined;
+
+  if (terms.length > 0) {
+    where = {
+      OR: terms.map((term) => ({
+        nombre: { contains: term, mode: Prisma.QueryMode.insensitive },
+      })),
+    };
+  }
+
+  const [categorias, total] = await Promise.all([
+    db.categoria.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy: { nombre: "asc" },
+    }),
+    db.categoria.count({ where }),
+  ]);
+
+  console.log("Categorias:", categorias);
+  console.log("Total:", total);
+
+  return NextResponse.json({ items: categorias, total });
 }
 
 // Crear un nuevo rol
