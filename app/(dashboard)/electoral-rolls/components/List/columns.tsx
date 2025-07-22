@@ -44,11 +44,6 @@ export const columns = ({ onDeleted }: ColumnsProps): ColumnDef<ElectoralRollWit
     header: "Establecimiento",
     cell: ({ row }) => row.original.establecimiento?.nombre || "-",
   },
-  // {
-  //   accessorKey: "circuito.nombre",
-  //   header: "Circuito",
-  //   cell: ({ row }) => row.original.circuito?.nombre || "-",
-  // },
   {
     id: "actions",
     header: "Acciones",

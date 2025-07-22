@@ -1,20 +1,28 @@
-'use client';
+"use client";
 
-import { columns, DataTable, UsuarioConRol } from "./";
+import { GenericListWithTable, GenericDataTable } from "@/app/(dashboard)/components";
+import { columns } from "./columns";
 
-interface UsersListProps {
-  users: UsuarioConRol[];
-  setUsers: React.Dispatch<React.SetStateAction<UsuarioConRol[]>>;
+interface Props {
+  search: string;
+  onDeleted?: () => void;
+  refresh?: boolean;
 }
 
-export function UsersList({
-  users,
-  setUsers,
-}: UsersListProps) {
+export function UserList({ search, onDeleted, refresh }: Props) {
   return (
-    <DataTable<UsuarioConRol, unknown>
-      columns={columns(setUsers)}
-      data={users}
+    <GenericListWithTable    
+      endpoint="/api/users"
+      columns={columns({ onDeleted })}      
+      externalSearch={search}
+      refreshToken={refresh}
+      pageSize={10}
+      DataTableComponent={(props) => (
+        <GenericDataTable
+          {...props}
+          searchPlaceholder="Filtrar por nombre o apellido..."
+        />
+      )}
     />
   );
 }

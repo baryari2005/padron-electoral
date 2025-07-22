@@ -1,13 +1,17 @@
 'use client'
 
 import { Button } from "@/components/ui/button";
-import { Categoria} from "@prisma/client"
+import { Categoria } from "@prisma/client"
 import { ColumnDef } from "@tanstack/react-table"
 import { ArrowUpDown } from "lucide-react";
 import { TableActions } from "@/components/ui/tableActions";
 
+interface ColumnsProps {
+    onDeleted?: () => void;
+}
+
 export const columns = (
-    setCatagories: React.Dispatch<React.SetStateAction<Categoria[]>>
+    { onDeleted }: ColumnsProps
 ): ColumnDef<Categoria>[] => [
         {
             accessorKey: "nombre",
@@ -26,19 +30,18 @@ export const columns = (
             header: "Acciones",
             cell: ({ row }) => {
                 const { id } = row.original;
+                const component = "categories";
 
                 return (
                     <TableActions
                         id={id.toString()}
-                        editUrl={`/categories/${id}`}
-                        deleteUrl={`/api/categories/${id}`}
-                        resourceName="Categoria"
-                        confirmTitle="¿Eliminar esta Categoria?"
-                        confirmDescription="Esta acción eliminará permanentemente la Categoria. ¿Continuar?"
+                        editUrl={`/${component}/${id}`}
+                        deleteUrl={`/api/${component}/${id}`}
+                        resourceName="Categoría"
+                        confirmTitle="¿Eliminar esta categoría?"
+                        confirmDescription="Esta acción eliminará permanentemente la categoría. ¿Continuar?"
                         confirmActionLabel="Eliminar"
-                        onDeleted={(deletedId) => {
-                            setCatagories((prev) => prev.filter((item) => item.id !== Number(deletedId)));
-                        }}
+                        onDeleted={() => onDeleted?.()}
                     />
                 );
             }

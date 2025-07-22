@@ -1,19 +1,12 @@
+// components/Header/ElectoralRollHeader.tsx
+
 "use client";
 
 import { useEffect, useState } from "react";
 import axiosInstance from "@/utils/axios";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { FiltersGrid } from "@/app/(dashboard)/components/FilterGrid";
+import { GenericFiltersGrid } from "@/app/(dashboard)/components";
 
 interface ElectoralRollHeaderProps {
-  onElectoralRollCreated: () => void;
-  onSearchChange: (query: string) => void;
   onFiltersChange: (filters: {
     localidad?: string;
     circuitoId?: number;
@@ -22,19 +15,42 @@ interface ElectoralRollHeaderProps {
 }
 
 export function ElectoralRollHeader({
-  onElectoralRollCreated,
-  onSearchChange,
   onFiltersChange,
 }: ElectoralRollHeaderProps) {
   const [localidades, setLocalidades] = useState<string[]>([]);
-  const [circuitos, setCircuitos] = useState<{ id: number; nombre: string }[]>([]);
-  const [establecimientos, setEstablecimientos] = useState<{ id: number; nombre: string }[]>([]);
+  const [circuitos, setCircuitos] = useState<{ id: number; nombre: string }[]>(
+    []
+  );
+  const [establecimientos, setEstablecimientos] = useState<
+    { id: number; nombre: string }[]
+  >([]);
 
   const [selectedFilters, setSelectedFilters] = useState<{
     localidad?: string;
     circuitoId?: number;
     establecimientoId?: number;
   }>({});
+
+  const filtersConfig = [
+    {
+      key: "localidad",
+      label: "Localidad",
+      options: localidades.map((loc) => ({ id: loc, nombre: loc })),
+      isNumber: false,
+    },
+    {
+      key: "circuitoId",
+      label: "Circuito",
+      options: circuitos,
+      isNumber: true,
+    },
+    {
+      key: "establecimientoId",
+      label: "Establecimiento",
+      options: establecimientos,
+      isNumber: true,
+    },
+  ];
 
   const fetchFilterOptions = async () => {
     try {
@@ -56,20 +72,31 @@ export function ElectoralRollHeader({
     fetchFilterOptions();
   }, []);
 
-  const handleFilterChange = (key: keyof typeof selectedFilters, value: string) => {
+  const handleFilterChange = (
+    key: string,
+    value: string | number | undefined
+  ) => {
+    const isNumber = filtersConfig.find((f) => f.key === key)?.isNumber;
+
+    const parsedValue =
+      value === "" || value === undefined
+        ? undefined
+        : isNumber
+        ? Number(value)
+        : value;
+
     const updated = {
       ...selectedFilters,
-      [key]: key === "localidad" ? value : Number(value),
+      [key]: parsedValue,
     };
     setSelectedFilters(updated);
     onFiltersChange(updated);
   };
 
   return (
-    <FiltersGrid
-      localidades={localidades}
-      circuitos={circuitos}
-      establecimientos={establecimientos}
+    <GenericFiltersGrid
+      filters={filtersConfig}
+      selected={selectedFilters}
       onFilterChange={handleFilterChange}
     />
   );

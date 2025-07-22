@@ -1,13 +1,40 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { Prisma } from "@prisma/client";
 
-// Obtener todos los circuites
-export async function GET() {
-  const circuites = await db.circuito.findMany({
-    select: { id: true, nombre: true, codigo: true },
-  });
-  return NextResponse.json({ circuites });
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const search = searchParams.get("search") || "";
+  const page = parseInt(searchParams.get("page") || "1");
+  const limit = parseInt(searchParams.get("limit") || "10");
+  const skip = (page - 1) * limit;
+
+  const terms = search.trim().split(" ").filter(Boolean);
+
+  let where: Prisma.CircuitoWhereInput | undefined = undefined;
+
+  if (terms.length > 0) {
+    where = {
+      OR: terms.map((term) => ({
+        nombre: { contains: term, mode: Prisma.QueryMode.insensitive },
+      })),
+    };
+  }
+
+  const [circuitos, total] = await Promise.all([
+    db.circuito.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy: { nombre: "asc" },
+    }),
+    db.circuito.count({ where }),
+  ]);
+
+  console.log("Circuitos:", circuitos);
+  console.log("Total:", total);
+
+  return NextResponse.json({ items: circuitos, total });
 }
 
 // Crear un nuevo rol

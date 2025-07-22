@@ -1,19 +1,62 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { Prisma } from "@prisma/client";
+import { Prisma, Role } from '@prisma/client';
 import { getAuthOrThrow } from "@/utils/auth";
 import { hash } from "bcryptjs";
 
 // Obtener todos los usuario con su rol
-export async function GET() {
-  const users = await db.user.findMany({
-    include: {
-      role: true,
-    },
-  });
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const search = searchParams.get("search") || "";
+  const page = parseInt(searchParams.get("page") || "1");
+  const limit = parseInt(searchParams.get("limit") || "10");
+  const skip = (page - 1) * limit;
 
-  console.log("[USUARIOS GET]", JSON.stringify(users, null, 2));
-  return NextResponse.json({ users });
+  const terms = search.trim().split(" ").filter(Boolean);
+  const part1 = terms[0] ?? "";
+  const part2 = terms[1] ?? "";
+  let where: Prisma.UserWhereInput | undefined = undefined;
+
+  if (terms.length > 0) {
+    where = {
+      AND: [
+        {
+          OR: [
+            { name: { startsWith: search, mode: Prisma.QueryMode.insensitive } },
+            { lastName: { startsWith: search, mode: Prisma.QueryMode.insensitive } },
+            {
+              AND: [
+                { name: { contains: part1, mode: Prisma.QueryMode.insensitive } },
+                { lastName: { contains: part2, mode: Prisma.QueryMode.insensitive } },
+              ],
+            },
+            {
+              AND: [
+                { name: { contains: part1, mode: Prisma.QueryMode.insensitive } },
+                { lastName: { contains: part2, mode: Prisma.QueryMode.insensitive } },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+  }
+
+  const [usuarios, total] = await Promise.all([
+    db.user.findMany({
+      where,
+      include: { role: true },
+      skip,
+      take: limit,
+      orderBy: { name: "asc" },
+    }),
+    db.user.count({ where }),
+  ]);
+
+  console.log("Usuarios:", usuarios);
+  console.log("Total:", total);
+
+  return NextResponse.json({ items: usuarios, total });
 }
 
 export async function POST(req: NextRequest) {

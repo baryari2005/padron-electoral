@@ -6,13 +6,16 @@ import { ArrowUpDown } from "lucide-react";
 import { Establecimiento, Circuito } from "@prisma/client";
 import { TableActions } from "@/components/ui/tableActions";
 
-// ✅ Tipo extendido con la relación circuito
+interface ColumnsProps {
+    onDeleted?: () => void;
+}
+
 export type EstablecimientoConCircuito = Establecimiento & {
   circuito: Circuito | null;
-};
+}
 
 export const columns = (
-  setEstablishments: React.Dispatch<React.SetStateAction<EstablecimientoConCircuito[]>>
+  { onDeleted }: ColumnsProps
 ): ColumnDef<EstablecimientoConCircuito>[] => [
   {
     accessorKey: "profileImage",
@@ -81,22 +84,18 @@ export const columns = (
     header: "Acciones",
     cell: ({ row }) => {
       const { id } = row.original;
-
-      return (
-        <TableActions
-          id={id.toString()}
-          editUrl={`/establishments/${id}`}
-          deleteUrl={`/api/establishments/${id}`}
-          resourceName="Establecimiento"
-          confirmTitle="¿Eliminar este Establecimiento?"
-          confirmDescription="Esta acción eliminará permanentemente el Establecimiento. ¿Continuar?"
-          confirmActionLabel="Eliminar"
-          onDeleted={(deletedId) => {
-            setEstablishments((prev) =>
-              prev.filter((item) => item.id !== Number(deletedId))
-            );
-          }}
-        />
+      const component = "establishments";
+      return (        
+         <TableActions
+            id={id.toString()}
+            editUrl={`/${component}/${id}`}
+            deleteUrl={`/api/${component}/${id}`}
+            resourceName="Establecimiento"
+            confirmTitle="¿Eliminar este establecimiento?"
+            confirmDescription="Esta acción eliminará permanentemente el establecimiento. ¿Continuar?"
+            confirmActionLabel="Eliminar"
+            onDeleted={() => onDeleted?.()}
+          />
       );
     },
   },

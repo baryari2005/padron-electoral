@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { z } from "zod";
+import { useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Form } from "@/components/ui/form";
@@ -13,43 +12,24 @@ import {
   FormTextField,
   SubmitButton,
 } from "@/app/(dashboard)/components/FormsCreate";
-
-const getFormSchema = (isEdit: boolean) =>
-  z.object({
-    id: isEdit
-      ? z.coerce.number().min(1, "Seleccioná un id de establecimiento")
-      : z.any().optional(),
-    nombre: z.string().min(6, "Debe tener al menos 6 caracteres"),
-    direccion: z.string().min(6, "Debe tener al menos 6 caracteres"),
-    profileImage: z.string().optional(),
-    circuitoId: z.coerce.number().min(1, "Seleccioná un Circuito"), // ← cambiado a string
-  });
-
-type FormValues = z.infer<ReturnType<typeof getFormSchema>>;
+import { Circuito, Establecimiento } from "@prisma/client";
+import { FormValues, getFormSchema } from "../../lib";
 
 interface FormEstablishmentProps {
-  establishment?: {
-    nombre: string;
-    direccion: string;
-    profileImage: string;
-    id: number;
-    circuitoId: number;
-  };
+  establishment?: Establecimiento;
   onSuccess: () => void;
   onClose?: () => void;
-  circuites: { id: number; nombre: string; codigo: string }[];
-  loadingCircuites: boolean;
 }
 
 export function FormEstablishment({
   establishment,
   onSuccess,
   onClose,
-  circuites,
-  loadingCircuites,
 }: FormEstablishmentProps) {
   const isEdit = !!establishment;
   const [isUploading, setIsUploading] = useState(false);
+  const [circuites, setCircuites] = useState<Circuito[]>([]);
+  const [loadingCircuites, setLoadingCircuites] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(getFormSchema(isEdit)),
@@ -87,6 +67,22 @@ export function FormEstablishment({
       toast.error(msg);
     }
   };
+
+  useEffect(() => {
+    const fetchOptions = async () => {
+      try {
+        setLoadingCircuites(true);
+        const res = await axiosInstance.get("/api/circuites");
+        setCircuites(res.data.circuites);
+      } catch (err) {
+        toast.error("Error cargando circuitos");
+      } finally {
+        setLoadingCircuites(false);
+      }
+    };
+
+    fetchOptions();
+  }, []);
 
   return (
     <Form {...form}>

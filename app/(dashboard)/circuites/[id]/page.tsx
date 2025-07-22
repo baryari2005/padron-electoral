@@ -47,7 +47,7 @@ export default function CircuitIdPage({ params }: { params: { id: number } }) {
   if (!Circuit) return null;
 
   const handleUpdated = () => {
-    toast.success("Categoria actualizada correctamente");
+    toast.success("Circuito actualizado correctamente");
     router.push("/circuites");
   };
 

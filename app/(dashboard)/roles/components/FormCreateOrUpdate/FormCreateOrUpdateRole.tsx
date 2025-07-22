@@ -1,21 +1,20 @@
 "use client";
 
-import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Form } from "@/components/ui/form";
 import { toast } from "sonner";
 import axiosInstance from "@/utils/axios";
 import { FormTextField, SubmitButton } from "@/app/(dashboard)/components/FormsCreate";
+import { formSchema, FormValues } from "../../lib";
 
-const formSchema = z.object({
-  name: z.string().min(4, "Debe tener al menos 4 caracteres").max(20, "Debe tener como máximo 20 caracteres"),
-});
 
-type FormValues = z.infer<typeof formSchema>;
 
 interface FormRoleProps {
-  role?: { id: number; name: string }; // si se pasa, es edición
+  role?: {
+    id: number;
+    name: string
+  };
   onSuccess: () => void;
   onClose?: () => void;
 }
@@ -28,17 +27,15 @@ export function FormRole({ role, onSuccess, onClose }: FormRoleProps) {
     },
     mode: "onChange",
   });
-
+  const isEdit = !!role;
   const { isValid, isSubmitting } = form.formState;
 
   const onSubmit = async (values: FormValues) => {
     try {
-      if (role) {
-        // Edición
+      if (isEdit) {        
         await axiosInstance.put(`/api/roles/${role.id}`, values);
         toast.success("Rol actualizado correctamente");
-      } else {
-        // Creación
+      } else {       
         await axiosInstance.post("/api/roles", values);
         toast.success("Rol creado correctamente");
       }

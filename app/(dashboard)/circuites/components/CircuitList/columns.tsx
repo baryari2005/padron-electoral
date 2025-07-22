@@ -6,8 +6,12 @@ import { ColumnDef } from "@tanstack/react-table"
 import { ArrowUpDown } from "lucide-react";
 import { TableActions } from "@/components/ui/tableActions";
 
+interface ColumnsProps {
+    onDeleted?: () => void;
+}
+
 export const columns = (
-    setCircuites: React.Dispatch<React.SetStateAction<Circuito[]>>
+    { onDeleted }: ColumnsProps
 ): ColumnDef<Circuito>[] => [
         {
             accessorKey: "codigo",
@@ -38,19 +42,18 @@ export const columns = (
             header: "Acciones",
             cell: ({ row }) => {
                 const { id } = row.original;
+                const component = "circuites";
 
                 return (
                     <TableActions
                         id={id.toString()}
-                        editUrl={`/circuites/${id}`}
-                        deleteUrl={`/api/circuites/${id}`}
+                        editUrl={`/${component}/${id}`}
+                        deleteUrl={`/api/${component}/${id}`}
                         resourceName="Circuito"
-                        confirmTitle="¿Eliminar este Circuito?"
-                        confirmDescription="Esta acción eliminará permanentemente el Circuito. ¿Continuar?"
+                        confirmTitle="¿Eliminar este circuito?"
+                        confirmDescription="Esta acción eliminará permanentemente el circuito. ¿Continuar?"
                         confirmActionLabel="Eliminar"
-                        onDeleted={(deletedId) => {
-                            setCircuites((prev) => prev.filter((item) => item.id !== Number(deletedId)));
-                        }}
+                        onDeleted={() => onDeleted?.()}
                     />
                 );
             }

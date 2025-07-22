@@ -15,28 +15,24 @@ import { FormValues, userSchema } from "../../lib/userSchema";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
-import { User } from "@prisma/client";
-
-
+import { User, Role } from '@prisma/client';
 
 interface FormUserProps {
   user?: User;
   onSuccess: () => void;
   onClose?: () => void;
-  roles: { id: number; name: string; }[];
-  loadingRoles: boolean;
 }
 
 export function FormUser({
   user,
   onSuccess,
   onClose,
-  roles,
-  loadingRoles,
 }: FormUserProps) {
   const isEdit = !!user;
   const [isUploading, setIsUploading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [roles, setRoles] = useState<Role[]>([]);
+  const [loadingRoles, setLoadingRoles] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(userSchema(isEdit)),
@@ -58,7 +54,6 @@ export function FormUser({
   const lastName = form.watch("lastName");
 
   const onSubmit = async (values: FormValues) => {
-    console.log("Entre");
     try {
       const payload = {
         ...values
@@ -84,13 +79,33 @@ export function FormUser({
   };
 
   useEffect(() => {
+    const fetchOptions = async () => {
+      try {
+        setLoadingRoles(true);
+        const res = await axiosInstance.get("/api/roles");
+        setRoles(res.data.roles);
+      } catch (err) {
+        toast.error("Error cargando roles");
+      } finally {
+        setLoadingRoles(false);
+      }
+    };
+
+    fetchOptions();
+  }, []);
+
+  useEffect(() => {
     console.log("Errores del formulario:", form.formState.errors);
   }, [form.formState.errors]);
 
   useEffect(() => {
     const fullName = `${name} ${lastName}`.trim();
+    const currentAvatar = form.getValues("avatarUrl");
 
-    if (fullName) {
+    // Si ya hay una imagen cargada por el usuario (no es ui-avatars), no sobreescribas
+    const isCustomAvatar = currentAvatar && !currentAvatar.includes("ui-avatars.com");
+
+    if (fullName && !isCustomAvatar) {
       const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=404040&color=fff&size=128&rounded=true&bold=true`;
       form.setValue("avatarUrl", avatarUrl, { shouldValidate: true });
     }
@@ -107,7 +122,7 @@ export function FormUser({
               label="User Id"
               placeholder="id..."
             />
-          )}           
+          )}
           <FormField
             control={form.control}
             name="email"
@@ -144,8 +159,7 @@ export function FormUser({
                 <Select
                   value={String(field.value) || ""}
                   onValueChange={(value) => {
-                    console.log("Rol seleccionado:", value);
-                    field.onChange(value);
+                    field.onChange(Number(value));
                   }}
                   disabled={loadingRoles}
                 >

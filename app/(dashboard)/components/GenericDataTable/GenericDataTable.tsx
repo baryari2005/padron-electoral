@@ -21,7 +21,7 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { TablePaginationToDB } from "@/app/(dashboard)/components/TablePagination";
 
-interface DataTableProps<TData, TValue> {
+interface GenericDataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   loading?: boolean;
@@ -29,9 +29,10 @@ interface DataTableProps<TData, TValue> {
   page: number;
   totalPages: number;
   onPageChange: (page: number) => void;
+  searchPlaceholder?: string;
 }
 
-export function DataTable<TData, TValue>({
+export function GenericDataTable<TData, TValue>({
   columns,
   data,
   loading = false,
@@ -39,7 +40,8 @@ export function DataTable<TData, TValue>({
   page,
   totalPages,
   onPageChange,
-}: DataTableProps<TData, TValue>) {
+  searchPlaceholder = "Buscar...",
+}: GenericDataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [search, setSearch] = useState("");
 
@@ -61,11 +63,11 @@ export function DataTable<TData, TValue>({
   };
 
   return (
-    <div >
-      {/* Input de búsqueda arriba de la tabla */}
+    <div>
+      {/* Input de búsqueda */}
       <div className="flex items-center mb-2">
         <Input
-          placeholder="Filtrar por apellido, nombre o matrícula del votante..."
+          placeholder={searchPlaceholder}
           value={search}
           onChange={handleInputChange}
           className="w-full"
@@ -73,7 +75,7 @@ export function DataTable<TData, TValue>({
       </div>
 
       {/* Tabla */}
-      <div className="overflow-x-auto rouded-md border">
+      <div className="overflow-x-auto rounded-md border">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (

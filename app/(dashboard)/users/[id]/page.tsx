@@ -12,8 +12,6 @@ import Link from "next/link";
 import { ArrowBigLeft, UserPen } from "lucide-react";
 import { FormUser } from "../components/FormCreateOrUpdate";
 
-
-
 export default function UserIdPage({ params }: { params: { id: string } }) {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
@@ -87,9 +85,7 @@ export default function UserIdPage({ params }: { params: { id: string } }) {
       {/* Formulario */}
       <FormUser
         user={user}
-        onSuccess={handleUpdated}
-        roles={roles}
-        loadingRoles={loadingRoles}
+        onSuccess={handleUpdated}                
       />
     </div>
   );

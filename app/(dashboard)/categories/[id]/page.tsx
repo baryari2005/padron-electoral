@@ -45,7 +45,7 @@ export default function CategoryIdPage({ params }: { params: { id: number } }) {
   if (!category) return null;
 
   const handleUpdated = () => {
-    toast.success("Categoria actualizada correctamente");
+    toast.success("Categoría actualizada correctamente");
     router.push("/categories");
   };
 
@@ -65,9 +65,9 @@ export default function CategoryIdPage({ params }: { params: { id: number } }) {
       {/* Encabezado */}
       <div className="flex items-center mb-2 space-x-2">
         <BookUser className="w-6 h-6 text-primary" />
-        <h2 className="text-2xl font-semibold">Editar Categoria</h2>
+        <h2 className="text-2xl font-semibold">Editar Categoría</h2>
       </div>
-      <p className="text-muted-foreground mb-6">Modificar una Categoria existente en el sistema</p>
+      <p className="text-muted-foreground mb-6">Modificar una Categoría existente en el sistema</p>
 
       <Separator className="mb-6" />
 
