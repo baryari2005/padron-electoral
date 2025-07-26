@@ -16,13 +16,15 @@ import {
   useWatch,
 } from "react-hook-form";
 import { useEffect, useState } from "react";
-import { numberToWordsEs } from "@/utils/numberAndLyrics"; // ✅ Usando tu función local
+import { numberToWordsEs } from "@/utils/numberAndLyrics";
 
 type Props<T extends FieldValues> = {
   control: UseFormReturn<T>["control"];
   name: FieldPath<T>;
   label: string;
   disabled?: boolean;
+  showErrorCondition?: (name: FieldPath<T>, value: number | undefined) => boolean;
+  errorMessage?: React.ReactNode;
 };
 
 export function FormItemNumberAndLyrics<T extends FieldValues>({
@@ -30,6 +32,8 @@ export function FormItemNumberAndLyrics<T extends FieldValues>({
   name,
   label,
   disabled = false,
+  showErrorCondition,
+  errorMessage = "⚠ Valor inválido o inconsistente",
 }: Props<T>) {
   const value = useWatch({ control, name }) as number | undefined;
   const [enLetras, setEnLetras] = useState("");
@@ -44,6 +48,8 @@ export function FormItemNumberAndLyrics<T extends FieldValues>({
     }
   }, [value]);
 
+  const shouldShowError = showErrorCondition?.(name, value) ?? false;
+
   return (
     <FormField
       control={control}
@@ -55,21 +61,27 @@ export function FormItemNumberAndLyrics<T extends FieldValues>({
             <FormControl>
               <Input
                 type="number"
-                className="w-24"
+                className={`w-24 ${shouldShowError ? "border-red-500 ring-red-500 bg-red-50" : ""}`}
                 {...field}
                 onChange={(e) => {
                   const parsed = Number(e.target.value);
                   field.onChange(isNaN(parsed) ? 0 : parsed);
                 }}
                 onFocus={(e) => setTimeout(() => e.target.select(), 0)}
-                disabled={disabled} />
+                disabled={disabled}
+              />
             </FormControl>
-            {/* <Input value={enLetras} disabled className="bg-muted" /> */}
-            <div className="flex-1 bg-muted px-3 py-2 rounded-md text-[11px] text-muted-foreground">
+            <div
+              className={`flex-1 bg-muted px-3 py-2 rounded-md text-[11px] text-muted-foreground border 
+                          ${shouldShowError ? "border-red-500 ring-red-500 bg-red-50" : "border-input"}`}
+            >
               {enLetras}
             </div>
           </div>
           <FormMessage />
+          {shouldShowError && (
+            <p className="text-xs text-red-500 mt-1">{errorMessage}</p>
+          )}
         </FormItem>
       )}
     />

@@ -24,7 +24,7 @@ interface ResultadosPresidencialesFormProps {
     categorias: Categoria[];
 }
 
-export default function ResultadosPresidencialesForm({
+export function ResultadosPresidencialesForm({
     control,
     resultadosPresidenciales,
     categorias,
@@ -99,7 +99,7 @@ export default function ResultadosPresidencialesForm({
                             <FormField
                                 key={cat.id}
                                 name={`resultadosPresidenciales.${index}.${cat.id}` as const}
-                                control={control}
+                                control={control}                                
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormControl>
@@ -108,6 +108,7 @@ export default function ResultadosPresidencialesForm({
                                                 min={0}
                                                 className="h-8 text-sm px-2 text-right"
                                                 {...field}
+                                                onChange={(e) => field.onChange(Number(e.target.value))} 
                                                 onFocus={(e) => setTimeout(() => e.target.select(), 0)}
                                             />
                                         </FormControl>
@@ -126,7 +127,7 @@ export default function ResultadosPresidencialesForm({
             <div
                 style={gridStyle}
                 className="grid font-bold text-sm">
-                <div className="col-span-3 uppercase">TOTAL VOTOS</div>
+                <div className="col-span-3 uppercase">total votos</div>
                 {categorias.map((cat) => (
                     <div key={cat.id} className="text-right mr-4">
                         {totales[cat.id] ?? 0}

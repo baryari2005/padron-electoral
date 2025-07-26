@@ -31,8 +31,8 @@ export async function GET(req: NextRequest) {
     db.agrupacionPolitica.count({ where }),
   ]);
 
-  console.log("Agrupaciones:", agrupaciones);
-  console.log("Total:", total);
+  // console.log("Agrupaciones:", agrupaciones);
+  // console.log("Total:", total);
 
   return NextResponse.json({ items: agrupaciones, total });
 }

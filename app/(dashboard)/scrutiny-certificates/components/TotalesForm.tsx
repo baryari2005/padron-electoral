@@ -1,11 +1,10 @@
 "use client";
 
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { UseFormReturn, useWatch } from "react-hook-form";
 import { CertificadoFormData } from "../utils/schema";
 import { FormItemNumberAndLyrics } from "../../components/FormsCreate";
 import { useEffect } from "react";
+import { TriangleAlert } from "lucide-react";
 
 
 interface TotalesFormProps {
@@ -13,13 +12,14 @@ interface TotalesFormProps {
     setValue: UseFormReturn<CertificadoFormData>["setValue"];
 }
 
-export default function TotalesForm({ control, setValue }: TotalesFormProps) {
+export function TotalesForm({ control, setValue }: TotalesFormProps) {
     const sobres = useWatch({ control, name: "totales.sobres" }) ?? 0;
     const votantes = useWatch({ control, name: "totales.votantes" }) ?? 0;
 
     useEffect(() => {
         if (!isNaN(sobres) && !isNaN(votantes)) {
-            setValue("totales.diferencia", votantes - sobres );
+            const diferencia = votantes - sobres;
+            setValue("totales.diferencia", diferencia);
         }
     }, [sobres, votantes, setValue]);
 
@@ -33,12 +33,19 @@ export default function TotalesForm({ control, setValue }: TotalesFormProps) {
         <div className="mt-8">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {campos.map(({ name, label }) => (
-                    <FormItemNumberAndLyrics<CertificadoFormData>
+                    <FormItemNumberAndLyrics
                         key={name}
                         control={control}
                         name={`totales.${name}`}
-                        label={label}                        
+                        label={label}
                         disabled={name === "diferencia"}
+                        showErrorCondition={(n, v) => n === "totales.diferencia" && v !== 0}
+                        errorMessage={
+                            <div className="flex items-center gap-1 text-red-500 text-xs mt-1 font-semibold">
+                                <TriangleAlert className="w-4 h-4" />
+                                Hay diferencia entre sobres y votantes
+                            </div>
+                        }
                     />
                 ))}
             </div>

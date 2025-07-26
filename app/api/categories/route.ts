@@ -32,8 +32,8 @@ export async function GET(req: NextRequest) {
     db.categoria.count({ where }),
   ]);
 
-  console.log("Categorias:", categorias);
-  console.log("Total:", total);
+  // console.log("Categorias:", categorias);
+  // console.log("Total:", total);
 
   return NextResponse.json({ items: categorias, total });
 }

@@ -4,19 +4,23 @@ interface CertificadoHeaderProps {
   seccion: string;
   circuito: string | number;
   mesa: string | number;
+  modo: "editar" | "crear";
 }
 
 export default function CertificadoHeader({
   seccion,
   circuito,
   mesa,
+  modo,
 }: CertificadoHeaderProps) {
   return (
     <div className="p-4 flex justify-between items-start">
       {/* Columna izquierda */}
       <div className="flex gap-4 items-start">
         <div className="w-16 h-16 relative">
-          <Image src="/escudo-argentina.png" alt="Escudo" fill objectFit="contain" />
+          <Image src="/escudo-argentina.png" alt="Escudo" width={100}
+            height={100}
+            className="object-contain" />
         </div>
         <div className="text-sm leading-tight">
           <p className="uppercase font-semibold">Junta Electoral Nacional</p>
@@ -29,11 +33,11 @@ export default function CertificadoHeader({
       </div>
 
       {/* Columna derecha */}
-      <div className="text-right text-sm leading-tight p-2">        
+      <div className="text-right text-sm leading-tight p-2">
         <p className="uppercase">Sección Electoral</p>
         <p className="font-bold">{seccion}</p>
         <div className="grid grid-cols-2 gap-2 mt-1 text-xs">
-          <div>
+          <div className="text-right">
             <p className="uppercase">Circuito</p>
             <p className="font-bold">{circuito}</p>
           </div>
