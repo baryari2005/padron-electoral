@@ -65,7 +65,12 @@ export const dataScrutinyCertificatesSidebar = [
         icon: ReceiptText,
         label: "Alta Certificado Escrutinio",
         href: "/scrutiny-certificates"
-    }
+    },
+    {
+        icon: ReceiptText,
+        label: "Listado de Certificados",
+        href: "/scrutiny-certificates/summary"
+    },
 ]
 
 export const dataToolsSidebar = [    

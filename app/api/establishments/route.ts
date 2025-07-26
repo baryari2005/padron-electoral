@@ -6,6 +6,7 @@ import { getAuthOrThrow } from "@/utils/auth";
 // Obtener todos los establecimientos
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
+  const noPagination = searchParams.get("all") === "true";
   const search = searchParams.get("search") || "";
   const page = parseInt(searchParams.get("page") || "1");
   const limit = parseInt(searchParams.get("limit") || "10");
@@ -16,7 +17,7 @@ export async function GET(req: NextRequest) {
   let where: Prisma.EstablecimientoWhereInput | undefined = undefined;
 
   if (terms.length > 0) {
-    where =  {
+    where = {
       AND: terms.map((term) => ({
         OR: [
           { nombre: { contains: term, mode: "insensitive" } },
@@ -27,19 +28,24 @@ export async function GET(req: NextRequest) {
     };
   }
 
+  const queryOptions: Prisma.EstablecimientoFindManyArgs = {
+    where,
+    include: { circuito: true },
+    orderBy: { nombre: "asc" },
+  };
+
+  if (!noPagination) {
+    queryOptions.skip = skip;
+    queryOptions.take = limit;
+  }
+
   const [establecimientos, total] = await Promise.all([
-    db.establecimiento.findMany({
-      where,
-      include: { circuito: true },
-      skip,
-      take: limit,
-      orderBy: { nombre: "asc" },
-    }),
+    db.establecimiento.findMany(queryOptions),
     db.establecimiento.count({ where }),
   ]);
 
-  console.log("Establecimientos:", establecimientos);
-  console.log("Total:", total);
+  // console.log("Establecimientos:", establecimientos);
+  // console.log("Total:", total);
 
   return NextResponse.json({ items: establecimientos, total });
 }

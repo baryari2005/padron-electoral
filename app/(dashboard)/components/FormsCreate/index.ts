@@ -7,3 +7,4 @@ export * from './FormAvatarUploader'
 export * from './FormItemNumberAndLyrics'
 export * from './FormFirmaInput'
 export * from './SimpleFirmaInput'
+export * from './FormCombobox';

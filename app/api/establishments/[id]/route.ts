@@ -50,7 +50,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   const body = await req.json();
   const { nombre, direccion, profileImage, circuitoId } = body;
 
-  if (!nombre || !direccion || !profileImage || !circuitoId) {
+  if (!nombre || !direccion || !circuitoId) {
     return NextResponse.json({ error: "Faltan datos" }, { status: 400 });
   }
 

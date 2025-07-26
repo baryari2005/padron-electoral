@@ -72,8 +72,8 @@ export function FormEstablishment({
     const fetchOptions = async () => {
       try {
         setLoadingCircuites(true);
-        const res = await axiosInstance.get("/api/circuites");
-        setCircuites(res.data.circuites);
+        const res = await axiosInstance.get("/api/circuites?all=true");
+        setCircuites(res.data.items);
       } catch (err) {
         toast.error("Error cargando circuitos");
       } finally {

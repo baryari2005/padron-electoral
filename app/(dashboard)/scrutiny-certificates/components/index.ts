@@ -1,9 +1,13 @@
-export * from './CargoResultados';
 export * from './CertificadoForm';
-export * from './FirmasForm';
+export * from './CertificadoHeader';
+// export * from './CompensacionFirmasForm';
+export * from './columns';
+// export * from './FiscalesForm';
+// export * from './FiscalesTable';
 export * from './MesaSelector';
+export * from './ResultadosPresidencialesForm'
 export * from './TotalesForm';
 export * from './VotosEspecialesForm';
-export * from './ResultadosPresidencialesForm'
-export * from './CompensacionFirmasForm'
-export * from './FiscalesForm'
+export * from './ResumenValidacionTotalesPorColumna';
+export * from './ValidacionesTotalesPorCategoria';
+export * from './CertificadosResumenPage';

@@ -67,24 +67,26 @@ model Circuito {
   nombre          String
   createAt        DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
-  Establecimiento Establecimiento[]
-  PadronElectoral PadronElectoral[]
+  establecimiento Establecimiento[]
+  padronElectoral PadronElectoral[]
+  mesa            Mesa[]
 
   @@unique([codigo])
 }
 
 model Establecimiento {
-  id           Int               @id @default(autoincrement())
-  userId       String
-  nombre       String
-  direccion    String
-  padrones     PadronElectoral[] // relación 1:N
-  profileImage String?           @db.Text
-  circuitoId   Int
-  circuito     Circuito          @relation(fields: [circuitoId], references: [id])
-  createAt     DateTime          @default(now())
-  updatedAt    DateTime          @updatedAt
-  Mesa         Mesa[]
+  id                      Int                       @id @default(autoincrement())
+  userId                  String
+  nombre                  String
+  direccion               String
+  padrones                PadronElectoral[] // relación 1:N
+  profileImage            String?                   @db.Text
+  circuitoId              Int
+  circuito                Circuito                  @relation(fields: [circuitoId], references: [id])
+  createAt                DateTime                  @default(now())
+  updatedAt               DateTime                  @updatedAt
+  mesa                    Mesa[]
+  mesasPorEstablecimiento MesasPorEstablecimiento[]
 
   @@unique([nombre, direccion])
   @@index([circuitoId])
@@ -126,7 +128,7 @@ model Role {
   id    Int     @id @default(autoincrement())
   name  String  @unique
   users User[]
-  Firma Firma[]
+  firma Firma[]
 }
 
 model User {
@@ -163,24 +165,37 @@ model Resultado {
 
 model Mesa {
   id                Int             @id @default(autoincrement())
-  circuito          String
   numero            String
+  seccion           String?
+  circuito          Circuito        @relation(fields: [circuitoId], references: [id])
+  circuitoId        Int
   establecimiento   Establecimiento @relation(fields: [establecimientoId], references: [id])
   establecimientoId Int
-  seccion           String?
-  electoresVotaron  Int
-  sobresEnUrna      Int
-  diferencia        Int
 
-  resultados Resultado[]
-  totales    TotalesMesa?
-  firmas     Firma[]
+  resultados      Resultado[]
+  votosEspeciales VotosEspeciales[]
+  firmas          Firma[]
+  totalMesa       TotalMesa?
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  diferenciaCategoria DiferenciaCategoria[]
 
   @@unique([numero, establecimientoId])
   @@index([establecimientoId])
+  @@index([circuitoId])
+}
+
+model TotalMesa {
+  id               Int @id @default(autoincrement())
+  mesaId           Int @unique
+  electoresVotaron Int
+  sobresEnUrna     Int
+  diferencia       Int
+
+  mesa Mesa @relation(fields: [mesaId], references: [id])
+
+  @@index([mesaId])
 }
 
 model AgrupacionPolitica {
@@ -198,18 +213,38 @@ model AgrupacionPolitica {
   @@index([nombre])
 }
 
-model TotalesMesa {
+model VotosEspeciales {
   id                    Int @id @default(autoincrement())
-  mesaId                Int @unique
   votosNulos            Int
   votosEnBlanco         Int
   votosRecurridos       Int
   votosImpugnados       Int
   votosComandoElectoral Int
 
-  mesa Mesa @relation(fields: [mesaId], references: [id])
+  categoria   Categoria @relation(fields: [categoriaId], references: [id])
+  categoriaId Int
 
+  mesa   Mesa @relation(fields: [mesaId], references: [id])
+  mesaId Int
+
+  @@unique([mesaId, categoriaId]) // ✔ para evitar duplicados
   @@index([mesaId])
+  @@index([categoriaId])
+}
+
+model DiferenciaCategoria {
+  id         Int @id @default(autoincrement())
+  diferencia Int
+
+  mesa   Mesa @relation(fields: [mesaId], references: [id])
+  mesaId Int
+
+  categoria   Categoria @relation(fields: [categoriaId], references: [id])
+  categoriaId Int
+
+  @@unique([mesaId, categoriaId])
+  @@index([mesaId])
+  @@index([categoriaId])
 }
 
 model Firma {
@@ -230,7 +265,53 @@ model Firma {
 }
 
 model Categoria {
+  id                  Int                   @id @default(autoincrement())
+  nombre              String                @unique
+  resultados          Resultado[]
+  votosEspeciales     VotosEspeciales[]
+  diferenciaCategoria DiferenciaCategoria[]
+}
+
+model Pais {
   id         Int         @id @default(autoincrement())
   nombre     String      @unique
-  resultados Resultado[]
+  provincias Provincia[]
+  createAt   DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+}
+
+model Provincia {
+  id          Int         @id @default(autoincrement())
+  nombre      String
+  paisId      Int
+  pais        Pais        @relation(fields: [paisId], references: [id])
+  localidades Localidad[]
+  createAt    DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@unique([nombre, paisId])
+  @@index([paisId])
+}
+
+model Localidad {
+  id          Int       @id @default(autoincrement())
+  nombre      String
+  provinciaId Int
+  provincia   Provincia @relation(fields: [provinciaId], references: [id])
+  createAt    DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([nombre, provinciaId])
+  @@index([provinciaId])
+}
+
+model MesasPorEstablecimiento {
+  id                Int             @id @default(autoincrement())
+  numero            Int
+  establecimiento   Establecimiento @relation(fields: [establecimientoId], references: [id])
+  establecimientoId Int
+
+  @@unique([numero])
+  @@index([numero])
+  @@index([establecimientoId])
 }

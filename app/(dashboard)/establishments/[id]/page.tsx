@@ -86,9 +86,7 @@ export default function EstablishmentIdPage({ params }: { params: { id: string }
       {/* Formulario */}
       <FormEstablishment
         establishment={establishment}
-        onSuccess={handleUpdated}
-        circuites={circuites}
-        loadingCircuites={loadingCircuites}
+        onSuccess={handleUpdated}                
       />
     </div>
   );
