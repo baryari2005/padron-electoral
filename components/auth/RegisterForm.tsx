@@ -83,12 +83,12 @@ export default function RegisterForm() {
         ...values,
         roleId: Number(values.roleId),
       };
-      const res = await axiosInstance.post("/api/auth/register", payload);
+      const res = await axiosInstance.post("/api/app-auth/register", payload);
 
       toast.success("Usuario creado correctamente");
 
       try {
-        const { data } = await axiosInstance.post("/api/auth/login", {
+        const { data } = await axiosInstance.post("/api/app-auth/login", {
           identifier: values.userId,
           password: values.password,
         });

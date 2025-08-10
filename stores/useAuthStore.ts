@@ -56,7 +56,7 @@ export const useAuthStore = create<AuthState>()(
           return;
         }
         try {
-          const res = await axiosInstance.get("/api/auth/me");
+          const res = await axiosInstance.get("/api/app-auth/me");
           set({ user: res.data.user, loading: false });
         } catch (error) {
           set({ user: null, loading: false });

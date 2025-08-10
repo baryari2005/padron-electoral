@@ -27,7 +27,7 @@ axiosInstance.interceptors.response.use(
     const path = error.config?.url;
 
     // ⚠️ Si el error viene del login, dejamos que el componente lo maneje
-    const isLoginRequest = path?.includes("/api/auth/login");
+    const isLoginRequest = path?.includes("/api/app-auth/login");
 
     if (status === 401 && !isLoginRequest) {
       toast.error("Sesión expirada. Iniciá sesión nuevamente.");

@@ -24,7 +24,7 @@ export default function LoginForm() {
 
   const handleLogin = async () => {
     try {
-      const { data } = await axiosInstance.post("/api/auth/login", {
+      const { data } = await axiosInstance.post("/api/app-auth/login", {
         identifier,
         password,
       });
