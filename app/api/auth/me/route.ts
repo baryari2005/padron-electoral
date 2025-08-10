@@ -1,4 +1,9 @@
 // app/api/auth/me/route.ts
+export const runtime = "nodejs";          // evita Edge (bcrypt/crypto nativo)
+export const dynamic = "force-dynamic";   // no SSG/ISR
+export const revalidate = 0;
+export const fetchCache = "force-no-store";
+
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import { db } from "@/lib/db";
