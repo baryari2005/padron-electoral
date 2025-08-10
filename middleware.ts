@@ -4,6 +4,9 @@ import jwt from "jsonwebtoken";
 export function middleware(req: NextRequest) {
   const token = req.headers.get("authorization")?.replace("Bearer ", "");
 
+  const { pathname } = req.nextUrl;
+  if (pathname.startsWith("/api")) return NextResponse.next();
+
   if (!token) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
