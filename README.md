@@ -87,3 +87,26 @@ Esto va a:
 
 3. Crear nueva migración init
 * ```npx prisma migrate dev --name init```
+
+
+
+# 1) Ver que el commit señalado existe y tocó .env (opcional, para ver)
+git show --name-only 6ed957ca4a8a57565655f376f7bb80c58666aab2
+
+# 2) Si ese es tu último commit, simplemente amend sin .env:
+git rm --cached .env                 # deja .env en disco pero lo saca del commit
+echo ".env" >> .gitignore            # asegúrate de ignorarlo
+git add .gitignore
+git commit --amend --no-edit         # reescribe el último commit sin .env
+
+# 3) Si NO era el último commit (hay commits encima):
+#    rebase interactivo y "drop" ese commit
+#    (se abrirá un editor; marcá 6ed957… como 'drop' y guardá)
+# git rebase -i origin/main
+
+# 4) Antes de pushear, chequeá que no haya claves
+git grep -n "sk_live_" || echo "✔️ no Stripe live keys found"
+git grep -n "sk_test_" || echo "✔️ no Stripe test keys found"
+
+# 5) Push
+git push origin main
