@@ -39,7 +39,8 @@ export default function ElectoralQuickMarkingPage() {
   const canList = Boolean(establecimientoId && mesaId);
   const canView = useHasPermission("ver_estadoelector");
   const canEdit = useHasPermission("editar_estadoelector");
-  if (!canView) return <AccessDeniedPage />;
+
+  // ⛔ (ANTES estaba el return acá; lo movemos abajo) // ✅ FIX
 
   // catálogos
   const [establecimientos, setEstablecimientos] = useState<Establecimiento[]>([]);
@@ -58,7 +59,7 @@ export default function ElectoralQuickMarkingPage() {
   const [view, setView] = useState<"grid" | "table">("grid");
 
   // UI: sectores visibles (izquierda/derecha) para la grilla
-  const COLUMNS = 14; // ajustá ancho
+  const COLUMNS = 14;
   const [leftOn, setLeftOn] = useState(true);
   const [rightOn, setRightOn] = useState(true);
   const visibleColumns = useMemo(() => {
@@ -95,21 +96,23 @@ export default function ElectoralQuickMarkingPage() {
 
   /** Prefetch establecimientos */
   useEffect(() => {
+    if (!canView) return; // ✅ FIX: guardamos por permiso
     (async () => {
       try {
         const { data } = await axiosInstance.get("/api/establishments?all=true");
         setEstablecimientos(data.items ?? data);
-
       } catch {
         toast.error(formatMessage("No se pudieron cargar los establecimientos"));
       }
     })();
-  }, []);
+  }, [canView]); // ✅ FIX: depende de canView
 
   /** Cargar mesas al seleccionar establecimiento */
   useEffect(() => {
+    if (!canView) return; // ✅ FIX
     if (!establecimientoId) {
-      setMesas([]); form.setValue("mesaId", "");
+      setMesas([]);
+      form.setValue("mesaId", "");
       return;
     }
     (async () => {
@@ -121,12 +124,15 @@ export default function ElectoralQuickMarkingPage() {
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [establecimientoId]);
+  }, [canView, establecimientoId]); // ✅ FIX
 
   /** SSE */
-  useVoteStream(mesaId, (payload) => {
-    if (payload?.type === "vote-changed") setRefreshToken((x) => x + 1);
-  });
+  useVoteStream(
+    canView ? mesaId : "", // ✅ FIX: evito suscribirme si no puede ver
+    (payload) => {
+      if (payload?.type === "vote-changed") setRefreshToken((x) => x + 1);
+    }
+  );
 
   /** Guardar / Descartar */
   const handleGuardarCambios = async () => {
@@ -136,7 +142,8 @@ export default function ElectoralQuickMarkingPage() {
         mesaId: mesaId || null,
         changes: pendingMarks,
       });
-      setPendingMarks([]); toast.success("Cambios guardados");
+      setPendingMarks([]);
+      toast.success("Cambios guardados");
       setRefreshToken((x) => x + 1);
     } catch {
       toast.error("No se pudieron guardar los cambios");
@@ -144,7 +151,8 @@ export default function ElectoralQuickMarkingPage() {
     }
   };
   const handleDescartarCambios = () => {
-    setPendingMarks([]); setRefreshToken((x) => x + 1);
+    setPendingMarks([]);
+    setRefreshToken((x) => x + 1);
     toast.message("Cambios descartados");
   };
 
@@ -165,7 +173,11 @@ export default function ElectoralQuickMarkingPage() {
 
   /** Traer votantes de la mesa (para la grilla) */
   useEffect(() => {
-    if (!canList) { setMesaVoters([]); return; }
+    if (!canView || !canList) {
+      // ✅ FIX: también corto si no hay permiso
+      setMesaVoters([]);
+      return;
+    }
     (async () => {
       setLoadingMesa(true);
       try {
@@ -193,7 +205,12 @@ export default function ElectoralQuickMarkingPage() {
         setLoadingMesa(false);
       }
     })();
-  }, [canList, establecimientoId, mesaId, refreshToken]);
+  }, [canView, canList, establecimientoId, mesaId, refreshToken]); // ✅ FIX
+
+  // ✅ FIX: ahora recién acá corto la UI, después de haber llamado TODOS los hooks
+  if (!canView) {
+    return <AccessDeniedPage />;
+  }
 
   return (
     <Form {...form}>

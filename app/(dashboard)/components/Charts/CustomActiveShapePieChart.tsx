@@ -2,6 +2,7 @@
 
 import { PieChart, Pie, Sector, ResponsiveContainer, Tooltip, SectorProps } from "recharts";
 import { useState } from "react";
+import Image from "next/image";
 
 type DataItem = {
   nombre: string;
@@ -122,7 +123,7 @@ export function CustomActiveShapePieChart({ data }: Props) {
   return (
     <div className="flex flex-col items-center gap-2">
       <div className="flex items-center justify-center gap-2 max-w-[400px] px-2 text-muted-foreground">
-        <img
+        <Image
           src={agrupacionActiva?.logo}
           alt={agrupacionActiva?.nombre}
           className="w-6 h-6 rounded-full object-cover"

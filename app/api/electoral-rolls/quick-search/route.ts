@@ -1,4 +1,7 @@
 // app/api/electoral-rolls/quick-search/route.ts
+export const dynamic = 'force-dynamic';   // no intentes SSG para esta route
+export const revalidate = 0;              // (opcional) sin cache de ISR
+export const fetchCache = 'force-no-store'; // (opcional) evita cache de fetch
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { Prisma } from "@prisma/client";
@@ -23,7 +26,7 @@ function parseIndexedFilters(searchParams: URLSearchParams) {
 
 export async function GET(req: NextRequest) {
   try {
-    const { searchParams } = new URL(req.url);
+    const { searchParams } = req.nextUrl; // ← usa nextUrl, está ok
 
     const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
     const limit = Math.max(1, Math.min(1000, parseInt(searchParams.get("limit") || "50", 10)));

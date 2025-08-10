@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import axiosInstance from "@/utils/axios";
 
@@ -39,10 +39,23 @@ export function GenericListWithTable<T>({
   const [totalPages, setTotalPages] = useState(1);
   const [internalSearch, setInternalSearch] = useState(externalSearch);
 
-  const fetchData = async () => {
+  // Params estables para la request
+  const params = useMemo(
+    () => ({
+      search: internalSearch,
+      page,
+      limit: pageSize,
+      ...(filters ?? {}),
+    }),
+    [internalSearch, page, pageSize, filters]
+  );
+
+  // fetchData estable
+  const fetchData = useCallback(async () => {
     if (clientData) {
       setData(clientData);
       setTotalPages(1);
+      setLoading(false);
       return;
     }
 
@@ -50,15 +63,7 @@ export function GenericListWithTable<T>({
 
     setLoading(true);
     try {
-      const res = await axiosInstance.get(endpoint, {
-        params: {
-          search: internalSearch,
-          page,
-          limit: pageSize,
-          ...filters,
-        },
-      });
-
+      const res = await axiosInstance.get(endpoint, { params });
       setData(res.data.items ?? res.data.padron ?? []);
       const total = res.data.total ?? 0;
       setTotalPages(Math.ceil(total / pageSize));
@@ -67,25 +72,24 @@ export function GenericListWithTable<T>({
     } finally {
       setLoading(false);
     }
-  };
+  }, [clientData, endpoint, params, pageSize]);
 
+  // Sincroniza búsqueda externa → interna y resetea página
   useEffect(() => {
     setInternalSearch(externalSearch);
     setPage(1);
   }, [externalSearch]);
 
+  // Carga de datos (o usa clientData si viene por props)
   useEffect(() => {
-    if (!clientData) fetchData();
-    else {
-      setData(clientData);
-      setTotalPages(1);
-    }
-  }, [internalSearch, page, filters, refreshToken, clientData]);
+    fetchData();
+  }, [fetchData, refreshToken]); // refreshToken fuerza recarga cuando cambie
 
   return (
     <div className="mt-4 space-y-4">
       <DataTableComponent
-        key={`dt-${page}-${internalSearch}-${JSON.stringify(filters)}-${refreshToken}`}
+        // key simplificado para evitar renders por stringify de filters
+        key={`dt-${page}-${internalSearch}-${refreshToken ?? ""}`}
         columns={columns}
         data={data}
         loading={loading}

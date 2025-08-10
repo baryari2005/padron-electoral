@@ -1,32 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { toast } from "sonner";
 import axiosInstance from "@/utils/axios";
-import {
-  FormAvatarUploader,
-  FormTextField,
-  SubmitButton,
-} from "@/app/(dashboard)/components/FormsCreate";
+import { FormAvatarUploader, FormTextField, SubmitButton } from "@/app/(dashboard)/components/FormsCreate";
 import { FormValues, userSchema } from "../../lib/userSchema";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Eye, EyeOff } from "lucide-react";
 import { Rol, Usuario } from "@prisma/client";
 import { formatApiMessage, formatMessage } from "@/lib/utils/formatters";
@@ -35,15 +18,10 @@ interface FormUserProps {
   user?: Usuario;
   onSuccess: () => void;
   onClose?: () => void;
-  roles: Rol[]; // ✅ roles ahora vienen como prop
+  roles: Rol[];
 }
 
-export function FormUser({
-  user,
-  onSuccess,
-  onClose,
-  roles = [], // 👈 usamos los roles desde props
-}: FormUserProps) {
+export function FormUser({ user, onSuccess, onClose, roles = [] }: FormUserProps) {
   const isEdit = !!user;
   const [isUploading, setIsUploading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -72,7 +50,7 @@ export function FormUser({
       const payload = { ...values };
 
       if (isEdit) {
-        await axiosInstance.put(`/api/users/${user.id}`, payload);
+        await axiosInstance.put(`/api/users/${user!.id}`, payload);
       } else {
         await axiosInstance.post("/api/users", payload);
         toast.success(formatApiMessage("success.usersCreated"));
@@ -81,37 +59,35 @@ export function FormUser({
       onSuccess();
       onClose?.();
     } catch (err: any) {
-      const msg =
-        err?.response?.data?.error?.includes("Unique constraint failed on the fields: (`email`)") ?
-        "El correo electrónico ya está en uso." :
-        "Algo salió mal.";
+      const msg = err?.response?.data?.error?.includes("Unique constraint failed on the fields: (`email`)")
+        ? "El correo electrónico ya está en uso."
+        : "Algo salió mal.";
       toast.error(formatMessage(msg));
     }
   };
 
+  // Autogenera avatar si el usuario no subió uno propio
   useEffect(() => {
     const fullName = `${name} ${lastName}`.trim();
     const currentAvatar = form.getValues("avatarUrl");
     const isCustomAvatar = currentAvatar && !currentAvatar.includes("ui-avatars.com");
 
     if (fullName && !isCustomAvatar) {
-      const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=404040&color=fff&size=128&rounded=true&bold=true`;
+      const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+        fullName
+      )}&background=404040&color=fff&size=128&rounded=true&bold=true`;
       form.setValue("avatarUrl", avatarUrl, { shouldValidate: true });
     }
-  }, [name, lastName]);
+  }, [name, lastName, form]); // ← incluir 'form' evita el warning
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {!isEdit && (
-            <FormTextField
-              control={form.control}
-              name="userId"
-              label="User Id"
-              placeholder="id..."
-            />
+            <FormTextField control={form.control} name="userId" label="User Id" placeholder="id..." />
           )}
+
           <FormField
             control={form.control}
             name="email"
@@ -125,20 +101,10 @@ export function FormUser({
               </FormItem>
             )}
           />
-          <FormTextField
-            control={form.control}
-            name="nombre"
-            label="Nombre"
-            placeholder="Nombre..."
-            uppercase
-          />
-          <FormTextField
-            control={form.control}
-            name="apellido"
-            label="Apellido"
-            placeholder="Apellido..."
-            uppercase
-          />
+
+          <FormTextField control={form.control} name="nombre" label="Nombre" placeholder="Nombre..." uppercase />
+          <FormTextField control={form.control} name="apellido" label="Apellido" placeholder="Apellido..." uppercase />
+
           <FormField
             control={form.control}
             name="rolId"
@@ -147,9 +113,7 @@ export function FormUser({
                 <FormLabel>Rol</FormLabel>
                 <Select
                   value={String(field.value)}
-                  onValueChange={(value) => {
-                    field.onChange(Number(value));
-                  }}
+                  onValueChange={(value) => field.onChange(Number(value))}
                 >
                   <FormControl>
                     <SelectTrigger>
@@ -168,6 +132,7 @@ export function FormUser({
               </FormItem>
             )}
           />
+
           <FormField
             control={form.control}
             name="password"
@@ -183,11 +148,12 @@ export function FormUser({
                     />
                     <button
                       type="button"
-                      onClick={() => setShowPassword(!showPassword)}
+                      onClick={() => setShowPassword((v) => !v)}
                       className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
                       aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
                     >
-                      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                      <Eye className={showPassword ? "hidden" : ""} size={20} />
+                      <EyeOff className={showPassword ? "" : "hidden"} size={20} />
                     </button>
                   </div>
                 </FormControl>
@@ -195,16 +161,16 @@ export function FormUser({
               </FormItem>
             )}
           />
+
           <FormAvatarUploader
             name={form.watch("nombre")}
             avatarUrl={form.watch("avatarUrl")}
-            onAvatarUploaded={(url) =>
-              form.setValue("avatarUrl", url, { shouldValidate: true })
-            }
+            onAvatarUploaded={(url) => form.setValue("avatarUrl", url, { shouldValidate: true })}
             isUploading={isUploading}
             setIsUploading={setIsUploading}
           />
         </div>
+
         <div className="mt-4">
           <SubmitButton
             loading={isSubmitting || isUploading}

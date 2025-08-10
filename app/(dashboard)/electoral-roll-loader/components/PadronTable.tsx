@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Table, TableHeader, TableRow, TableCell, TableBody } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
@@ -22,39 +22,52 @@ export function PadronTable() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-
   // filtros
   const [search, setSearch] = useState("");
   const [documento, setDocumento] = useState("");
   const [voto, setVoto] = useState("all");
 
+  const [loading, setLoading] = useState(false);
+
   const limit = 50;
 
-  const fetchData = async () => {
-    const params = new URLSearchParams({
-      page: page.toString(),
-      limit: limit.toString(),
+  // Params estables
+  const params = useMemo(() => {
+    return new URLSearchParams({
+      page: String(page),
+      limit: String(limit),
       search,
       documento,
       voto,
-    });
+    }).toString();
+  }, [page, limit, search, documento, voto]);
 
-    const res = await fetch(`/api/padron?${params.toString()}`);
-    const json = await res.json();
+  // fetchData estable
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/padron?${params}`);
+      const json = await res.json();
 
-    console.log("Datos recibidos:", json);
+      console.log("Datos recibidos:", json);
 
-    setData(json.data);
-    setTotalPages(json.totalPages);
-  };
+      setData(json.data ?? []);
+      setTotalPages(json.totalPages ?? 1);
+    } catch (e) {
+      console.error("Error en PadronTable:", e);
+    } finally {
+      setLoading(false);
+    }
+  }, [params]);
 
+  // Carga cuando cambien page/filtros
   useEffect(() => {
     fetchData();
-  }, [page]);
+  }, [fetchData]);
 
   const handleSearch = () => {
-    setPage(1); // reiniciar la página
-    fetchData();
+    // reiniciar la página y dejar que el useEffect dispare el fetch
+    setPage(1);
   };
 
   return (
@@ -81,8 +94,8 @@ export function PadronTable() {
             </SelectContent>
           </Select>
         </div>
-        <Button className="col-span-1 md:col-span-3" onClick={handleSearch}>
-          Buscar
+        <Button className="col-span-1 md:col-span-3" onClick={handleSearch} disabled={loading}>
+          {loading ? "Buscando..." : "Buscar"}
         </Button>
       </div>
 
@@ -112,13 +125,13 @@ export function PadronTable() {
       </Table>
 
       <div className="flex justify-between items-center">
-        <Button onClick={() => setPage((p) => Math.max(p - 1, 1))} disabled={page === 1}>
+        <Button onClick={() => setPage((p) => Math.max(p - 1, 1))} disabled={page === 1 || loading}>
           Anterior
         </Button>
         <span>
           Página {page} de {totalPages}
         </span>
-        <Button onClick={() => setPage((p) => Math.min(p + 1, totalPages))} disabled={page === totalPages}>
+        <Button onClick={() => setPage((p) => Math.min(p + 1, totalPages))} disabled={page === totalPages || loading}>
           Siguiente
         </Button>
       </div>

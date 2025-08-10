@@ -12,6 +12,7 @@ import {
 import { useEffect, useState } from "react";
 import { CertificadoFormData } from "../utils/schema";
 import { getAvatarUrl } from "@/utils/avatar";
+import Image from "next/image";
 
 interface Categoria {
     id: string;
@@ -80,7 +81,7 @@ export function ResultadosPresidencialesForm({
                         className="grid items-center gap-2 even:bg-muted/50 p-2 rounded-md"
                     >
                         <div>
-                            <img
+                            <Image
                                 src={imagen}
                                 alt="Logo"
                                 width={40}

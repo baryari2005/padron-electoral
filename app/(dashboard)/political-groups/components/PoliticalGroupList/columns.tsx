@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowUpDown } from "lucide-react";
 import { TableActions } from "@/components/ui/tableActions";
 import { buildActionsColumn } from "@/app/(dashboard)/utils/buildActionsColumn";
+import Image from "next/image";
 
 interface ColumnsProps {
     onDeleted?: () => void;
@@ -24,7 +25,7 @@ export const columns = ({
             cell: ({ row }) => {
                 const imageUrl = row.original.profileImage;
                 return imageUrl ? (
-                    <img
+                    <Image
                         src={imageUrl}
                         alt="Logo de la Agrupación Política"
                         className="h-10 w-10 rounded-full object-cover"

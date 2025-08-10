@@ -16,26 +16,26 @@ import { AccessDeniedPage } from "@/components/NoPermissions/AccessDeniedPage";
 
 export default function PoliticalGroupIdPage({ params }: { params: { id: number } }) {
   const canView = useHasPermission("ver_agrupaciones");
-  if (!canView) return <AccessDeniedPage />;
-
+  
   const router = useRouter();
   const searchParams = useSearchParams();
   const modo: "ver" | "editar" = searchParams.get("modo") === "ver" ? "ver" : "editar";
-
+  
   const [politicalGroup, setPoliticalGroup] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-
+  
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
       router.push("/");
       return;
     }
-
+    
     const fetchPoliticalGroup = async () => {
       const id = Number(params.id);
       if (isNaN(id)) return router.push("/");
-
+      
+      
       try {
         const res = await axiosInstance.get(`/api/political-groups/${id}`);
         if (res.status !== 200) return router.push("/");
@@ -46,13 +46,15 @@ export default function PoliticalGroupIdPage({ params }: { params: { id: number 
         setLoading(false);
       }
     };
-
+    
     fetchPoliticalGroup();
   }, [params.id, router]);
-
+  
+  if (!canView) return <AccessDeniedPage />;
+  
   if (loading) return <p className="text-center mt-10">Cargando...</p>;
   if (!politicalGroup) return null;
-
+  
   const handleUpdated = () => {
     toast.success(formatApiMessage("success.politicalGroupUpdated"));
     router.push("/political-groups");

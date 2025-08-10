@@ -20,19 +20,20 @@ export default function MesaSummaryPage() {
     const [stacked, setStacked] = useState(true);
 
     const canView = useHasPermission("ver_reportes");
-    if (!canView) return <AccessDeniedPage />;
-
+    
     useEffect(() => {
         axiosInstance
-            .get("/api/reports/mesa-vote-summary")
-            .then((res) => res.data)
-            .then((data) => {
-                console.log("📦 Data cruda del backend mesa-vote-summary:", data);
-                setData(data)
-            })
-            .finally(() => setLoading(false));
+        .get("/api/reports/mesa-vote-summary")
+        .then((res) => res.data)
+        .then((data) => {
+            console.log("📦 Data cruda del backend mesa-vote-summary:", data);
+            setData(data)
+        })
+        .finally(() => setLoading(false));
     }, []);
-
+    
+    if (!canView) return <AccessDeniedPage />;
+    
     const escuelas = [
         { id: "__all__", nombre: "Todos" },
         ...Array.from(

@@ -68,13 +68,12 @@ export default function CertificadoForm({
   const resultadosPresidenciales = form.watch("resultadosPresidenciales");
   const sobres = form.watch("totales.sobres");
 
-    // 🔁 Carga inicial de categorías
+  // 🔁 Carga inicial de categorías
   useEffect(() => {
     axiosInstance
       .get("/api/categories?all=true")
       .then((res) => {
         const items = res.data?.items ?? [];
-        console.log("📦 Categorías recibidas", items);
         setCategorias(items);
       })
       .catch((err) => {
@@ -90,7 +89,6 @@ export default function CertificadoForm({
       .get("/api/political-groups?all=true")
       .then((res) => {
         const items = res.data?.items ?? [];
-        console.log("📦 Agrupaciones recibidas", items);
         setAgrupaciones(items);
       })
       .catch((err) => {
@@ -111,9 +109,10 @@ export default function CertificadoForm({
       try {
         const res = await axiosInstance.get(`/api/scrutiny-certificates/${mesaId}`);
         const data = res.data;
-        console.log("📦 Certificado recibido", data);
 
         form.reset({ ...data, numeroMesa: data.mesa.numero });
+
+        // callbacks del padre: incluyen en deps
         onMetadataLoaded?.({
           seccion: "53 - SAN MIGUEL",
           circuito: data.mesa.circuitoId,
@@ -122,8 +121,8 @@ export default function CertificadoForm({
 
         const escuelaId = data.mesa.escuelaId;
         if (escuelaId) {
-          const res = await axiosInstance.get(`/api/establishments/${escuelaId}`);
-          onEscuelaSeleccionada?.(res.data);
+          const est = await axiosInstance.get(`/api/establishments/${escuelaId}`);
+          onEscuelaSeleccionada?.(est.data);
         }
       } catch (err) {
         console.error("❌ Error al cargar certificado", err);
@@ -132,7 +131,7 @@ export default function CertificadoForm({
         setLoadingCertificado(false);
       }
     })();
-  }, [mesaId, modo]);
+  }, [mesaId, modo, form, onMetadataLoaded, onEscuelaSeleccionada]); // ← ✅ deps completas
 
   // 🔁 Preconfiguración por defecto en modo crear
   useEffect(() => {
@@ -144,7 +143,7 @@ export default function CertificadoForm({
       });
       formReset.current = true;
     }
-  }, [agrupaciones, categorias, modo]);
+  }, [agrupaciones, categorias, modo, form]); // ← ✅ incluye form
 
   // 🔁 Callback al cambiar la mesa seleccionada
   useEffect(() => {
@@ -152,10 +151,9 @@ export default function CertificadoForm({
       if (value.mesa?.numeroMesa) onMesaChange?.(String(value.mesa.numeroMesa));
     });
     return () => subscription?.unsubscribe?.();
-  }, [form.watch, onMesaChange]);
+  }, [form, onMesaChange]); // ← ✅ usar 'form' (objeto), no 'form.watch'
 
   const isLoading = loadingCategorias || loadingAgrupaciones || loadingCertificado;
-  console.log("🌀 Estado de carga:", { loadingCategorias, loadingAgrupaciones, loadingCertificado, isLoading });
 
   if (isLoading) return <CertificadoLoader />;
 
@@ -223,12 +221,11 @@ export default function CertificadoForm({
 
         <ResumenValidacionTotalesPorColumna control={form.control} categorias={categorias} />
         <Separator />
-        
+
         <div className="text-sm font-medium italic text-center text-muted-foreground px-4">
           (*) La suma de los totales por columna deberá coincidir con la cantidad de sobres utilizados en la urna
         </div>
         <Separator />
-
 
         <CertificadoActions
           form={form}

@@ -6,6 +6,7 @@ import { ArrowUpDown } from "lucide-react";
 import { TableActions } from "@/components/ui/tableActions";
 import { Rol, Usuario } from "@prisma/client";
 import { buildActionsColumn } from "@/app/(dashboard)/utils/buildActionsColumn";
+import Image from "next/image";
 
 export type UsuarioConRol = Usuario & {
   rol: Rol | null;
@@ -24,7 +25,7 @@ export const columns = (
       cell: ({ row }) => {
         const imageUrl = row.original.avatarUrl;
         return imageUrl ? (
-          <img
+          <Image
             src={imageUrl}
             alt="Avatar"
             className="h-10 w-10 rounded-full object-cover"

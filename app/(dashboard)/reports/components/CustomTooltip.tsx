@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { TooltipProps } from "recharts";
 
 export function CustomTooltip({
@@ -15,7 +16,7 @@ export function CustomTooltip({
       {/* Label con logo al lado */}
       <div className="flex items-center gap-2 mb-4">
         {logo && (
-          <img
+          <Image
             src={logo}
             alt="logo"
             className="w-5 h-5 object-contain rounded-sm"

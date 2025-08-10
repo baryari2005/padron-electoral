@@ -100,7 +100,7 @@ export function FormEstablishment({
         form.setValue("numerosDeMesa", numeros);
       }
     }
-  }, [isEdit, establishment]);
+  }, [isEdit, establishment, form]);
 
   return (
     <Form {...form}>
