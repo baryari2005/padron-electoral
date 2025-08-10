@@ -1,3 +1,7 @@
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+export const fetchCache = "force-no-store";
 import { createRouteHandler } from "uploadthing/next";
 
 import { ourFileRouter } from "./core";
@@ -9,3 +13,4 @@ export const { GET, POST } = createRouteHandler({
   // Apply an (optional) custom config:
   // config: { ... },
 });
+

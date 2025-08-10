@@ -1,3 +1,7 @@
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+export const fetchCache = "force-no-store";
 // app/api/electoral-rolls/electoral-rolls-loader/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { read, utils } from "xlsx";
@@ -211,3 +215,4 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Fallo en el importador." }, { status: 500 });
   }
 }
+

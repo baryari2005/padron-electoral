@@ -1,3 +1,7 @@
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+export const fetchCache = "force-no-store";
 // app/api/search/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db"; // tu instancia de prisma
@@ -84,3 +88,4 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json({ results });
 }
+

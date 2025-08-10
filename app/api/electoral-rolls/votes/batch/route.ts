@@ -1,3 +1,7 @@
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+export const fetchCache = "force-no-store";
 // app/api/electoral-rolls/votes/batch/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
@@ -127,3 +131,4 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Error interno al registrar votos" }, { status: 500 });
   }
 }
+

@@ -94,6 +94,9 @@ Esto va a:
 git show --name-only 6ed957ca4a8a57565655f376f7bb80c58666aab2
 
 # 2) Si ese es tu último commit, simplemente amend sin .env:
+git add -A
+git commit -m "chore: add const route.ts auth register"
+
 git rm --cached .env                 # deja .env en disco pero lo saca del commit
 echo ".env" >> .gitignore            # asegúrate de ignorarlo
 git add .gitignore
@@ -110,3 +113,35 @@ git grep -n "sk_test_" || echo "✔️ no Stripe test keys found"
 
 # 5) Push
 git push origin main
+
+
+
+# Parate en la raíz del repo
+cd C:\Users\Gejol\Desktop\Next\dashboard-pp
+
+# 1) Definimos el header
+$header = @'
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+export const fetchCache = "force-no-store";
+
+'@
+
+# 2) Recorremos todas las route.ts / route.js bajo app/api
+Get-ChildItem -Path .\app\api -Recurse -File -Include route.ts,route.js | ForEach-Object {
+  $p = $_.FullName
+  try {
+    # Usamos .NET para leer el archivo completo (evita -Raw y problemas con [ ])
+    $content = [System.IO.File]::ReadAllText($p)
+
+    if ($content -notmatch 'runtime\s*=\s*"nodejs"') {
+      [System.IO.File]::WriteAllText($p, $header + $content)
+      Write-Host "Patcheado: $p"
+    } else {
+      Write-Host "Ya tiene header: $p"
+    }
+  } catch {
+    Write-Warning "No pude procesar: $p - $($_.Exception.Message)"
+  }
+}

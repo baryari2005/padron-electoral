@@ -1,3 +1,7 @@
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+export const fetchCache = "force-no-store";
 // app/api/establishments/[id]/available-tables/route.ts
 import { db } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
