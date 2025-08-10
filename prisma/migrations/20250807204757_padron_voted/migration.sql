@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "PadronElectoral" ADD COLUMN     "votedAt" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
+ADD COLUMN     "votedBy" TEXT;

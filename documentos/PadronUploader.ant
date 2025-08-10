@@ -1,0 +1,58 @@
+// components/PadronUploader.tsx
+"use client";
+
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
+
+export function PadronUploader() {
+  const [file, setFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files?.[0]) {
+      setFile(e.target.files[0]);
+    }
+  };
+
+  const handleUpload = async () => {
+    if (!file) {
+      toast.error("Por favor seleccioná un archivo Excel.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    setIsUploading(true);
+
+    try {
+      const res = await fetch("/api/padron/import-padron", {
+        method: "POST",
+        body: formData,
+      });
+      
+      if (!res.ok) throw new Error("Error al importar los datos");
+
+      toast.success("¡Datos importados correctamente!");
+    } catch (err) {
+      console.error("[error]" + err);
+       toast.error("Error al subir el archivo: " + (err));
+    } finally {
+      setIsUploading(false);
+      setFile(null);
+    }
+  };
+
+  return (
+    <div className="space-y-4 max-w-md p-4 border rounded-xl shadow bg-white">
+      <Label htmlFor="padronFile">Seleccioná el archivo del padrón:</Label>
+      <Input id="padronFile" type="file" accept=".xlsx,.xls" onChange={handleChange} />
+      <Button onClick={handleUpload} disabled={!file || isUploading}>
+        {isUploading ? "Subiendo..." : "Subir archivo"}
+      </Button>
+    </div>
+  );
+}
