@@ -1,9 +1,9 @@
 import { PrismaClient } from '@prisma/client';
-import bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
 async function main() {
+  const bcrypt = (await import("bcryptjs")).default;
   // 1️⃣ Crear los roles si no existen
   await prisma.rol.createMany({
     data: [

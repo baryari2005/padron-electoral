@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
 
     // 👉 Lazy imports para evitar errores en carga de módulo
     const { db } = await import("@/lib/db");
-    const bcrypt = (await import("bcrypt")).default;
+    const bcrypt = (await import("bcryptjs")).default;
     const jwt = (await import("jsonwebtoken")).default;
 
     const user = await db.usuario.findFirst({
