@@ -9,6 +9,14 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { formatApiMessage } from "@/lib/utils/formatters";
 
+export async function OPTIONS() {
+  return NextResponse.json({}, { status: 200 });
+}
+
+export async function GET() {
+  return NextResponse.json({ ok: true, route: "/api/app-auth/login" }, { status: 200 });
+}
+
 export async function POST(req: Request) {
   const { identifier, password } = await req.json();
 
