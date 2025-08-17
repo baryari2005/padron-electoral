@@ -72,7 +72,7 @@ export function Ranking({ resultados, categoryOrder }: RankingProps) {
       return next;
     });
     // dependemos de la firma estable, no del objeto ranking
-  }, [keysSig]);
+  }, [keysSig, categoriaKeys]);
 
   const toggleCategoria = (categoria: string) => {
     setVisibleCategorias((prev) => ({ ...prev, [categoria]: !prev[categoria] }));

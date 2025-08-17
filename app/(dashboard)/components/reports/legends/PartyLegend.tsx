@@ -1,6 +1,8 @@
 // components/reports/VotesAccordionItem/legend/PartyLegend.tsx
 "use client";
 
+import Image from "next/image";
+
 export type LegendItem = {
   name: string;
   color: string;
@@ -46,7 +48,7 @@ export function PartyLegend({
     <div className="flex items-center gap-2 min-w-0">
       <Chip color={it.color} />
       {it.logo ? (
-        <img
+        <Image
           src={it.logo}
           alt={it.name}
           width={logoSize}

@@ -20,6 +20,7 @@ import {
 import { SubmitButton } from "@/app/(dashboard)/components/FormsCreate/SubmitButton";
 import { formatApiMessage } from "@/lib/utils/formatters";
 import { Cargando } from "@/components/ui/upload";
+import Image from "next/image";
 
 interface FormPoliticalGroupProps {
   politicalGroup?: {
@@ -222,7 +223,7 @@ export function FormPoliticalGroup({
                 setIsUploading={setIsUploading}
               />
             ) : (
-              <img
+              <Image
                 src={form.watch("profileImage") || "/placeholder.svg"}
                 alt="Avatar"
                 className="h-16 w-16 rounded-full border object-cover"
