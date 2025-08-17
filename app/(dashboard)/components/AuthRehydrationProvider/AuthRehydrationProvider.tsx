@@ -19,12 +19,14 @@ export function AuthRehydrationProvider() {
             src="/logo.png"
             alt="Logo"
             fill
+            sizes="160px"
             className="object-contain dark:hidden rounded-lg"
             priority
           />
           <Image
             src="/logo-white.png"
             alt="Logo blanco"
+            sizes="160px"
             fill
             className="object-contain hidden dark:block rounded-lg"
             priority
@@ -34,7 +36,6 @@ export function AuthRehydrationProvider() {
         <h1 className="text-2xl font-bold">Votaciones 2025</h1>
         <p className="text-muted-foreground">San Miguel</p>
         <hr className="w-1/4 border-muted my-6" />
-
         <div className="flex items-center gap-3">
           <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
           <span className="text-lg font-medium text-muted-foreground animate-pulse">

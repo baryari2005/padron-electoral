@@ -1,5 +1,6 @@
 'use client'
 
+import { sortableHeader } from "@/app/(dashboard)/components/table/SortableHeader";
 import { buildActionsColumn } from "@/app/(dashboard)/utils/buildActionsColumn";
 import { Button } from "@/components/ui/button";
 import { Rol } from "@prisma/client"
@@ -16,15 +17,7 @@ export const columns = ({ onDeleted, canEdit, canDelete, }: ColumnsProps): Colum
     const baseColumns: ColumnDef<Rol>[] = [
         {
             accessorKey: "nombre",
-            header: ({ column }) => {
-                return (
-                    <Button
-                        variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-                        Rol
-                        <ArrowUpDown className="w-4 h-4 ml-2" />
-                    </Button>
-                )
-            },
+            header: sortableHeader("Rol"),
         },
         buildActionsColumn({ component: "roles", label: "rol", onDeleted, canEdit, canDelete }),
     ];

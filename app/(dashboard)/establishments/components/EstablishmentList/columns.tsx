@@ -4,9 +4,9 @@ import { Button } from "@/components/ui/button";
 import { ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown } from "lucide-react";
 import { Establecimiento, Circuito } from "@prisma/client";
-import { TableActions } from "@/components/ui/tableActions";
 import { buildActionsColumn } from "@/app/(dashboard)/utils/buildActionsColumn";
-import Image from "next/image";
+import { AvatarLogo } from "@/app/(dashboard)/components/common/AvatarLogo";
+import { sortableHeader } from "@/app/(dashboard)/components/table/SortableHeader";
 
 interface ColumnsProps {
   onDeleted?: () => void;
@@ -17,6 +17,8 @@ interface ColumnsProps {
 export type EstablecimientoConCircuito = Establecimiento & {
   circuito: Circuito | null;
 }
+
+const collator = new Intl.Collator("es", { numeric: true, sensitivity: "base" });
 
 export const columns = ({
   onDeleted,
@@ -29,62 +31,44 @@ export const columns = ({
       accessorKey: "profileImage",
       header: "Logo",
       cell: ({ row }) => {
-        const imageUrl = row.original.profileImage;
-        return imageUrl ? (
-          <Image
+        const imageUrl: string | null = row.original.profileImage ?? null;
+        return (
+          <AvatarLogo
             src={imageUrl}
-            alt="Logo del establecimiento"
-            className="h-10 w-10 rounded-full object-cover"
+            alt={`Logo de ${row.original?.nombre ?? "establecimiento"}`}
+            size={40}
           />
-        ) : (
-          <span className="text-sm text-muted-foreground italic">Sin imagen</span>
         );
       },
     },
     {
       accessorKey: "nombre",
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Nombre
-          <ArrowUpDown className="w-4 h-4 ml-2" />
-        </Button>
-      ),
+      header: sortableHeader("Nombre"),
     },
     {
       accessorKey: "direccion",
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Dirección
-          <ArrowUpDown className="w-4 h-4 ml-2" />
-        </Button>
-      ),
+      header: sortableHeader("Dirección"),
     },
     {
-      id: "circuito",
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Circuito
-          <ArrowUpDown className="w-4 h-4 ml-2" />
-        </Button>
-      ),
-      cell: ({ row }) => {
-        const circuito = row.original.circuito;
+      id: "circuitoCodigo",
+      accessorFn: (row) => row.circuito?.codigo ?? null, // <-- valor a ordenar
+      header: sortableHeader("Circuito"),
+      cell: ({ getValue }) => {
+        const codigo = (getValue() as string | null) ?? null;
         return (
           <span className="text-sm">
-            {circuito
-              ? `${circuito.codigo} - ${circuito.nombre}`
-              : <span className="italic text-muted-foreground">Sin circuito</span>}
+            {codigo ? codigo : <span className="italic text-muted-foreground">Sin circuito</span>}
           </span>
         );
+      },
+      sortingFn: (rowA, rowB, columnId) => {
+        const a = (rowA.getValue<string | null>(columnId)) ?? "";
+        const b = (rowB.getValue<string | null>(columnId)) ?? "";
+        // vacíos al final
+        if (!a && !b) return 0;
+        if (!a) return 1;
+        if (!b) return -1;
+        return collator.compare(a, b);
       },
     },
     buildActionsColumn({ component: "establishments", label: "establecimiento", onDeleted, canEdit, canDelete }),

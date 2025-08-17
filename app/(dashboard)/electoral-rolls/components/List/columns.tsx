@@ -5,6 +5,7 @@ import { PadronElectoral } from "@prisma/client";
 import { Button } from "@/components/ui/button";
 import { ArrowUpDown } from "lucide-react";
 import { buildActionsColumn } from "@/app/(dashboard)/utils/buildActionsColumn";
+import { sortableHeader } from "@/app/(dashboard)/components/table/SortableHeader";
 
 interface ElectoralRollWithRelations extends PadronElectoral {
   establecimiento: { nombre: string };
@@ -23,27 +24,15 @@ export const columns = ({
   const baseColumns: ColumnDef<ElectoralRollWithRelations>[] = [
     {
       accessorKey: "numeroMatricula",
-      header: ({ column }) => (
-        <Button variant="ghost" onClick={() => column.toggleSorting()}>
-          Matrícula <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      ),
+      header: sortableHeader("Matrícula"),
     },
     {
       accessorKey: "apellido",
-      header: ({ column }) => (
-        <Button variant="ghost" onClick={() => column.toggleSorting()}>
-          Apellido <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      ),
+      header: sortableHeader("Apellido"),
     },
     {
       accessorKey: "nombre",
-      header: ({ column }) => (
-        <Button variant="ghost" onClick={() => column.toggleSorting()}>
-          Nombre <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      ),
+      header: sortableHeader("Nombre"),
     },
     {
       header: "Establecimiento",

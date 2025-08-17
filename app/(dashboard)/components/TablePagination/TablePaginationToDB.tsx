@@ -32,6 +32,8 @@ export function TablePaginationToDB({
     }
   };
 
+  totalPages = (totalPages === 0) ? 1 : totalPages;
+
   return (
     <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-2 md:space-y-0 md:space-x-4 py-4">
       <div className="text-sm text-muted-foreground">

@@ -145,3 +145,17 @@ Get-ChildItem -Path .\app\api -Recurse -File -Include route.ts,route.js | ForEac
     Write-Warning "No pude procesar: $p - $($_.Exception.Message)"
   }
 }
+
+
+
+-- Para MesaStats (join 1:1)
+CREATE INDEX IF NOT EXISTS idx_padron_est_num
+  ON "PadronElectoral" ("establecimientoId", "numeroMesa");
+
+-- Para EstablecimientoStats
+CREATE INDEX IF NOT EXISTS idx_padron_est ON "PadronElectoral" ("establecimientoId");
+CREATE INDEX IF NOT EXISTS idx_mesas_est   ON "MesasPorEstablecimiento" ("establecimientoId");
+
+-- Para CircuitoStats
+CREATE INDEX IF NOT EXISTS idx_padron_circ ON "PadronElectoral" ("circuitoId");
+CREATE INDEX IF NOT EXISTS idx_estab_circ  ON "Establecimiento" ("circuitoId");

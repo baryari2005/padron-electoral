@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Cargando } from "@/components/ui/upload";
 import { Loader2 } from "lucide-react";
 import { Control } from "react-hook-form";
 
@@ -63,10 +64,7 @@ export function FormSelectField({
             </FormControl>
             <SelectContent>
               {loading ? (
-                <div className="flex items-center gap-2 px-4 py-2 text-sm text-muted-foreground">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Cargando...
-                </div>
+                <Cargando label="Cargando..."/>
               ) : (
                 options.map((opt) => (
                   <SelectItem key={opt.value} value={opt.value}>

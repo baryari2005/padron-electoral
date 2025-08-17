@@ -19,12 +19,15 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { Button } from "@/components/ui/button";
-import { ChevronsUpDown, Check } from "lucide-react";
-import { useState } from "react";
+import { ChevronsUpDown, Check, Loader2 } from "lucide-react";
+import { useId, useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 
-interface FormComboboxProps<T> {
-  label: string;
+export type FormComboboxProps<T> = {
+  /** id base para relacionar label y trigger (recomendado) */
+  id?: string;
+  label?: string;
+  withLabel?: boolean;                // ← controla si se muestra o no el label (default true si label existe)
   placeholder?: string;
   options: T[];
   value?: string;
@@ -34,11 +37,18 @@ interface FormComboboxProps<T> {
   onOptionSelected?: (option: T) => void;
   disabled?: boolean;
   loading?: boolean;
-  withLabel?: boolean;
-}
+
+  /** Personalización opcional */
+  className?: string;                 // contenedor
+  buttonClassName?: string;           // botón trigger
+  emptyText?: string;                 // texto cuando no hay resultados
+  searchPlaceholder?: string;         // placeholder del buscador
+};
 
 export function FormCombobox<T>({
+  id,
   label,
+  withLabel = true,
   placeholder = "Seleccionar",
   options,
   value,
@@ -47,45 +57,66 @@ export function FormCombobox<T>({
   getOptionValue,
   onOptionSelected,
   disabled = false,
-  withLabel = true,
+  loading = false,
+  className = "",
+  buttonClassName = "",
+  emptyText = "No se encontraron resultados.",
+  searchPlaceholder,
 }: FormComboboxProps<T>) {
   const [open, setOpen] = useState(false);
 
-  const selectedOption = options.find((opt) => getOptionValue(opt) === value);
+  // ids accesibles y estables
+  const reactId = useId();
+  const baseId = id ?? `cb-${reactId}`;
+  const triggerId = `${baseId}-trigger`;
+  const labelId = `${baseId}-label`;
+  const listId = `${baseId}-listbox`;
 
-  // 🪵 Logs para depuración
-  // console.log("🪵 [FormCombobox] Label:", label);
-  // console.log("🪵 [FormCombobox] Value:", value);
-  // console.log("🪵 [FormCombobox] Options:", options);
-  //console.log("🪵 [FormCombobox] Selected Option:", selectedOption);
+  const selectedOption = useMemo(
+    () => options.find((opt) => getOptionValue(opt) === value),
+    [options, value, getOptionValue]
+  );
+
+  const computedSearchPlaceholder =
+    searchPlaceholder ?? `Buscar ${label ? label.toLowerCase() : "opción"}...`;
 
   return (
-    <FormItem className="self-end min-h-[100px]">
-      {withLabel ? (
-        <FormLabel className="block text-xs text-left mt-1">
+    <FormItem className={cn("self-end min-h-[100px]", className)}>
+      {withLabel && !!label ? (
+        <FormLabel id={labelId} htmlFor={triggerId} className="block text-xs text-left mt-1">
           {label}
         </FormLabel>
       ) : null}
+
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
+            id={triggerId}
             type="button"
             variant="outline"
             role="combobox"
             aria-expanded={open}
-            disabled={disabled}
-            className="w-full justify-between h-10 px-3"
+            aria-controls={listId}
+            aria-labelledby={withLabel && label ? `${labelId} ${triggerId}` : triggerId}
+            disabled={disabled || loading}
+            className={cn("w-full justify-between h-10 px-3", buttonClassName)}
           >
             <span className="truncate max-w-[90%] text-left">
-              {value
-                ? selectedOption
-                  ? getOptionLabel(selectedOption)
-                  : `Seleccionar ${label}`
-                : placeholder}
+              {loading ? (
+                <span className="inline-flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Cargando...
+                </span>
+              ) : value ? (
+                selectedOption ? getOptionLabel(selectedOption) : `Seleccionar ${label ?? ""}`
+              ) : (
+                placeholder
+              )}
             </span>
             <ChevronsUpDown className="opacity-50 h-4 w-4 ml-2 shrink-0" />
           </Button>
         </PopoverTrigger>
+
         <PopoverContent
           className="w-[var(--radix-popover-trigger-width)] p-0"
           align="start"
@@ -96,42 +127,49 @@ export function FormCombobox<T>({
         >
           <Command>
             <CommandInput
-              disabled={disabled}
-              placeholder={`Buscar ${label.toLowerCase()}...`}
+              disabled={disabled || loading}
+              placeholder={computedSearchPlaceholder}
               className="h-9"
             />
-            <CommandList>
-              <CommandEmpty>No se encontraron resultados.</CommandEmpty>
-              <CommandGroup className="max-h-[300px] overflow-auto">
-                {options.map((opt) => {
-                  const optValue = getOptionValue(opt);
-                  const optLabel = getOptionLabel(opt);
-                  return (
-                    <CommandItem
-                      key={optValue}
-                      value={optLabel}
-                      onSelect={() => {
-                        onChange(optValue);
-                        onOptionSelected?.(opt);
-                        setOpen(false);
-                      }}
-                    >
-                      {optLabel}
-                      <Check
-                        className={cn(
-                          "ml-auto h-4 w-4",
-                          value === optValue ? "opacity-100" : "opacity-0"
-                        )}
-                      />
-                    </CommandItem>
-                  );
-                })}
-              </CommandGroup>
+            <CommandList id={listId} aria-labelledby={withLabel && label ? labelId : undefined}>
+              {loading ? (
+                <div className="flex items-center gap-2 p-3 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Cargando opciones...
+                </div>
+              ) : (
+                <>
+                  <CommandEmpty>{emptyText}</CommandEmpty>
+                  <CommandGroup className="max-h-[300px] overflow-auto">
+                    {options.map((opt) => {
+                      const optValue = getOptionValue(opt);
+                      const optLabel = getOptionLabel(opt);
+                      const selected = value === optValue;
+
+                      return (
+                        <CommandItem
+                          key={optValue}
+                          value={optLabel}
+                          onSelect={() => {
+                            onChange(optValue);
+                            onOptionSelected?.(opt);
+                            setOpen(false);
+                          }}
+                        >
+                          {optLabel}
+                          <Check className={cn("ml-auto h-4 w-4", selected ? "opacity-100" : "opacity-0")} />
+                        </CommandItem>
+                      );
+                    })}
+                  </CommandGroup>
+                </>
+              )}
             </CommandList>
           </Command>
         </PopoverContent>
       </Popover>
-      <FormMessage /> {/* espacio reservado */}
+
+      <FormMessage />
     </FormItem>
   );
 }

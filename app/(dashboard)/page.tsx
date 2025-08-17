@@ -1,77 +1,119 @@
+// app/(dashboard)/page.tsx
 "use client";
 
-import CardSummary from "./components/CardSummary/CardSummary";
 import { UsersRound, BookOpenCheck, Waypoints, AlertTriangle } from "lucide-react";
 import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import { AuthRehydrationProvider } from "./components/AuthRehydrationProvider/AuthRehydrationProvider";
 import { AlertCard } from "./components/AlertCard/AlertCard";
-import { CategoriaRanking } from "./components/CategoryRaking/CategoryRanking";
-import ResumenTortasPorCategoriaConCustom from "./components/Charts/ResumenTortasPorCategoriaConCustom";
+import SummaryPieChartByCategory from "./components/reports/SummaryPieChartByCategory";
+import { RankingCategoryGridFromTable } from "./components/reports/RankingCategoryGrid";
 
-const cardData = [
-  {
-    icon: UsersRound,
-    total: "240",
-    average: 15,
-    title: "Mesas escrutadas",
-    tooltipText: "Cantidad total de mesas cargadas en el sistema",
-  },
-  {
-    icon: Waypoints,
-    total: "21.340",
-    average: 80,
-    title: "Votantes registrados",
-    tooltipText: "Cantidad de personas que participaron",
-  },
-  {
-    icon: BookOpenCheck,
-    total: "98.5%",
-    average: 30,
-    title: "Porcentaje escrutado",
-    tooltipText: "Proporción de mesas procesadas sobre el total esperado",
-  },
-];
+import { useDashboardStats } from "./scrutiny-certificates/hooks/useDashboardStats";
+import { useCertificatesSummary } from "./scrutiny-certificates/hooks/useCertificatesSummary";
+import { RankingListCard } from "./scrutiny-certificates/components/RankingListCard";
+import { useRankingsFromSummary } from "./scrutiny-certificates/hooks/useRankingsFromSummary";
+
+const nf = (n: number) => n.toLocaleString("es-AR");
+const pf = (n: number) => `${n.toFixed(1)}%`;
 
 export default function Home() {
-  const { loading } = useAuthRedirect();
+  const { loading: authLoading } = useAuthRedirect();
+  const { escuelas, loading: summaryLoading } = useCertificatesSummary();
 
-  if (loading) {
-    return <AuthRehydrationProvider />;
-  }
+  // ⬇️ AGREGA ESTAS DOS CONSTANTES (o traelas de tu API)
+  const TOTAL_MESAS_ESPERADAS = 252;  // <-- reemplazá con el real
+  const PADRON_TOTAL = 31340;         // <-- reemplazá con el real
+
+  // ⬇️ PASALAS AL HOOK (en vez de null)
+  const {
+    mesasEscrutadas,
+    habilitadas,
+    porcentajeEscrutado,
+    votantesRegistrados,
+    porcentajeParticipacion,
+    deltaEscrutado,
+  } = useDashboardStats({
+    escuelas,                                 // TODAS
+    totalMesasHabilitadas: TOTAL_MESAS_ESPERADAS,
+    padronTotal: PADRON_TOTAL,
+    storageKey: "sc:dashboard-stats:global",
+  });
+
+  const { rankEstablecimientos, rankCircuitos } = useRankingsFromSummary(escuelas, { top: 5 });
+  const faltan = Math.max((habilitadas || 0) - mesasEscrutadas, 0);
+
+  if (authLoading || summaryLoading) return <AuthRehydrationProvider />;
 
   return (
     <div>
-      {/* <h2 className="text-3xl font-bold mb-6">Informe general de votación</h2> */}
-
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-x-6">
-        {cardData.map((card, index) => (
-          <CardSummary
-            key={index}
-            icon={card.icon}
-            total={card.total}
-            average={card.average}
-            title={card.title}
-            tooltipText={card.tooltipText}
-          />
-        ))}
+        {/* Mesas escrutadas (X / total) */}
+        <div className="rounded-xl border bg-card p-4">
+          <div className="text-sm text-muted-foreground flex items-center gap-2">
+            <UsersRound className="h-4 w-4" />
+            Mesas escrutadas
+          </div>
+          <div className="mt-2 flex items-end gap-2">
+            <div className="text-2xl font-semibold">
+              {nf(mesasEscrutadas)} / {nf(habilitadas || TOTAL_MESAS_ESPERADAS)}
+            </div>
+            <span className="rounded-md bg-black text-white text-[10px] px-2 py-[2px]">
+              {pf(porcentajeEscrutado)}
+            </span>
+          </div>
+        </div>
+
+        {/* Votantes registrados (X / padrón) */}
+        <div className="rounded-xl border bg-card p-4">
+          <div className="text-sm text-muted-foreground flex items-center gap-2">
+            <Waypoints className="h-4 w-4" />
+            Votantes registrados
+          </div>
+          <div className="mt-2 flex items-end gap-2">
+            <div className="text-2xl font-semibold">
+              {nf(votantesRegistrados)} / {nf(PADRON_TOTAL)}
+            </div>
+            <span className="rounded-md bg-black text-white text-[10px] px-2 py-[2px]">
+              {porcentajeParticipacion != null ? pf(porcentajeParticipacion) : "—"}
+            </span>
+          </div>
+        </div>
+
+        {/* Porcentaje escrutado (solo %) */}
+        <div className="rounded-xl border bg-card p-4">
+          <div className="text-sm text-muted-foreground flex items-center gap-2">
+            <BookOpenCheck className="h-4 w-4" />
+            Porcentaje escrutado
+          </div>
+          <div className="mt-2 flex items-end gap-2">
+            <div className="text-2xl font-semibold">{pf(porcentajeEscrutado)}</div>
+            {deltaEscrutado != null && (
+              <span className="rounded-md bg-black text-white text-[10px] px-2 py-[2px]">
+                {`${deltaEscrutado >= 0 ? "+" : ""}${deltaEscrutado.toFixed(1)} pts`}
+              </span>
+            )}
+          </div>
+        </div>
       </div>
 
-      <div className="mt-10">
-        <AlertCard tipo="warning" mensaje="Faltan 12 mesas por cargar." icon={AlertTriangle} />
+      {/* Rankings */}
+      <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <RankingListCard title="Top establecimientos por votos (share municipal)" items={rankEstablecimientos} />
+        <RankingListCard title="Top circuitos por votos (share municipal)" items={rankCircuitos} />
       </div>
 
-      <div className="mt-6">        
-        <ResumenTortasPorCategoriaConCustom />        
+      {/* aviso de faltantes */}
+      {faltan > 0 && (
+        <div className="mt-6">
+          <AlertCard tipo="warning" mensaje={`Faltan ${faltan} mesas por cargar.`} icon={AlertTriangle} />
+        </div>
+      )}
+
+      <div className="mt-6 mb-6">
+        <SummaryPieChartByCategory />
       </div>
 
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 w-full mt-6">
-        
-          <CategoriaRanking categoria="DIPUTADOS" />
-          <CategoriaRanking categoria="SENADORES" />
-        
-      </div>
+      <RankingCategoryGridFromTable />
     </div>
-
   );
 }

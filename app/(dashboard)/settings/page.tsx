@@ -25,6 +25,7 @@ import { formatMessage } from "@/lib/utils/formatters";
 import Link from "next/link";
 import { ArrowBigLeft } from "lucide-react";
 import { useAuthStore } from "@/stores/useAuthStore";
+import { Cargando } from "@/components/ui/upload";
 
 export default function SettingsPage() {
   const { user, setUser } = useAuthStore();
@@ -61,7 +62,7 @@ export default function SettingsPage() {
       avatarUrl: user.avatarUrl,
     };
 
-    const res = await fetch("/api/auth/register", {
+    const res = await fetch("/api/app-auth/register", {
       method: "PUT",
       body: JSON.stringify(data),
       headers: { "Content-Type": "application/json" },
@@ -80,9 +81,7 @@ export default function SettingsPage() {
     }
   };
 
-  if (!user) {
-    return <p className="text-center mt-10">Cargando perfil...</p>;
-  }
+  if (!user) return <Cargando label="Cargando perfil..."/>; 
 
   return (
     <div className="space-y-4">

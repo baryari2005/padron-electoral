@@ -1,3 +1,4 @@
+// app/(dashboard)/components/GenericDataTable.tsx
 "use client";
 
 import {
@@ -5,9 +6,7 @@ import {
   flexRender,
   getCoreRowModel,
   useReactTable,
-  getSortedRowModel,
   SortingState,
-  getFilteredRowModel,
 } from "@tanstack/react-table";
 
 import {
@@ -31,6 +30,10 @@ interface GenericDataTableProps<TData, TValue> {
   totalPages: number;
   onPageChange: (page: number) => void;
   searchPlaceholder?: string;
+
+  // ⬇️ vienen del padre
+  sorting: SortingState;
+  onSortingChange: (updater: SortingState | ((old: SortingState) => SortingState)) => void;
 }
 
 export function GenericDataTable<TData, TValue>({
@@ -42,33 +45,31 @@ export function GenericDataTable<TData, TValue>({
   totalPages,
   onPageChange,
   searchPlaceholder = "Buscar...",
+  sorting,
+  onSortingChange,
 }: GenericDataTableProps<TData, TValue>) {
-  const [sorting, setSorting] = useState<SortingState>([]);
   const [search, setSearch] = useState("");
 
   const table = useReactTable({
     data,
     columns,
+    state: { sorting },
+    onSortingChange,
+    manualSorting: true,     // ← ordena el backend
+    manualPagination: true,  // ← pagina el backend
+    enableSortingRemoval: true,
     getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    state: {
-      sorting,
-      globalFilter: search,
-    },
-    onSortingChange: setSorting,
-    globalFilterFn: "includesString",
-    getFilteredRowModel: getFilteredRowModel(),    
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearch(value);
-    onSearchChange(value);
+    onSearchChange(value); // busca en el server
   };
 
   return (
     <div>
-      {/* Input de búsqueda */}
+      {/* Búsqueda */}
       <div className="flex items-center mb-2">
         <Input
           placeholder={searchPlaceholder}

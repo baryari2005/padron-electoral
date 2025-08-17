@@ -26,7 +26,7 @@ export const MODULO_LABELS: Record<Modulo, string> = {
     categorias: "Cargos Políticos",
     votantes: "Electores",
     reportes: "Reportes",
-    estadoelector: "Elector"
+    estadoelector: "Flag Voto"
 };
 
 export const ACCION_LABELS: Record<Accion, string> = {

@@ -12,6 +12,7 @@ import Link from "next/link";
 import { ArrowBigLeft, UserPen } from "lucide-react";
 import { FormUser } from "../components/UserForm";
 import { formatApiMessage } from "@/lib/utils/formatters";
+import { Cargando } from "@/components/ui/upload";
 
 export default function UserIdPage({ params }: { params: { id: string } }) {
   const router = useRouter();
@@ -57,7 +58,7 @@ export default function UserIdPage({ params }: { params: { id: string } }) {
     fetchData();
   }, [params.id, router]);
 
-  if (loading) return <p className="text-center mt-10">Cargando...</p>;
+  if (loading) return <Cargando variant="page" label="Cargando usuario..."/>;
   if (!user) return null;
 
   const handleUpdated = () => {

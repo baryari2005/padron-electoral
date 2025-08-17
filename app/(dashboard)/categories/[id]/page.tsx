@@ -11,6 +11,7 @@ import { ArrowBigLeft, BookUser } from "lucide-react";
 import Link from "next/link";
 import { FormCategory } from "../components";
 import { formatApiMessage } from "@/lib/utils/formatters";
+import { Cargando } from "@/components/ui/upload";
 
 export default function CategoryIdPage({ params }: { params: { id: number } }) {
   const router = useRouter();
@@ -42,7 +43,7 @@ export default function CategoryIdPage({ params }: { params: { id: number } }) {
     fetchCategory();
   }, [params.id, router]);
 
-  if (loading) return <p className="text-center mt-10">Cargando...</p>;
+  if (loading) return <Cargando variant="page" label="Cargando cargo político..."/>;
   if (!category) return null;
 
   const handleUpdated = () => {

@@ -1,11 +1,9 @@
 'use client'
 
-import { Button } from "@/components/ui/button";
 import { ColumnDef } from "@tanstack/react-table";
-import { ArrowUpDown } from "lucide-react";
-
 import { buildActionsColumn } from "@/app/(dashboard)/utils/buildActionsColumn";
 import { CargoPolitico } from "@prisma/client";
+import { sortableHeader } from "@/app/(dashboard)/components/table/SortableHeader";
 
 interface ColumnsProps {
   onDeleted?: () => void;
@@ -21,15 +19,7 @@ export const columns = ({
   const baseColumns: ColumnDef<CargoPolitico>[] = [
     {
       accessorKey: "nombre",
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Cargo Político
-          <ArrowUpDown className="w-4 h-4 ml-2" />
-        </Button>
-      ),
+      header: sortableHeader("Nombre"),
     },
     buildActionsColumn({ component: "categories", label: "cargo político", onDeleted, canEdit, canDelete }),
   ];

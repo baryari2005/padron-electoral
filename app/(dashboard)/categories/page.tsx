@@ -30,7 +30,7 @@ export default function CategoriesPage() {
   const canDelete = useHasPermission("eliminar_categorias");
 
   if (!canView) {
-    return <AccessDeniedPage/>
+    return <AccessDeniedPage subtitle="Ver Cargos Políticos."/>
   }
 
   return (

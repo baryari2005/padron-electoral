@@ -16,8 +16,10 @@ interface Props {
   placeholder?: string;
   type?: string;
   disabled?: boolean;
-  onchange?: (value: string) => void;
+   onchange?: (value: string | number | undefined) => void; 
   uppercase?: boolean; // <- nueva prop
+  min?: number;
+  step?: number;
 }
 
 export function FormTextField({
@@ -29,6 +31,8 @@ export function FormTextField({
   disabled = false,
   onchange,
   uppercase = false, // <- valor por defecto
+  min,
+  step,
 }: Props) {
   return (
     <FormField
@@ -43,11 +47,22 @@ export function FormTextField({
               type={type}
               disabled={disabled}
               value={field.value || ""}
+              min={type === "number" ? min : undefined}
+              step={type === "number" ? step : undefined}
               onChange={(e) => {
-                const value = uppercase ? e.target.value.toUpperCase() : e.target.value;
-                field.onChange(value);
-                onchange?.(value);
+                if (type === "number") {
+                  const raw = e.target.value;
+                  const next =
+                    raw === "" ? undefined : Number(raw); // "" -> undefined | "12" -> 12
+                  field.onChange(next);
+                  onchange?.(next);
+                } else {
+                  const value = uppercase ? e.target.value.toUpperCase() : e.target.value;
+                  field.onChange(value);
+                  onchange?.(value);
+                }
               }}
+              onWheel={(e) => (e.currentTarget as HTMLInputElement).blur()} // evita scroll cambiando números
             />
           </FormControl>
           <FormMessage />

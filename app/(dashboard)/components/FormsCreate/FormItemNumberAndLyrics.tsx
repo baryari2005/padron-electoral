@@ -80,7 +80,7 @@ export function FormItemNumberAndLyrics<T extends FieldValues>({
           </div>
           <FormMessage />
           {shouldShowError && (
-            <p className="text-xs text-red-500 mt-1">{errorMessage}</p>
+            <div className="text-xs text-red-500 mt-1">{errorMessage}</div>
           )}
         </FormItem>
       )}

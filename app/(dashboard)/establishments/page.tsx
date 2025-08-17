@@ -9,7 +9,7 @@ import { School } from "lucide-react";
 import { useHasPermission } from "@/lib/permissions/useHasPermission";
 import { AccessDeniedPage } from "@/components/NoPermissions/AccessDeniedPage";
 
-export default function CircuitesPage() {
+export default function EstablishmentsPage() {
   const [refresh, setRefresh] = useState(false);
   const [search, setSearch] = useState("");
 
@@ -29,7 +29,7 @@ export default function CircuitesPage() {
   const canEdit = useHasPermission("editar_establecimientos");
   const canDelete = useHasPermission("eliminar_establecimientos");
 
-  if (!canView) return (<AccessDeniedPage />);
+  if (!canView) return (<AccessDeniedPage subtitle="Ver Establecimientos."/>);
 
   return (
     <div className="space-y-4">

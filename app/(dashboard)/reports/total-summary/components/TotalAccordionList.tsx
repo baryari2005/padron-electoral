@@ -26,7 +26,8 @@ export function TotalAccordionList({ total, stacked, onToggleStacked }: TotalAcc
   return (
     <Accordion type="multiple" className="space-y-2">
       <TotalAccordionItem
-        key={1}
+        key="total"
+        value="total"
         total={total}
         stacked={stacked}
         onToggleStacked={onToggleStacked}

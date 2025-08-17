@@ -10,7 +10,7 @@ import { formatMessage } from "@/lib/utils/formatters";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
-import { FormCombobox2 } from "../../components/FormsCreate";
+import { FormCombobox } from "../../components/FormsCreate";
 import { Loader2, Search } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
@@ -27,6 +27,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { VoterSeatMap, type VoterSeat } from "./components/VoterSeatMap";
 import { IconAzul, IconRojo, IconVerde } from "./components/icons/VoterIcons";
 import { cn } from "@/lib/utils";
+import { Cargando } from "@/components/ui/upload";
 
 type FormValues = { establecimientoId: string; mesaId: string; query: string };
 
@@ -209,7 +210,7 @@ export default function ElectoralQuickMarkingPage() {
 
   // ✅ FIX: ahora recién acá corto la UI, después de haber llamado TODOS los hooks
   if (!canView) {
-    return <AccessDeniedPage />;
+    return <AccessDeniedPage subtitle="Ver Electores que votaron."/>;
   }
 
   return (
@@ -238,7 +239,7 @@ export default function ElectoralQuickMarkingPage() {
               render={({ field }) => (
                 <div>
                   <Label>Establecimiento</Label>
-                  <FormCombobox2
+                  <FormCombobox
                     label=""
                     value={field.value}
                     onChange={(v: string) => {
@@ -260,7 +261,7 @@ export default function ElectoralQuickMarkingPage() {
               render={({ field }) => (
                 <div>
                   <Label>Mesa</Label>
-                  <FormCombobox2
+                  <FormCombobox
                     label=""
                     value={field.value}
                     onChange={(v: string) => {
@@ -352,12 +353,7 @@ export default function ElectoralQuickMarkingPage() {
 
                 {/* OVERLAY que cubre TODO el Card */}
                 {loadingMesa && (
-                  <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/80 dark:bg-gray-950/80 backdrop-blur-sm">
-                    <div className="flex flex-col items-center gap-2">
-                      <div className="h-5 w-5 border-4 border-gray-300 border-t-transparent rounded-full animate-spin" />
-                      <span className="text-muted-foreground text-sm">Cargando datos...</span>
-                    </div>
-                  </div>
+                  <Cargando label="Cargando datos..."/>
                 )}
               </Card>
             )}

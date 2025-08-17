@@ -1,159 +1,36 @@
+// components/reports/TotalAccordionItem.tsx
 "use client";
 
-import {
-  AccordionItem,
-  AccordionTrigger,
-  AccordionContent,
-} from "@/components/ui/accordion";
-import { Card, CardContent, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Button } from "@/components/ui/button";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  CartesianGrid,
-} from "recharts";
-import { ChartColumnBig, ChartColumnStacked, Eye, EyeOff, Layers, MapPinned, School } from "lucide-react";
+import { MapPinned } from "lucide-react";
+import { useCategoryOrder } from "../../hooks/useCategoryOrder";
 
-
-import {
-  buildChartData,
-  buildChartDataVotosEspeciales,  
-  getCategoriasUnicas,
-  getColor,
-  getColorEspecial,
-  getTiposEspecialesUnicos,
-} from "../../utils/chartUtils";
-
-import { useState } from "react";
-
-import { createCustomLogoTick, CustomTooltip, CustomLegend } from "@/app/(dashboard)/reports/components";
-
-import { MesaRanking } from "../../mesa-summary/components/MesaRanking";
-import { TotalVoteSummary } from "./types/TotalVoteSummary";
-
-
-interface TotalAccordionItemProps {
-  total: TotalVoteSummary;
-  stacked: boolean;
-  onToggleStacked: () => void;
-}
+import type { TotalVoteSummary } from "./types/TotalVoteSummary";
+import { VotesAccordionItem } from "@/app/(dashboard)/components/reports/VotesAccordionItem";
 
 export function TotalAccordionItem({
   total,
   stacked,
   onToggleStacked,
-}: TotalAccordionItemProps) {
-  const [mostrarVotosEspeciales, setMostrarVotosEspeciales] = useState(false);
+  value,
+}: {
+  total: TotalVoteSummary;
+  stacked: boolean;
+  onToggleStacked: () => void;
+  value: string;
+}) {
+  const { categoryOrder } = useCategoryOrder();
 
-  const chartData = buildChartData(total.resultados);
-  const ordenCategorias = ["DIPUTADOS", "SENADORES"];
-  
   return (
-    <AccordionItem key={1} value={`establecimiento-${1}`} >
-      <AccordionTrigger className="px-4 no-underline hover:no-underline text-muted-foreground hover:text-primary">
-        <CardTitle className="flex text-sm">
-          <p>
-            <span className="flex text-muted-foreground ">
-              <MapPinned width={20} height={20} className="mr-4" />
-              {"Votación general"}
-              <span className="flex items-center text-xs">
-                <Layers width={15} height={15} className="ml-8 mr-4" />
-                {total.resumen
-                  ? `Votantes: ${total.resumen.electoresVotaron} - Sobres: ${total.resumen.sobresEnUrna}`
-                  : "Sin datos"}
-              </span>
-            </span>
-          </p>
-        </CardTitle>
-      </AccordionTrigger>
-      <AccordionContent>
-        <Card className="mt-2 border-none">
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold">
-                Votos por agrupación y categoría
-              </p>
-              <Button size="sm" variant="ghost" onClick={onToggleStacked} className="text-xs font-semibold">
-                Ver {stacked ? "barras" : "combinado"}
-                {stacked ? <ChartColumnBig width={20} height={20} /> : <ChartColumnStacked width={20} height={20} />}
-              </Button>
-            </div>
-
-            <div className="grid grid-cols-1 xl:grid-cols-[70%_30%] gap-6">
-              {/* Gráfico */}
-              <div className="h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                    <XAxis
-                      dataKey="agrupacion"
-                      tick={createCustomLogoTick(chartData)}
-                      interval={0}
-                      height={40}
-                    />
-                    <YAxis tickLine={false} axisLine={true} />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Legend content={<CustomLegend label="Cargos políticos:" />} />
-                    {getCategoriasUnicas(total.resultados).map((cat) => (
-                      <Bar
-                        key={cat}
-                        dataKey={cat}
-                        stackId={stacked ? "a" : undefined}
-                        fill={getColor(cat)}
-                      />
-                    ))}
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-
-              <MesaRanking resultados={total.resultados} />
-            </div>
-
-            {/* Votos especiales */}
-            <Separator />
-            <div className="flex justify-between items-center mt-4">
-              <p className="text-sm font-semibold">Votos especiales por categoría</p>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => setMostrarVotosEspeciales((prev) => !prev)}
-              >
-                {mostrarVotosEspeciales ? <EyeOff width={20} height={20} /> : <Eye width={20} height={20} />}
-                {mostrarVotosEspeciales ? "Ocultar" : "Mostrar"}
-              </Button>
-            </div>
-            {mostrarVotosEspeciales && (
-              <>
-                <div className="h-80">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={buildChartDataVotosEspeciales(total.votosEspeciales)}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                      <XAxis dataKey="categoria" tick={{ dy: 12 }} />
-                      <YAxis tickLine={false} axisLine={true} />
-                      <Tooltip content={<CustomTooltip />} />
-                      <Legend content={<CustomLegend label="Votos especiales:" />} />
-                      {getTiposEspecialesUnicos(total.votosEspeciales).map((tipo) => (
-                        <Bar
-                          key={tipo}
-                          dataKey={tipo}
-                          stackId={stacked ? "a" : undefined}
-                          fill={getColorEspecial(tipo)}
-                        />
-                      ))}
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
-      </AccordionContent>
-    </AccordionItem>
+    <VotesAccordionItem
+      value={`total-${value}`}
+      icon={<MapPinned width={20} height={20} />}
+      title={"Votación general"}
+      resumen={total.resumen}
+      resultados={total.resultados}
+      votosEspeciales={total.votosEspeciales}
+      categoryOrder={categoryOrder}
+      stacked={stacked}
+      onToggleStacked={onToggleStacked}
+    />
   );
 }

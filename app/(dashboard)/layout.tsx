@@ -8,17 +8,10 @@ import { useAuthGuard } from "@/hooks/useAuthGuard";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { isReady, user } = useAuthGuard({ redirectTo: "/sign-in" });
-
-  // 🔒 Mostrar loading si todavía no está lista la auth
   if (!isReady) return <AuthRehydrationProvider />;
 
-  // 🔐 Si no hay usuario, no mostramos nada (o podrías redirigir)
   if (!user) return null;
 
-  console.log("🔁 DashboardLayout render");
-  console.log("🛡️ AuthGuard estado:", { isReady, user });
-
-  // ✅ Solo se renderiza el layout completo una vez que el usuario está
   return (
     <div className={`flex w-full h-full ${pacifico.variable} ${firmaFont.variable}`}>
       <div className="hidden xl:block w-80 h-full xl:fixed">

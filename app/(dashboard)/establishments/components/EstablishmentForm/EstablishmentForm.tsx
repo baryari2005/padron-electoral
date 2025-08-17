@@ -11,7 +11,7 @@ import {
   FormAvatarUploader,
   FormTextField,
   SubmitButton,
-  FormCombobox2,
+  FormCombobox,
   FormTags
 } from "@/app/(dashboard)/components/FormsCreate";
 
@@ -141,7 +141,7 @@ export function FormEstablishment({
                   disabled
                 />
               ) : (
-                <FormCombobox2
+                <FormCombobox
                   label="Circuito"
                   value={String(field.value)}
                   onChange={field.onChange}

@@ -2,7 +2,8 @@
 
 import { Accordion } from "@/components/ui/accordion";
 import { MesaAccordionItem } from "./MesaAccordionItem";
-import { MesaVoteSummary } from "./types";
+import { MesaVoteSummary } from "./types/MesaVoteSummary";
+
 
 interface MesaAccordionListProps {
   mesas: MesaVoteSummary[];

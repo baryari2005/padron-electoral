@@ -9,9 +9,11 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { ChartNoAxesCombined } from "lucide-react";
 import axiosInstance from "@/utils/axios";
 
-import { MesaVoteSummary } from "./types";
+
 import { MesaAccordionList } from "./MesaAccordionList";
-import { ReportsLoader } from "../../components";
+import { CommonLoader } from "@/app/(dashboard)/components/common/CommonLoader";
+import { MesaVoteSummary } from "./types/MesaVoteSummary";
+
 
 export default function MesaSummaryPage() {
     const [data, setData] = useState<MesaVoteSummary[]>([]);
@@ -20,20 +22,20 @@ export default function MesaSummaryPage() {
     const [stacked, setStacked] = useState(true);
 
     const canView = useHasPermission("ver_reportes");
-    
+
     useEffect(() => {
         axiosInstance
-        .get("/api/reports/mesa-vote-summary")
-        .then((res) => res.data)
-        .then((data) => {
-            console.log("📦 Data cruda del backend mesa-vote-summary:", data);
-            setData(data)
-        })
-        .finally(() => setLoading(false));
+            .get("/api/reports/mesa-vote-summary")
+            .then((res) => res.data)
+            .then((data) => {
+                console.log("📦 Data cruda del backend mesa-vote-summary:", data);
+                setData(data)
+            })
+            .finally(() => setLoading(false));
     }, []);
-    
-    if (!canView) return <AccessDeniedPage />;
-    
+
+    if (!canView) return <AccessDeniedPage subtitle="Informe de Votos por Mesa." />;
+
     const escuelas = [
         { id: "__all__", nombre: "Todos" },
         ...Array.from(
@@ -59,7 +61,12 @@ export default function MesaSummaryPage() {
         return a.numero - b.numero;
     });
 
-    if (loading) return <ReportsLoader />;
+    if (loading) return <CommonLoader logo="/logo.png"
+        alternativeLogo="/logo-white.png"
+        alternativeText="Más San Miguel"
+        title="Votaciones 2025"
+        subTitle="San Miguel"
+        loaderText="Cargando Reportes por mesa..." />;
 
     return (
         <div className="space-y-6">

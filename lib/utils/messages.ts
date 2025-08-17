@@ -21,10 +21,11 @@ export const messages = {
 
     categoryCreated: "Cargo político creado correctamente.",
     categoryDeleted: "Cargo político eliminado correctamente.",
+    categorieDeleted: "Cargo político eliminado correctamente.",
     categoryUpdated: "Cargo político actualizado correctamente.",
 
     politicalGroupCreated: "Agrupación política creada correctamente.",
-    politicalGroupDeleted: "Agrupación política eliminada correctamente.",
+    "political-groupDeleted": "Agrupación política eliminada correctamente.",
     politicalGroupUpdated: "Agrupación política actualizada correctamente.",
 
     circuiteCreated: "Circuito creado correctamente.",

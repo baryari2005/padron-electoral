@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowBigLeft, UserPen } from "lucide-react";
 import Link from "next/link";
 import { Separator } from "@/components/ui/separator";
+import { Cargando } from "@/components/ui/upload";
 
 // ✅ Tipo local con voto_sino validado como "SI" | "NO"
 type VotoSino = "SI" | "NO";
@@ -66,9 +67,7 @@ export default function EditElectoralRollPage() {
     if (id) fetchElectoralRoll();
   }, [id, router]);
 
-  if (loading) {
-    return <Skeleton className="h-48 w-full" />;
-  }
+  if (loading) return <Cargando variant="page" label="Cargando elector..."/>;  
 
   if (!electoralRoll) return null;
 

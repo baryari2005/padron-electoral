@@ -9,8 +9,8 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { MesaVoteSummary } from "./types";
-import { getColorEspecial, getTiposEspecialesUnicos } from "../../utils/chartUtils";
+import { MesaVoteSummary } from "./types/MesaVoteSummary";
+import { getColorEspecial, getTiposEspecialesUnicos } from "../../../components/reports/utils/chartUtils";
 
 
 interface MesaVotosEspecialesChartProps {

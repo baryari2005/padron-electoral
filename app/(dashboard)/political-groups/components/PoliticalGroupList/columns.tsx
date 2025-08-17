@@ -2,11 +2,9 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import { AgrupacionPolitica } from "@prisma/client";
-import { Button } from "@/components/ui/button";
-import { ArrowUpDown } from "lucide-react";
-import { TableActions } from "@/components/ui/tableActions";
 import { buildActionsColumn } from "@/app/(dashboard)/utils/buildActionsColumn";
-import Image from "next/image";
+import { AvatarLogo } from "@/app/(dashboard)/components/common/AvatarLogo";
+import { sortableHeader } from '../../../components/table/SortableHeader';
 
 interface ColumnsProps {
     onDeleted?: () => void;
@@ -23,17 +21,15 @@ export const columns = ({
             accessorKey: "profileImage",
             header: "Logo",
             cell: ({ row }) => {
-                const imageUrl = row.original.profileImage;
-                return imageUrl ? (
-                    <Image
+                const imageUrl: string | null = row.original.profileImage ?? null;
+                return (
+                    <AvatarLogo
                         src={imageUrl}
-                        alt="Logo de la Agrupación Política"
-                        className="h-10 w-10 rounded-full object-cover"
+                        alt={`Logo de ${row.original?.nombre ?? "agrupación política"}`}
+                        size={30}
                     />
-                ) : (
-                    <span className="text-sm text-muted-foreground italic">Sin imagen</span>
                 );
-            }
+            },
         },
         {
             accessorKey: "numero",
@@ -42,15 +38,8 @@ export const columns = ({
         },
         {
             accessorKey: "nombre",
-            header: ({ column }) => {
-                return (
-                    <Button
-                        variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-                        Agrupación Política
-                        <ArrowUpDown className="w-4 h-4 ml-2" />
-                    </Button>
-                )
-            },
+            header: sortableHeader("Agrupación Política"),
+            
         },
         buildActionsColumn({ component: "political-groups", label: "agrupación política", onDeleted, canEdit, canDelete }),
     ];
