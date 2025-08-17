@@ -1,0 +1,28 @@
+# Fuerza codificación de texto en UTF-8
+* text=auto eol=lf working-tree-encoding=UTF-8
+
+# Archivos que siempre deben ser tratados como texto
+*.js     text
+*.ts     text
+*.tsx    text
+*.json   text
+*.css    text
+*.scss   text
+*.html   text
+*.md     text
+*.yml    text
+*.yaml   text
+*.gitignore text
+*.gitattributes text
+
+# Archivos binarios (no se deben modificar)
+*.png    binary
+*.jpg    binary
+*.jpeg   binary
+*.gif    binary
+*.ico    binary
+*.pdf    binary
+*.zip    binary
+*.gz     binary
+*.tar    binary
+*.lock   binary
