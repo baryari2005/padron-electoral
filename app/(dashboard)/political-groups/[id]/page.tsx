@@ -13,6 +13,7 @@ import { FormPoliticalGroup } from "../components";
 import { formatApiMessage } from "@/lib/utils/formatters";
 import { useHasPermission } from "@/lib/permissions/useHasPermission";
 import { AccessDeniedPage } from "@/components/NoPermissions/AccessDeniedPage";
+import { Cargando } from "@/components/ui/upload";
 
 export default function PoliticalGroupIdPage({ params }: { params: { id: number } }) {
   const canView = useHasPermission("ver_agrupaciones");
@@ -50,9 +51,9 @@ export default function PoliticalGroupIdPage({ params }: { params: { id: number 
     fetchPoliticalGroup();
   }, [params.id, router]);
   
-  if (!canView) return <AccessDeniedPage />;
+  if (!canView) return <AccessDeniedPage subtitle="Ver Partido Político."/>;
   
-  if (loading) return <p className="text-center mt-10">Cargando...</p>;
+  if (loading) return <Cargando variant="page" label="Cargando partido político..."/>;
   if (!politicalGroup) return null;
   
   const handleUpdated = () => {

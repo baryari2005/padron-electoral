@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
@@ -16,14 +16,16 @@ import {
   MesaSelector,
   ResumenValidacionTotalesPorColumna,
 } from "@/app/(dashboard)/scrutiny-certificates/components";
-
-import { AgrupacionPolitica } from "@prisma/client";
-import { EstablecimientoConCircuito } from "./types";
-import { CertificadoLoader } from "./CertificadoForm/CertificadoLoader";
-import { buildDefaultVotosEspeciales, buildResultadosPresidenciales } from "./helpers";
+import { CommonLoader } from "../../components/common/CommonLoader";
 import { CertificadoActions } from "./CertificadoForm/CertificadoActions";
 import { CertificadoHeaderSummary } from "./CertificadoForm/CertificadoHeaderSummary";
-import { formatApiMessage } from "@/lib/utils/formatters";
+
+import { useCategorias } from "../hooks/useCategorias";
+import { useAgrupaciones } from "../hooks/useAgrupaciones";
+import { usePermisosMatriz } from "../hooks/usePermisosMatriz";
+import { useCertificadoEdicion } from "../hooks/useCertificadoEdicion";
+import { useCertificadoDefaults } from "../hooks/useCertificadoDefaults";
+import { EstablecimientoConCircuito } from "./types";
 
 interface CertificadoFormProps {
   mesaId?: number;
@@ -44,15 +46,7 @@ export default function CertificadoForm({
   onSuccess,
   onMetadataLoaded,
 }: CertificadoFormProps) {
-  const [agrupaciones, setAgrupaciones] = useState<AgrupacionPolitica[]>([]);
-  const [categorias, setCategorias] = useState<{ id: string; nombre: string }[]>([]);
-  const [loadingCategorias, setLoadingCategorias] = useState(true);
-  const [loadingAgrupaciones, setLoadingAgrupaciones] = useState(true);
-  const [loadingCertificado, setLoadingCertificado] = useState(() => modo === "editar" && mesaId !== undefined);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [confirmarGuardado, setConfirmarGuardado] = useState(false);
-  const formReset = useRef(false);
-
+  // 1) TODOS los hooks siempre al tope y en el mismo orden
   const form = useForm<CertificadoFormData>({
     resolver: zodResolver(certificadoSchema),
     defaultValues: {
@@ -64,100 +58,57 @@ export default function CertificadoForm({
     mode: "onChange",
   });
 
+  const { categorias, loadingCategorias } = useCategorias();
+  const { agrupaciones, loadingAgrupaciones } = useAgrupaciones();
+  const { habilitadosPorAgrupacion, loadingPermisos } = usePermisosMatriz({
+    ready: !loadingAgrupaciones,
+  });
+
+  const { loadingCertificado } = useCertificadoEdicion(
+    modo === "editar" && !!mesaId,
+    mesaId,
+    {
+      onData: (data) => form.reset({ ...data, numeroMesa: data.mesa.numero }),
+      onMetadataLoaded,
+      onEscuelaSeleccionada,
+    }
+  );
+
+  useCertificadoDefaults(form, modo, agrupaciones, categorias);
+
+  // Hooks de estado ANTES de cualquier return condicional
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [confirmarGuardado, setConfirmarGuardado] = useState(false);
+
+  // Watches
   const votosEspeciales = form.watch("votosEspeciales");
   const resultadosPresidenciales = form.watch("resultadosPresidenciales");
   const sobres = form.watch("totales.sobres");
 
-  // 🔁 Carga inicial de categorías
+  // Callback de cambio de mesa
   useEffect(() => {
-    axiosInstance
-      .get("/api/categories?all=true")
-      .then((res) => {
-        const items = res.data?.items ?? [];
-        setCategorias(items);
-      })
-      .catch((err) => {
-        console.error("❌ Error al cargar categorías", err);
-        toast.error(formatApiMessage("errors.categoryBadRequest"));
-      })
-      .finally(() => setLoadingCategorias(false));
-  }, []);
-
-  // 🔁 Carga inicial de agrupaciones
-  useEffect(() => {
-    axiosInstance
-      .get("/api/political-groups?all=true")
-      .then((res) => {
-        const items = res.data?.items ?? [];
-        setAgrupaciones(items);
-      })
-      .catch((err) => {
-        console.error("❌ Error al cargar agrupaciones", err);
-        toast.error(formatApiMessage("errors.politicalGroupBadRequest"));
-      })
-      .finally(() => setLoadingAgrupaciones(false));
-  }, []);
-
-  // 🔁 Carga del certificado si está en modo edición
-  useEffect(() => {
-    if (modo !== "editar" || !mesaId) {
-      setLoadingCertificado(false);
-      return;
-    }
-
-    (async () => {
-      try {
-        const res = await axiosInstance.get(`/api/scrutiny-certificates/${mesaId}`);
-        const data = res.data;
-
-        form.reset({ ...data, numeroMesa: data.mesa.numero });
-
-        // callbacks del padre: incluyen en deps
-        onMetadataLoaded?.({
-          seccion: "53 - SAN MIGUEL",
-          circuito: data.mesa.circuitoId,
-          mesa: data.mesa.numeroMesa,
-        });
-
-        const escuelaId = data.mesa.escuelaId;
-        if (escuelaId) {
-          const est = await axiosInstance.get(`/api/establishments/${escuelaId}`);
-          onEscuelaSeleccionada?.(est.data);
-        }
-      } catch (err) {
-        console.error("❌ Error al cargar certificado", err);
-        toast.error(formatApiMessage("errors.certificateBadRequest"));
-      } finally {
-        setLoadingCertificado(false);
-      }
-    })();
-  }, [mesaId, modo, form, onMetadataLoaded, onEscuelaSeleccionada]); // ← ✅ deps completas
-
-  // 🔁 Preconfiguración por defecto en modo crear
-  useEffect(() => {
-    if (!formReset.current && modo === "crear" && agrupaciones.length > 0 && categorias.length > 0) {
-      form.reset({
-        ...form.getValues(),
-        votosEspeciales: buildDefaultVotosEspeciales(categorias),
-        resultadosPresidenciales: buildResultadosPresidenciales(agrupaciones, categorias),
-      });
-      formReset.current = true;
-    }
-  }, [agrupaciones, categorias, modo, form]); // ← ✅ incluye form
-
-  // 🔁 Callback al cambiar la mesa seleccionada
-  useEffect(() => {
-    const subscription = form.watch((value) => {
+    const sub = form.watch((value) => {
       if (value.mesa?.numeroMesa) onMesaChange?.(String(value.mesa.numeroMesa));
     });
-    return () => subscription?.unsubscribe?.();
-  }, [form, onMesaChange]); // ← ✅ usar 'form' (objeto), no 'form.watch'
+    return () => sub?.unsubscribe?.();
+  }, [form, onMesaChange]);
 
+  // 2) Chequeo de loading (no hay hooks después de este return)
   const isLoading = loadingCategorias || loadingAgrupaciones || loadingCertificado;
+  if (isLoading) {
+    return (
+      <CommonLoader
+        logo="/logo.png"
+        alternativeLogo="/logo-white.png"
+        alternativeText="Más San Miguel"
+        title="Votaciones 2025"
+        subTitle="San Miguel"
+        loaderText="Cargando certificado de escrutinio ..."
+      />
+    );
+  }
 
-  if (isLoading) return <CertificadoLoader />;
-
-  // 🔎 Validación de inconsistencias
+  // 3) Lógica normal (sin hooks)
   const hayInconsistencias = categorias.some((cat) => {
     const especiales = Object.values(votosEspeciales?.[cat.id] || {}).reduce(
       (acc: number, val: any) => acc + (Number(val) || 0),
@@ -192,6 +143,7 @@ export default function CertificadoForm({
     }
   };
 
+  // 4) Render
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -213,10 +165,16 @@ export default function CertificadoForm({
           control={form.control}
           resultadosPresidenciales={form.getValues().resultadosPresidenciales}
           categorias={categorias}
+          agrupaciones={agrupaciones}
+          habilitadosPorAgrupacion={habilitadosPorAgrupacion}
+          loadingPermisos={loadingPermisos}
         />
         <Separator />
 
-        <VotosEspecialesForm control={form.control} categorias={categorias} />
+        <VotosEspecialesForm
+          control={form.control}
+          categorias={categorias}
+        />
         <Separator />
 
         <ResumenValidacionTotalesPorColumna control={form.control} categorias={categorias} />

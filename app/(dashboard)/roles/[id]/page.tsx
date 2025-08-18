@@ -11,6 +11,8 @@ import { ArrowBigLeft, ShieldUser } from "lucide-react";
 import Link from "next/link";
 import { formatApiMessage } from "@/lib/utils/formatters";
 import { FormRole } from "../components/RoleForm";
+import { Label } from '@/components/ui/label';
+import { Cargando } from "@/components/ui/upload";
 
 export default function RolIdPage({ params }: { params: { id: number } }) {
   const router = useRouter();
@@ -42,7 +44,7 @@ export default function RolIdPage({ params }: { params: { id: number } }) {
     fetchRol();
   }, [params.id, router]);
 
-  if (loading) return <p className="text-center mt-10">Cargando...</p>;
+  if (loading) return <Cargando variant="page" label="Cargando rol..."/>;
   if (!role) return null;
 
   const handleUpdated = () => {

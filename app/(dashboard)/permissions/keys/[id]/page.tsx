@@ -13,6 +13,7 @@ import { ArrowBigLeft, MapPinned, ShieldPlus } from "lucide-react";
 
 import { formatApiMessage } from "@/lib/utils/formatters";
 import { PermissionsKeyForm } from "../components/PermissionsKeyForm";
+import { Cargando } from "@/components/ui/upload";
 
 
 export default function PermissionKeyIdPage({ params }: { params: { id: number } }) {
@@ -45,7 +46,7 @@ export default function PermissionKeyIdPage({ params }: { params: { id: number }
     fetchPermission();
   }, [params.id, router]);
 
-  if (loading) return <p className="text-center mt-10">Cargando...</p>;
+  if (loading) return <Cargando label="Cargando..."/>;
   if (!Permission) return null;
 
   const handleUpdated = () => {

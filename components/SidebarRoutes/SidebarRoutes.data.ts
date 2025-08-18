@@ -17,7 +17,8 @@ import {
     BarChart3,
     BarChart2,
     BarChart,
-    BookmarkCheck
+    BookmarkCheck,
+    CircleFadingArrowUp
 } from 'lucide-react'
 
 export const dataGeneralSidebar = [
@@ -79,6 +80,11 @@ export const dataToolsSidebar = [
         icon: Upload,
         label: "Import Padrón Electoral",
         href: "/electoral-roll-loader"
+    },
+    {
+        icon: CircleFadingArrowUp,
+        label: "Correr Estadísticas",
+        href: "/stats"
     },
     {
         icon: BookmarkCheck,

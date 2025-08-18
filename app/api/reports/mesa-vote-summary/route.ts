@@ -40,6 +40,7 @@ export async function GET() {
         categoria: r.cargoPolitico.nombre,
         agrupacion: r.agrupacionPolitica.nombre,
         logo: r.agrupacionPolitica.profileImage,
+        color: r.agrupacionPolitica.color_hex ?? "#000000",
         votos: r.votos,
       })),
       votosEspeciales: mesa.resultadosEspeciales.flatMap((e) => [

@@ -6,7 +6,8 @@ export default function ElectoralRollPage() {
       <div className="mb-6">
         <h2 className="text-2xl">Importar Padrón Electoral</h2>
       </div>
-      <ElectoralRegistrerLoader />
+      <ElectoralRegistrerLoader />      
+
     </div>
   );
 }

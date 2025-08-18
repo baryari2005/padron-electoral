@@ -2,7 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
-htm, body, :root{
+htm,
+body,
+:root {
   height: 100%;
 }
 
@@ -26,13 +28,13 @@ htm, body, :root{
   }
 }
 
-@media (max-width: 768px){
-  .calendar-container .fc .fc-toolbar{
+@media (max-width: 768px) {
+  .calendar-container .fc .fc-toolbar {
     display: block;
   }
 }
 
-.calendar-container .fc .fc-button-primary{
+.calendar-container .fc .fc-button-primary {
   background-color: black;
 }
 
@@ -68,6 +70,7 @@ htm, body, :root{
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
   }
+
   .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
@@ -94,6 +97,13 @@ htm, body, :root{
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
   }
+
+  /* Por si algún overlay quedó con z alto */
+  .recharts-tooltip-wrapper,
+  .recharts-default-tooltip {
+    pointer-events: none !important;
+    z-index: 0 !important;
+  }
 }
 
 
@@ -102,6 +112,7 @@ htm, body, :root{
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
   }

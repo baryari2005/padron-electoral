@@ -35,7 +35,7 @@ export default function ElectoralRollPage() {
   const canEdit = useHasPermission("editar_votantes");
   const canDelete = useHasPermission("eliminar_votantes");
 
-  if (!canView) return (<AccessDeniedPage />);
+  if (!canView) return (<AccessDeniedPage subtitle="Ver Padrón Electoral."/>);
 
   return (
     <div className="space-y-4">

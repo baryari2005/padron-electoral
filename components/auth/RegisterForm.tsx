@@ -27,6 +27,7 @@ import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { motion } from 'framer-motion';
 import { Logo } from "../Logo";
 import { useRouter } from "next/navigation";
+import { Cargando } from "../ui/upload";
 
 
 interface Role {
@@ -213,10 +214,7 @@ export default function RegisterForm() {
                         </FormControl>
                         <SelectContent>
                           {loadingRoles ? (
-                            <div className="flex items-center gap-2 px-4 py-2 text-sm text-muted-foreground">
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                              Cargando roles...
-                            </div>
+                            <Cargando label="Cargando roles..." />
                           ) : (
                             roles.map((role) => (
                               <SelectItem key={role.id} value={String(role.id)}>

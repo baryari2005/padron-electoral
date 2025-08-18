@@ -5,16 +5,19 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { ChartNoAxesCombined } from "lucide-react";
 import { StandaloneCombobox } from "@/app/(dashboard)/components/FormsCreate";
 import axiosInstance from "@/utils/axios";
-import { ReportsLoader } from "../../components";
 import { CircuiteVoteSummary } from "./types/CircuiteVoteSummary";
 
 import { CircuiteAccordionList } from "./CircuiteAccordionList";
+import { useHasPermission } from "@/lib/permissions/useHasPermission";
+import { AccessDeniedPage } from "@/components/NoPermissions/AccessDeniedPage";
+import { CommonLoader } from "@/app/(dashboard)/components/common/CommonLoader";
 
 export default function CircuiteSummaryPage() {
   const [data, setData] = useState<CircuiteVoteSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCircuite, setSelectedCircuite] = useState("__all__");
   const [stacked, setStacked] = useState(true);
+  const canView = useHasPermission("ver_reportes");
 
   useEffect(() => {
     axiosInstance
@@ -47,7 +50,14 @@ export default function CircuiteSummaryPage() {
       : data
   ).sort((a, b) => a.circuito.localeCompare(b.circuito));
 
-  if (loading) return <ReportsLoader />;
+  if (!canView) return <AccessDeniedPage subtitle="Informe por Circuito."/>;
+  if (loading) return <CommonLoader
+    logo="/logo.png"
+    alternativeLogo="/logo-white.png"
+    alternativeText="Más San Miguel"
+    title="Votaciones 2025"
+    subTitle="San Miguel"
+    loaderText="Cargando Reportes por circuito..." />;
 
   return (
     <div className="space-y-6">

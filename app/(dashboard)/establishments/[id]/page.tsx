@@ -11,6 +11,7 @@ import { ArrowBigLeft, School } from "lucide-react";
 import Link from "next/link";
 import { FormEstablishment } from "../components/EstablishmentForm";
 import { formatApiMessage } from "@/lib/utils/formatters";
+import { Cargando } from "@/components/ui/upload";
 
 
 export default function EstablishmentIdPage({ params }: { params: { id: string } }) {
@@ -57,7 +58,7 @@ export default function EstablishmentIdPage({ params }: { params: { id: string }
     fetchData();
   }, [params.id, router]);
 
-  if (loading) return <p className="text-center mt-10">Cargando...</p>;
+  if (loading) return <Cargando variant="page" label="Cargando establecimiento..."/>;
   if (!establishment) return null;
 
   const handleUpdated = () => {

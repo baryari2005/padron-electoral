@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { TooltipProps } from "recharts";
+import { AvatarLogo } from "../../components/common/AvatarLogo";
 
 export function CustomTooltip({
   active,
@@ -16,10 +17,10 @@ export function CustomTooltip({
       {/* Label con logo al lado */}
       <div className="flex items-center gap-2 mb-4">
         {logo && (
-          <Image
+          <AvatarLogo
             src={logo}
-            alt="logo"
-            className="w-5 h-5 object-contain rounded-sm"
+            alt={label}
+            size={24}
           />
         )}
         <p className="font-semibold text-muted-foreground truncate text-sm">{label}</p>

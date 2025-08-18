@@ -19,6 +19,7 @@ import {
   GenericListWithTable,
   GenericDataTable,
 } from "../../components";
+import { Cargando } from "@/components/ui/upload";
 
 type Accion = "ver" | "crear" | "editar" | "eliminar";
 
@@ -109,10 +110,7 @@ export function PermisosPorRolGridForm() {
         <Select onValueChange={(v) => setRolId(Number(v))}>
           <SelectTrigger>
             {loadingRoles ? (
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Cargando roles...</span>
-              </div>
+              <Cargando labelSize="text-sm" label="Cargando roles..."/>
             ) : (
               <SelectValue placeholder="Seleccioná un rol" />
             )}
@@ -129,10 +127,7 @@ export function PermisosPorRolGridForm() {
 
       {/* Spinner de carga al cambiar de rol */}
       {rolId && loading && (
-        <div className="flex justify-center py-10 text-muted-foreground">
-          <Loader2 className="animate-spin w-6 h-6 mr-2" />
-          <span>Cargando permisos del rol...</span>
-        </div>
+        <Cargando labelSize="text-sm" label="Cargando permisos del rol..."/>
       )}
 
       {/* Tabla de permisos por módulo */}

@@ -29,7 +29,7 @@ export default function PoliticalGroupPage() {
   const canEdit = useHasPermission("editar_agrupaciones");
   const canDelete = useHasPermission("eliminar_agrupaciones");
 
-  if (!canView) return (<AccessDeniedPage />);
+  if (!canView) return (<AccessDeniedPage subtitle="Ver Agrupación Política."/>);
 
   return (
     <div className="space-y-4">

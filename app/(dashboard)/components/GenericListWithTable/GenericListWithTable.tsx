@@ -1,26 +1,40 @@
+// app/(dashboard)/components/GenericListWithTable/GenericListWithTable.tsx
 "use client";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
-import { ColumnDef } from "@tanstack/react-table";
+import { ColumnDef, SortingState } from "@tanstack/react-table";
 import axiosInstance from "@/utils/axios";
+
+interface DataTableProps<T> {
+  data: T[];
+  loading: boolean;
+  page: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+  onSearchChange: (query: string) => void;
+  columns: ColumnDef<T, any>[];
+  sorting: SortingState;
+  onSortingChange: (updater: SortingState | ((old: SortingState) => SortingState)) => void;
+}
 
 interface GenericListWithTableProps<T> {
   endpoint?: string;
   columns: ColumnDef<T, any>[];
   filters?: Record<string, any>;
   externalSearch: string;
-  DataTableComponent: React.ComponentType<{
-    data: T[];
-    loading: boolean;
-    page: number;
-    totalPages: number;
-    onPageChange: (page: number) => void;
-    onSearchChange: (query: string) => void;
-    columns: ColumnDef<T, any>[];
-  }>;
+  DataTableComponent: React.ComponentType<DataTableProps<T>>;
   pageSize?: number;
   refreshToken?: any;
   clientData?: T[];
+}
+
+function useDebounce<T>(value: T, delay = 300) {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const id = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(id);
+  }, [value, delay]);
+  return debounced;
 }
 
 export function GenericListWithTable<T>({
@@ -39,18 +53,22 @@ export function GenericListWithTable<T>({
   const [totalPages, setTotalPages] = useState(1);
   const [internalSearch, setInternalSearch] = useState(externalSearch);
 
-  // Params estables para la request
-  const params = useMemo(
-    () => ({
-      search: internalSearch,
-      page,
-      limit: pageSize,
-      ...(filters ?? {}),
-    }),
-    [internalSearch, page, pageSize, filters]
-  );
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const activeSort = sorting[0]; // puede ser undefined
 
-  // fetchData estable
+  // búsqueda con debounce
+  const [searchDraft, setSearchDraft] = useState(externalSearch);
+  useEffect(() => setSearchDraft(externalSearch), [externalSearch]);
+  const debouncedSearch = useDebounce(searchDraft, 350);
+
+  const params = useMemo(() => ({
+    search: debouncedSearch,
+    page,
+    limit: pageSize,
+    ...(activeSort ? { sortBy: activeSort.id, sortDir: activeSort.desc ? "desc" : "asc" } : {}),
+    ...(filters ?? {}),
+  }), [debouncedSearch, page, pageSize, activeSort, filters]);
+
   const fetchData = useCallback(async () => {
     if (clientData) {
       setData(clientData);
@@ -58,7 +76,6 @@ export function GenericListWithTable<T>({
       setLoading(false);
       return;
     }
-
     if (!endpoint) return;
 
     setLoading(true);
@@ -74,22 +91,18 @@ export function GenericListWithTable<T>({
     }
   }, [clientData, endpoint, params, pageSize]);
 
-  // Sincroniza búsqueda externa → interna y resetea página
   useEffect(() => {
     setInternalSearch(externalSearch);
     setPage(1);
   }, [externalSearch]);
 
-  // Carga de datos (o usa clientData si viene por props)
   useEffect(() => {
     fetchData();
-  }, [fetchData, refreshToken]); // refreshToken fuerza recarga cuando cambie
+  }, [fetchData, refreshToken]);
 
   return (
     <div className="mt-4 space-y-4">
       <DataTableComponent
-        // key simplificado para evitar renders por stringify de filters
-        key={`dt-${page}-${internalSearch}-${refreshToken ?? ""}`}
         columns={columns}
         data={data}
         loading={loading}
@@ -97,8 +110,13 @@ export function GenericListWithTable<T>({
         totalPages={totalPages}
         onPageChange={(newPage) => setPage(newPage)}
         onSearchChange={(val) => {
-          setInternalSearch(val);
+          setSearchDraft(val);
           setPage(1);
+        }}
+        sorting={sorting}
+        onSortingChange={(updater) => {
+          setSorting((old) => (typeof updater === "function" ? (updater as any)(old) : updater));
+          setPage(1); // al cambiar sort, volvemos a la página 1
         }}
       />
     </div>

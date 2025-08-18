@@ -5,16 +5,19 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { ChartNoAxesCombined } from "lucide-react";
 import { StandaloneCombobox } from "@/app/(dashboard)/components/FormsCreate";
 import axiosInstance from "@/utils/axios";
-import { ReportsLoader } from "../../components";
 import { EstablishmentVoteSummary } from "./types/EstablishmentVoteSummary";
 
 import { EstablishmentAccordionList } from "./EstablishmentAccordionList";
+import { AccessDeniedPage } from "@/components/NoPermissions/AccessDeniedPage";
+import { useHasPermission } from "@/lib/permissions/useHasPermission";
+import { CommonLoader } from "@/app/(dashboard)/components/common/CommonLoader";
 
 export default function EstablishmentSummaryPage() {
   const [data, setData] = useState<EstablishmentVoteSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedEscuela, setSelectedEscuela] = useState("__all__");
   const [stacked, setStacked] = useState(true);
+  const canView = useHasPermission("ver_reportes");
 
   useEffect(() => {
     axiosInstance
@@ -47,7 +50,13 @@ export default function EstablishmentSummaryPage() {
       : data
   ).sort((a, b) => a.establecimiento.localeCompare(b.establecimiento));
 
-  if (loading) return <ReportsLoader />;
+  if (!canView) return <AccessDeniedPage subtitle="Informe por Establecimiento." />;
+  if (loading) return <CommonLoader logo="/logo.png"
+    alternativeLogo="/logo-white.png"
+    alternativeText="Más San Miguel"
+    title="Votaciones 2025"
+    subTitle="San Miguel"
+    loaderText="Cargando Reportes por establecimiento..." />;
 
   return (
     <div className="space-y-6">

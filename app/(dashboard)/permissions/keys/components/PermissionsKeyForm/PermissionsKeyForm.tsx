@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { Form, FormField } from "@/components/ui/form";
 import { toast } from "sonner";
 import axiosInstance from "@/utils/axios";
-import { FormCombobox2, FormTextField, SubmitButton } from "@/app/(dashboard)/components/FormsCreate";
+import { FormCombobox, FormTextField, SubmitButton } from "@/app/(dashboard)/components/FormsCreate";
 
 import { formatApiMessage, formatMessage } from "@/lib/utils/formatters";
 import { permissionFormSchema, PermissionFormValues } from "../../lib";
@@ -104,7 +104,7 @@ export function PermissionsKeyForm({
             control={form.control}
             name="modulo"
             render={({ field }) => (
-              <FormCombobox2
+              <FormCombobox
                 label="Módulo"
                 value={String(field.value)}
                 onChange={field.onChange}
@@ -119,7 +119,7 @@ export function PermissionsKeyForm({
             control={form.control}
             name="accion"
             render={({ field }) => (
-              <FormCombobox2
+              <FormCombobox
                 label="Acción"
                 value={String(field.value)}
                 onChange={field.onChange}

@@ -7,6 +7,8 @@ import { TableActions } from "@/components/ui/tableActions";
 import { Rol, Usuario } from "@prisma/client";
 import { buildActionsColumn } from "@/app/(dashboard)/utils/buildActionsColumn";
 import Image from "next/image";
+import { AvatarLogo } from "@/app/(dashboard)/components/common/AvatarLogo";
+import { sortableHeader } from "@/app/(dashboard)/components/table/SortableHeader";
 
 export type UsuarioConRol = Usuario & {
   rol: Rol | null;
@@ -23,44 +25,27 @@ export const columns = (
       accessorKey: "avatarUrl",
       header: "Avatar",
       cell: ({ row }) => {
-        const imageUrl = row.original.avatarUrl;
-        return imageUrl ? (
-          <Image
+        const imageUrl: string | null = row.original.avatarUrl ?? null;
+        return (
+          <AvatarLogo
             src={imageUrl}
-            alt="Avatar"
-            className="h-10 w-10 rounded-full object-cover"
+            alt={`Logo de ${row.original?.nombre}`}
+            size={40}
           />
-        ) : (
-          <span className="text-sm text-muted-foreground italic">Sin imagen</span>
         );
       },
     },
     {
       accessorKey: "userId",
-      header: ({ column }) => (
-        <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-          ID
-          <ArrowUpDown className="w-4 h-4 ml-2" />
-        </Button>
-      ),
+      header: sortableHeader("ID"),
     },
     {
       accessorKey: "nombre",
-      header: ({ column }) => (
-        <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-          Nombre
-          <ArrowUpDown className="w-4 h-4 ml-2" />
-        </Button>
-      ),
+      header: sortableHeader("Nombre"),
     },
     {
       accessorKey: "apellido",
-      header: ({ column }) => (
-        <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-          Apellido
-          <ArrowUpDown className="w-4 h-4 ml-2" />
-        </Button>
-      ),
+      header: sortableHeader("Apellido"),
     },
     {
       id: "rol",

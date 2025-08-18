@@ -1,50 +1,130 @@
 "use client";
 
 import Image from "next/image";
-import { Button } from "@/components/ui/button";
+import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Component } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils"; // si no tenés cn, podés removerlo
+import { Separator } from "../ui/separator";
 
-export function AccessDeniedPage() {
+type AccessDeniedPageProps = {
+  fullScreen?: boolean;      // true: tapa toda la pantalla | false: tapa solo el contenedor padre (que debe ser relative)
+  showActions?: boolean;     // muestra botones opcionales
+  onPrimaryAction?: () => void;
+  primaryLabel?: string;
+  onSecondaryAction?: () => void;
+  secondaryLabel?: string;
+  title?: string;
+  subtitle?: string;
+  location?: string;         // ej: "San Miguel"
+  message?: string;
+  className?: string;        // por si querés estilos extra
+};
+
+export function AccessDeniedPage({
+  fullScreen = true,
+  showActions = true,
+  onPrimaryAction,
+  primaryLabel = "Ir al inicio",
+  onSecondaryAction,
+  secondaryLabel = "Volver",
+  title = "Votaciones 2025",
+  subtitle = "Informe de votos totales",
+  location = "San Miguel",
+  message = "No tenés permiso para ver esta sección.",
+  className,
+}: AccessDeniedPageProps) {
   const router = useRouter();
+  const focusRef = useRef<HTMLButtonElement | null>(null);
+
+  useEffect(() => {
+    // Le damos foco a un botón al montar para accesibilidad / navegación con teclado
+    focusRef.current?.focus();
+  }, []);
+
+  const WrapperTag = "div";
+  const coverClasses = fullScreen
+    ? "fixed inset-0 z-50"
+    : "absolute inset-0 z-50"; // recuerda: el padre debe tener `relative` si NO es fullScreen
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center text-center px-4 bg-background">
-      {/* Logo con cambio según tema */}
-      <div className="relative w-[60px] h-[60px] mb-2">
-        <Image
-          src="/logo.png"
-          alt="Logo"
-          fill
-          className="object-contain dark:hidden"
-          priority
-        />
-        <Image
-          src="/logo-white.png"
-          alt="Logo blanco"
-          fill
-          className="object-contain hidden dark:block"
-          priority
-        />
+    <WrapperTag
+      className={cn(
+        coverClasses,
+        "grid place-items-center bg-background/80 backdrop-blur-sm",
+        className
+      )}
+      role="alert"
+      aria-live="assertive"
+      aria-label="Acceso denegado"
+    >
+      <div className="w-full max-w-md mx-auto text-center rounded-2xl border bg-card p-8 shadow-lg">
+        {/* Logo que cambia según tema */}
+        <div className="relative w-[60px] h-[60px] mx-auto mb-3">
+          <Image
+            src="/logo.png"
+            alt="Logo"
+            sizes="160px"
+            fill
+            className="object-contain rounded-lg dark:hidden"
+            priority
+          />
+          <Image
+            src="/logo-white.png"
+            alt="Logo blanco"
+            sizes="160px"
+            fill
+            className="object-contain hidden rounded-lg dark:block"
+            priority
+          />
+        </div>
+
+        {/* Encabezado */}
+
+        <h1 className="text-2xl font-bold">{title}</h1>
+        <p className="text-muted-foreground">{location}</p>
+
+        <hr className="my-4 border-muted/50" />
+
+        <div className="flex items-center justify-center animate-pulse">
+          <Component className="w-4 h-4 mr-2" />
+          <h2 className="text-sm-plus text-muted-foreground">{subtitle}</h2>
+        </div>
+        {/* Mensaje de error */}
+        <div className="flex items-center justify-center gap-2 text-red-600 mb-6 animate-pulse">
+          <AlertTriangle className="shrink-0 " size={22} />
+          <p className="text-base font-medium ">{message}</p>
+        </div>
+
+        <Separator className="mb-6" />
+        {/* Acciones */}
+        {showActions && (
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <Button
+              ref={focusRef}
+              onClick={
+                onPrimaryAction
+                  ? onPrimaryAction
+                  : () => router.push("/") // acción por defecto
+              }
+            >
+              {primaryLabel}
+            </Button>
+
+            <Button
+              variant="outline"
+              onClick={
+                onSecondaryAction
+                  ? onSecondaryAction
+                  : () => router.back() // acción por defecto
+              }
+            >
+              {secondaryLabel}
+            </Button>
+          </div>
+        )}
       </div>
-
-      <h1 className="text-2xl font-bold">Votaciones 2025</h1>
-      <p className="text-muted-foreground mb-4">San Miguel</p>
-      <hr className="w-1/4 border-muted mb-6" />
-
-      
-      <p className="flex text-muted-foreground text-lg text-red-500 mb-6 text-center">
-        <AlertTriangle size={24} className="text-red-500 mr-2" /> No tenés permiso para ver esta sección.
-      </p>
-
-      {/* <div className="flex gap-4 flex-wrap justify-center">
-        <Button variant="outline" onClick={() => router.push("/")}>
-          Volver al inicio
-        </Button>
-        <Button onClick={() => router.push("/sign-up")}>
-          Iniciar sesión
-        </Button>
-      </div> */}
-    </div>
+    </WrapperTag>
   );
 }

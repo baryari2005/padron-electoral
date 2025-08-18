@@ -7,7 +7,7 @@ export function mapMesasToResumenPorEstablecimiento(mesas: MesaEscrutadaConDatos
   return Object.values(agrupado).map((mesasDelEstablecimiento) => {
     const establecimiento = mesasDelEstablecimiento[0].establecimiento;
 
-    const resultadosMap = new Map<string, { categoria: string; agrupacion: string; logo: string; votos: number }>();
+    const resultadosMap = new Map<string, { categoria: string; agrupacion: string; logo: string; color: string; votos: number }>();
     const votosEspecialesMap = new Map<string, { categoria: string; tipo: string; cantidad: number }>();
     let resumen = {
       sobresEnUrna: 0,
@@ -24,6 +24,7 @@ export function mapMesasToResumenPorEstablecimiento(mesas: MesaEscrutadaConDatos
             categoria: r.cargoPolitico.nombre,
             agrupacion: r.agrupacionPolitica.nombre,
             logo: r.agrupacionPolitica.profileImage ?? "/placeholder-logo.png",
+            color: r.agrupacionPolitica.color_hex ?? "#000000",
             votos: 0,
           });
         }

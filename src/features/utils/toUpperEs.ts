@@ -1,0 +1,1 @@
+export const toUpperEs = (s: string) => (s ?? "").toLocaleUpperCase("es-AR");

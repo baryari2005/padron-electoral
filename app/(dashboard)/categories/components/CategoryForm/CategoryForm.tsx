@@ -12,7 +12,8 @@ import { formatApiMessage, formatMessage } from "@/lib/utils/formatters";
 interface FormCategoryProps {
   category?: {
     id: number;
-    nombre: string
+    nombre: string;
+    orden: number;
   };
   onSuccess: () => void;
   onClose?: () => void;
@@ -23,6 +24,7 @@ export function FormCategory({ category, onSuccess, onClose }: FormCategoryProps
     resolver: zodResolver(categoryFormSchema),
     defaultValues: {
       nombre: category?.nombre || "",
+      orden: category?.orden ?? 0,
     },
     mode: "onChange",
   });
@@ -31,12 +33,12 @@ export function FormCategory({ category, onSuccess, onClose }: FormCategoryProps
 
   const onSubmit = async (values: CategoryFormValues) => {
     try {
-      const isEdit = !!category; 
+      const isEdit = !!category;
 
       if (isEdit) {
-        await axiosInstance.put(`/api/categories/${category.id}`, values);        
+        await axiosInstance.put(`/api/categories/${category.id}`, values);
       } else {
-        await axiosInstance.post("/api/categories", values);        
+        await axiosInstance.post("/api/categories", values);
         toast.success(formatApiMessage("success.categoryCreated"));
       }
 
@@ -58,6 +60,15 @@ export function FormCategory({ category, onSuccess, onClose }: FormCategoryProps
             label="Nombre del Cargo Político"
             placeholder="Ej: PRESIDENTE"
             uppercase
+          />
+          <FormTextField
+            control={form.control}
+            name="orden"
+            label="Orden (opcional)"
+            placeholder="1"
+            type="number"
+            min={1}
+            step={1}            
           />
         </div>
 

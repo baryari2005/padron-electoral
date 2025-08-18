@@ -30,7 +30,7 @@ export default function CircuitesPage() {
   const canDelete = useHasPermission("eliminar_circuitos");
 
   if (!canView) {
-    return <AccessDeniedPage />
+    return <AccessDeniedPage subtitle="Ver Circuitos."/>
   }
 
   return (

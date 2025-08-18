@@ -4,6 +4,7 @@ export interface TotalVoteSummary {
   resultados: {
     categoria: string;
     agrupacion: string;
+    color_hex?: string;
     logo?: string | null;
     votos: number;
   }[];

@@ -1,0 +1,1 @@
+export const stripLeadingZeros = (s: string) => (s ?? "").replace(/^0+(?!$)/, "");

@@ -12,6 +12,7 @@ import Link from "next/link";
 import { ArrowBigLeft, MapPinned } from "lucide-react";
 import { FormCircuit } from "../components/CircuitForm";
 import { formatApiMessage } from "@/lib/utils/formatters";
+import { Cargando } from "@/components/ui/upload";
 
 
 export default function CircuitIdPage({ params }: { params: { id: number } }) {
@@ -47,7 +48,7 @@ export default function CircuitIdPage({ params }: { params: { id: number } }) {
     fetchCircuit();
   }, [params.id, router]);
 
-  if (loading) return <p className="text-center mt-10">Cargando...</p>;
+  if (loading) return <Cargando variant="page" label="Cargando circuito..."/>;
   if (!Circuit) return null;
 
   const handleUpdated = () => {

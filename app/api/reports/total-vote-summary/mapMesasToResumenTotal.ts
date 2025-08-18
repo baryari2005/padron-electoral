@@ -1,7 +1,7 @@
 import { MesaEscrutadaConDatosCompletos } from "./types";
 
 export function mapMesasToResumenTotal(mesas: MesaEscrutadaConDatosCompletos[]) {
-  const resultadosMap = new Map<string, { categoria: string; agrupacion: string; logo: string; votos: number }>();
+  const resultadosMap = new Map<string, { categoria: string; agrupacion: string; logo: string; color: string; votos: number }>();
   const votosEspecialesMap = new Map<string, { categoria: string; tipo: string; cantidad: number }>();
   let resumen = {
     sobresEnUrna: 0,
@@ -17,6 +17,7 @@ export function mapMesasToResumenTotal(mesas: MesaEscrutadaConDatosCompletos[]) 
           categoria: r.cargoPolitico.nombre,
           agrupacion: r.agrupacionPolitica.nombre,
           logo: r.agrupacionPolitica.profileImage ?? "/placeholder-logo.png",
+          color: r.agrupacionPolitica.color_hex ?? "#000000",
           votos: 0,
         });
       }
