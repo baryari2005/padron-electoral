@@ -10,13 +10,13 @@ import { Layers, PieChart as PieIcon, ChartColumnBig, ChartColumnStacked, Eye, E
 import { Ranking } from "../../reports/components/Ranking";
 import { buildChartData } from "./utils/chartUtils";
 import { useCategorySorting } from "./hooks/useCategorySorting";
-import { useColorByAgrupacion } from "./hooks/useColorByAgrupacion";
 import { PiesByCategory } from "./charts/PiesByCategory";
 import { BarsByCategory } from "./charts/BarsByCategory";
 import { SpecialVotesChart } from "./specials/SpecialVotesChart";
 
 import type { Resultado, Resumen, VotoEspecial } from "./types/types";
 import { PartyLegend } from "./legends/PartyLegend";
+import { useColorByPoliticalGroup } from "./hooks/useColorByPoliticalGroup";
 
 export function VotesAccordionItem({
   ...props
@@ -34,7 +34,7 @@ export function VotesAccordionItem({
 
   const chartData = useMemo(() => buildChartData(resultados), [resultados]);
   const { categoriasOrdenadas, sortCategorias } = useCategorySorting(resultados, categoryOrder);
-  const { colorByAgrupacion } = useColorByAgrupacion(resultados);
+  const colorByAgrupacion = useColorByPoliticalGroup(resultados);
 
   // Legend agrupada por categoría (para tortas)
   const groupedLegendItems = useMemo(() => {
@@ -56,7 +56,7 @@ export function VotesAccordionItem({
       out[cat] = Array.from(m.entries())
         .map(([name, { value, logo }]) => ({
           name,
-          color: colorByAgrupacion.get(name) ?? "hsl(var(--muted))",
+          color: colorByAgrupacion.get(name.toUpperCase()) ?? "hsl(var(--muted))",
           logo: logo ?? undefined,
           value,
           percent: total > 0 ? (value / total) * 100 : 0,

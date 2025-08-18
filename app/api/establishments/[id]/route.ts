@@ -9,7 +9,8 @@ import { getUserIdFromRequest } from "@/lib/auth/getUserIdFromRequest";
 import { jsonError, parseIdOrThrow } from "@/lib/utils/api-helpers";
 import { handleError } from "@/lib/utils/request-helpers";
 import { formatApiMessage } from "@/lib/utils/formatters";
-import { getById, softDelete, update } from "@/lib/_server/establishments.service";
+import { getById, softDelete } from "@/lib/_server/establishments.service";
+import { updateEstablecimiento } from "./service";
 
 /** GET: obtener un establecimiento por ID */
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
@@ -32,24 +33,33 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     const id = parseIdOrThrow(params.id);
     const userId = getUserIdFromRequest(req);
 
-    const { nombre, direccion, profileImage, circuitoId, numerosDeMesa } = await req.json();
+    const body = await req.json().catch(() => ({}));
+    const { nombre, direccion, profileImage, circuitoId, numerosDeMesa } = body;
 
     if (!nombre) return jsonError("required.name");
     if (!direccion) return jsonError("required.street");
     if (!circuitoId) return jsonError("required.circuite");
 
-    const updated = await update({
+    // 👇 Solo incluimos numerosDeMesa si realmente vino en el body.
+    const mesasProvided: number[] | undefined =
+      Array.isArray(numerosDeMesa) ? numerosDeMesa.map(Number) : undefined;
+
+    const result = await updateEstablecimiento({
       id,
       nombre,
       direccion,
-      profileImage,
+      profileImage: (typeof profileImage === "string" || profileImage === null) ? profileImage : undefined,
       circuitoId: Number(circuitoId),
       userId,
-      numerosDeMesa: Array.isArray(numerosDeMesa) ? numerosDeMesa : [],
+      ...(mesasProvided !== undefined ? { numerosDeMesa: mesasProvided } : {}),
     });
 
-    return NextResponse.json(updated);
-  } catch (error) {
+    return NextResponse.json(result);
+  } catch (error: any) {
+    // Si el service tira status (ej. 409), respetalo
+    if (error?.status) {
+      return NextResponse.json({ ok: false, message: String(error.message ?? "Conflict") }, { status: error.status });
+    }
     if (error instanceof NextResponse) return error;
     if (error instanceof Error && error.message === "INVALID_ID") {
       return jsonError("errors.idInvalid");

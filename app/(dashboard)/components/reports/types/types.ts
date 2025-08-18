@@ -2,6 +2,7 @@ export type Resultado = {
   categoria: string;
   agrupacion: string;
   votos: number;
+  color?: string | null;
   logo?: string | null;
 };
 
