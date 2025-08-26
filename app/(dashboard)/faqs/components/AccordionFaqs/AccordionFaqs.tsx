@@ -1,32 +1,55 @@
 "use client";
 
-import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import { faqs } from "./AccordionFaqs.data";
+import * as React from "react";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { FAQS } from "./AccordionFaqs.data";
 
-export function AccordionFaqs() {
+export default function FAQAccordion() {
+  const [query, setQuery] = React.useState("");
+
+  const filtered = React.useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return FAQS;
+    return FAQS.filter(
+      ({ q: question, a }) =>
+        question.toLowerCase().includes(q) ||
+        (typeof a === "string" ? a.toLowerCase().includes(q) : false)
+    );
+  }, [query]);
+
   return (
-    <Accordion type="single" collapsible className="w-full">
-      {faqs.map((f) => (
-        <AccordionItem key={f.id} value={`faq-${f.id}`} className="w-full">
-          {/* Trigger: SOLO texto, nada de markdown acá */}
-          <AccordionTrigger className="text-left hover:no-underline">
-            {f.question}
-          </AccordionTrigger>
+    <Card className="border rounded-xl shadow-sm">
+      <CardHeader className="gap-2">
+        <CardTitle className="text-xl">Preguntas Frecuentes</CardTitle>
+        <Input
+          placeholder="Buscar en las FAQs…"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          className="h-9"
+        />
+      </CardHeader>
 
-          {/* Content: Markdown envuelto en un contenedor full width */}
-          <AccordionContent>
-            <div className="prose prose-sm dark:prose-invert max-w-none
-                            prose-p:my-2 prose-li:my-1 prose-ul:my-2 prose-ol:my-2
-                            prose-headings:mt-0 prose-headings:mb-2 prose-strong:font-semibold">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {f.answer}
-              </ReactMarkdown>
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-      ))}
-    </Accordion>
+      <CardContent>
+        {filtered.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No encontramos resultados para “{query}”.</p>
+        ) : (
+          <Accordion type="multiple" className="w-full">
+            {filtered.map(({ q, a }, idx) => {
+              const id = `faq-${idx}`;
+              return (
+                <AccordionItem key={id} value={id}>
+                  <AccordionTrigger className="text-left">{q}</AccordionTrigger>
+                  <AccordionContent className="text-sm leading-6 text-muted-foreground">
+                    {a}
+                  </AccordionContent>
+                </AccordionItem>
+              );
+            })}
+          </Accordion>
+        )}
+      </CardContent>
+    </Card>
   );
 }

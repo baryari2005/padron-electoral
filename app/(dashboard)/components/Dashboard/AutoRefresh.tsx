@@ -18,7 +18,7 @@ type Props = {
 export default function AutoRefresh({
   intervalSec = 60,
   eventName = "dashboard:refresh",
-  initialPaused = true,
+  initialPaused = false,
   className = "",
 }: Props) {
   const [left, setLeft] = useState(intervalSec);

@@ -1,14 +1,9 @@
-import { AccordionFaqs } from "./components/AccordionFaqs";
+import FAQAccordion from "./components/AccordionFaqs/AccordionFaqs";
 
-export default function PageFaqs() {
+export default function SupportPage() {
   return (
-    <div className="space-y-4">
-      <div className="items-center justify-between">
-        <h2 className="text-2xl mb-6">Preguntas</h2>
-        <div className="rounded-xl border bg-card p-6 shadow space-y-2">
-          <AccordionFaqs />
-        </div>
-      </div>
+    <div className="mx-auto  space-y-6">
+      <FAQAccordion />
     </div>
-  )
+  );
 }
