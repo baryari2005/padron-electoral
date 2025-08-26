@@ -15,8 +15,7 @@ import { TopList } from "./components/Dashboard/lists/TopList";
 import { ProgressList } from "./components/Dashboard/lists/ProgressList";
 import { ParticipationList } from "./components/Dashboard/lists/ParticipationList";
 import { LeadersGrid } from "./components/Dashboard/LeadersGrid";
-
-
+import { DashboardRefreshBridge } from "./components/Dashboard/DashboardRefreshBridge";
 
 // ======= Página principal =======
 export default function DashboardClient({ data: initial }: { data: SummaryResponse }) {
@@ -52,13 +51,22 @@ export default function DashboardClient({ data: initial }: { data: SummaryRespon
         ],
         [especiales]
     );
-    
+
+    const refreshDashboard = async () => {
+        const res = await axiosInstance.get("/api/dashboard/summary", {
+            params: { ts: Date.now() },
+            headers: { "Cache-Control": "no-cache", Pragma: "no-cache" },
+        });
+        setData(res.data);
+    };
+
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <h1 className="text-base font-semibold"></h1>
-                <AutoRefresh intervalSec={60} /> {/* modo pro: refresh suave */}
+                <AutoRefresh intervalSec={60} onRefresh={refreshDashboard} /> {/* modo pro: refresh suave */}
             </div>
+            <DashboardRefreshBridge />
             {/* KPIs */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <KPIStat
