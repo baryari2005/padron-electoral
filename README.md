@@ -1,5 +1,58 @@
-# Descripción
+# 📌 Sistema de Padrón Electoral
+Este repositorio contiene el sistema de padrón electoral.  
+Aquí se documenta el flujo de trabajo con **Git**, convenciones y comandos más usados.
 
+## 🚀 Flujo de trabajo con ramas
+1. **Actualizar la rama principal (`main`):**
+   ```bash
+   git checkout main
+   git pull origin main
+   ```
+2. **Crear una nueva rama a partir de (`main`):**
+   ```bash
+   git checkout -b feature/nombre-del-cambio
+   ```
+   
+3. **Realizar cambios en el código:**
+  Editar, agregar o eliminar archivos según sea necesario.
+
+4. **Revisar cambios pendientes:**
+    ```bash
+   git status
+   ```
+   
+5. **Agregar y commitear cambios:**
+    ```bash
+    git add .
+    git commit -m "feat: descripción breve de los cambios"
+    ```
+6. **Subir la nueva rama al remoto:**
+   ```bash
+    git push -u origin feature/nombre-del-cambio    
+   ```
+
+## 🔄 Trabajar sobre una rama existente
+**Cuando la rama ya existe en remoto:**
+    
+   ```bash
+       git add .
+       git commit -m "fix: detalle del cambio"
+       git push    
+   ```
+
+## ✅ Fusionar cambios en main
+**Cuando los cambios estén listos:**
+  ```bash
+    # Cambiar a main y actualizar
+    git checkout main
+    git pull origin main
+
+    # Fusionar la rama
+    git merge feature/nombre-del-cambio
+
+    # Subir cambios a remoto
+    git push origin main
+   ```
 
 
 ## Correr en dev
