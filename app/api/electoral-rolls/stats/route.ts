@@ -1,8 +1,9 @@
-// app/api/electoral-rolls/stats/route.ts
+export const runtime = 'nodejs';       // no Edge
+export const dynamic = 'force-dynamic';// desactiva static render
+export const revalidate = 0; 
+
 import { NextRequest } from "next/server";
 import { PrismaClient } from "@prisma/client";
-
-export const runtime = "nodejs"; // exceljs/agrupaciones requieren Node, no Edge
 
 // Si preferís, usa un prisma singleton:
 const prisma = new PrismaClient();

@@ -1,8 +1,10 @@
+export const runtime = 'nodejs';       // no Edge
+export const dynamic = 'force-dynamic';// desactiva static render
+export const revalidate = 0; 
+
 import { NextRequest } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import ExcelJS from "exceljs";
-
-export const runtime = "nodejs"; // asegura Node (exceljs necesita Node)
 
 const prisma = new PrismaClient();
 
