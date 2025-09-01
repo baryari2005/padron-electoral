@@ -26,5 +26,5 @@ export function useAutoAvatar<T extends FieldValues>(
                 shouldValidate: true,
             });
         }
-    }, [nombre, apellido]);
+    }, [nombre, apellido, form, keys.avatarUrl]);
 }

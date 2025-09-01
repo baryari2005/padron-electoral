@@ -31,16 +31,16 @@ type Stats = {
   roleId: number;
 };
 
-export default function GenerarAutoridadesPage() {
-  // si tenés un permiso específico, cambialo aquí:
-  const canRun = useHasPermission("editar_generarusuario") || useHasPermission("crear_generarusuario");
+export default function GenerarAutoridadesPage() {  
+  const canEdit = useHasPermission("editar_generarusuario");
+  const canCreate = useHasPermission("crear_generarusuario");
+  const canRun = canEdit || canCreate;
 
   const [openConfirm, setOpenConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [resetPasswords, setResetPasswords] = useState(false);
   const [stats, setStats] = useState<Stats | null>(null);
 
-  if (!canRun) return <AccessDeniedPage subtitle="Generar usuarios Autoridad de mesa." />;
 
   const run = async () => {
     try {
@@ -60,6 +60,8 @@ export default function GenerarAutoridadesPage() {
       setOpenConfirm(false);
     }
   };
+
+  if (!canRun) return <AccessDeniedPage subtitle="Generar usuarios Autoridad de mesa." />;
 
   return (
     <div className="space-y-6">

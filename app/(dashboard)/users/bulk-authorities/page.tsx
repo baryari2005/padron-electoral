@@ -3,11 +3,6 @@
 
 import { Separator } from "@/components/ui/separator";
 import BulkAuthoritiesForm from "./BulkAuthoritiesForm";
-import { useHasPermission } from "@/lib/permissions/useHasPermission";
-import { AccessDeniedPage } from "@/components/NoPermissions/AccessDeniedPage";
-
-
-
 
 export default function Page() {
   return (

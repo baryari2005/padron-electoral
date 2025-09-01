@@ -239,7 +239,7 @@ export default function ElectoralQuickMarkingPage() {
       }
     })();
     // 👇 mantené refreshToken (Enter/Botón) para disparar la búsqueda
-  }, [canView, canList, establecimientoId, mesaId, refreshToken]);
+  }, [canView, canList, establecimientoId, mesaId, refreshToken, query]);
 
 
   // ✅ FIX: ahora recién acá corto la UI, después de haber llamado TODOS los hooks

@@ -16,11 +16,10 @@ type StatsResponse = {
 
 export default function ExportNoVotaronPage() {
   const canView = useHasPermission("ver_estadoelector");
-  if (!canView) return <AccessDeniedPage subtitle="Exportar no votantes." />;
-
+  
   const sp = useSearchParams();
   const router = useRouter();
-
+  
   const establecimientoId = sp.get("establecimientoId") || "";
   const mesaId = sp.get("mesaId") || "";
   const q = sp.get("q") || "";
@@ -30,7 +29,7 @@ export default function ExportNoVotaronPage() {
   const [downloadUrl, setDownloadUrl] = useState<string>("");
   const [filename, setFilename] = useState<string>("no-votaron.xlsx");
   const [errorMsg, setErrorMsg] = useState<string>("");
-
+  
   // nombre de archivo “lindo”
   const niceName = useMemo(() => {
     const parts = ["no-votaron"];
@@ -39,14 +38,14 @@ export default function ExportNoVotaronPage() {
     if (q.trim()) parts.push(q.trim().slice(0, 20).replace(/\s+/g, "_"));
     return `${parts.join("-")}-${Date.now()}.xlsx`;
   }, [establecimientoId, mesaId, q]);
-
+  
   useEffect(() => {
     let urlToRevoke: string | null = null;
 
     const run = async () => {
       try {
         setPhase("counting");
-
+        
         // 1) contar no votantes (para informar)
         const { data: s } = await axiosInstance.get<StatsResponse>("/api/electoral-rolls/stats", {
           params: {
@@ -57,7 +56,7 @@ export default function ExportNoVotaronPage() {
           },
         });
         setCount(s?.totals?.noVotaron ?? 0);
-
+        
         // 2) generar excel
         setPhase("exporting");
         const { data } = await axiosInstance.get<ArrayBuffer>("/api/electoral-rolls/export-not-voted", {
@@ -68,7 +67,7 @@ export default function ExportNoVotaronPage() {
           },
           responseType: "arraybuffer",
         });
-
+        
         const blob = new Blob([data], {
           type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         });
@@ -81,14 +80,16 @@ export default function ExportNoVotaronPage() {
         setPhase("error");
       }
     };
-
+    
     run();
-
+    
     return () => {
       if (urlToRevoke) URL.revokeObjectURL(urlToRevoke);
     };
   }, [establecimientoId, mesaId, q, niceName]);
-
+  
+  if (!canView) return <AccessDeniedPage subtitle="Exportar no votantes." />;
+  
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
