@@ -7,6 +7,6 @@ export * from './FormAvatarUploader'
 export * from './FormItemNumberAndLyrics'
 export * from './FormFirmaInput'
 export * from './SimpleFirmaInput'
-export * from './FormCombobox';
 export * from './FormTags';
 export * from './StandaloneCombobox';
+export * from './FormCombobox';

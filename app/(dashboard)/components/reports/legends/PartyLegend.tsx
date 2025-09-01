@@ -54,6 +54,7 @@ export function PartyLegend({
           width={logoSize}
           height={logoSize}
           className="rounded-sm object-contain"
+          unoptimized={true}
         />
       ) : null}
       <span className="text-xs text-muted-foreground truncate max-w-[14ch] sm:max-w-[20ch]">

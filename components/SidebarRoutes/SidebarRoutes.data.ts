@@ -18,7 +18,9 @@ import {
     BarChart2,
     BarChart,
     BookmarkCheck,
-    CircleFadingArrowUp
+    CircleFadingArrowUp,
+    Users2,
+    Import
 } from 'lucide-react'
 
 export const dataGeneralSidebar = [
@@ -87,9 +89,14 @@ export const dataToolsSidebar = [
         href: "/stats"
     },
     {
+        icon: Import,
+        label: "Generar excel con no votantes",
+        href: "/electoral-rolls/export-not-voted"
+    },
+    {
         icon: BookmarkCheck,
         label: "Modificar estado de votación",
-        href: "/electoral-rolls/quick-marking"        
+        href: "/electoral-rolls/quick-marking"
     }
 ];
 
@@ -144,6 +151,11 @@ export const dataConfigSidebar = [
         icon: ShieldPlus,
         label: "Permisos",
         href: "/permissions/keys"
+    },
+    {
+        icon: Users2,
+        label: "Generar usuarios Autoridad de mesa",
+        href: "/users/bulk-authorities"
     },
     // {
     //     icon: Settings,

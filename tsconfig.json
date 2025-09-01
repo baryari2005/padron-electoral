@@ -33,7 +33,7 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     "test-prisma.js"
-  ],
+, "app/(dashboard)/components/FormsCreate/FormCombobox.borrar"  ],
   "exclude": [
     "node_modules"
   ]

@@ -51,7 +51,9 @@ export function FormEstablishment({
     mode: "onChange",
   });
 
-  const { isSubmitting } = form.formState;
+  const { isSubmitting, isValid, isDirty } = form.formState;
+  const canSubmit = isValid && !isSubmitting && (!isEdit || isDirty);
+
   const numerosDeMesa = form.watch("numerosDeMesa");
 
   const onSubmit = async (values: FormValues) => {
@@ -127,10 +129,10 @@ export function FormEstablishment({
             control={form.control}
             name="circuitoId"
             render={({ field }) => {
-              const selectedCircuito = circuites.find((c) => c.id === Number(field.value));              
+              const selectedCircuito = circuites.find((c) => c.id === Number(field.value));
               const displayValue = selectedCircuito
                 ? `${selectedCircuito.codigo} - ${selectedCircuito.nombre}`
-                : "Sin asignar";                
+                : "Sin asignar";
 
               return isReadOnly ? (
                 <FormTextField
@@ -149,6 +151,8 @@ export function FormEstablishment({
                   getOptionLabel={(c) => `${c.codigo} - ${c.nombre}`}
                   getOptionValue={(c) => String(c.id)}
                   loading={loadingCircuites}
+                  disabled={loadingCircuites}
+                  placeholder={loadingCircuites ? "Cargando…" : "Seleccionar"}
                 />
               );
             }}
@@ -197,6 +201,7 @@ export function FormEstablishment({
         {!isReadOnly && (
           <div>
             <SubmitButton
+              disabled={!canSubmit}
               loading={isSubmitting || isUploading}
               label={isEdit ? "Actualizar" : "Crear"}
               icon={isEdit ? "pencil" : "plus"}

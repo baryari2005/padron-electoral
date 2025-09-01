@@ -44,7 +44,7 @@ export async function POST(req: Request) {
         email,
         password: hashedPassword,
         rolId: roleId,
-        avatarUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=404040&color=fff&size=128&rounded=true&bold=true`
+        avatarUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=404040&color=fff&size=128&rounded=true&bold=true&format=png`
       },
     });
 

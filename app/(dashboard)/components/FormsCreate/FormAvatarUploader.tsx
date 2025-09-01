@@ -30,7 +30,7 @@ export function FormAvatarUploader({
                 avatarUrl ||
                 `https://ui-avatars.com/api/?name=${encodeURIComponent(
                   name
-                )}&background=0d9488&color=fff&rounded=true`
+                )}&background=0d9488&color=fff&rounded=true&format=png`
               }
               alt="avatar"
             />

@@ -1,21 +1,27 @@
+// src/features/users/components/FormUser.tsx
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { toast } from "sonner";
+import { Form } from "@/components/ui/form";
 import axiosInstance from "@/utils/axios";
-import { FormAvatarUploader, FormTextField, SubmitButton } from "@/app/(dashboard)/components/FormsCreate";
-import { FormValues, userSchema } from "../../lib/userSchema";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Eye, EyeOff } from "lucide-react";
-import { Rol, Usuario } from "@prisma/client";
+import { toast } from "sonner";
+import { SubmitButton } from "@/app/(dashboard)/components/FormsCreate";
 import { formatApiMessage, formatMessage } from "@/lib/utils/formatters";
+import type { Rol, Usuario } from "@prisma/client";
+import { buildUserSchema, BuildUserSchemaIn, BuildUserSchemaOut, getEscuelasIdsFromUser } from "@/src/features/users/lib/userForm.helpers";
+import { useAutoAvatar } from "@/src/features/users/hooks/useAutoAvatar";
+import { useRoleFlags } from "@/src/features/users/hooks/useRoleFlags";
+import { useEscuelas } from "@/src/features/users/hooks/useEscuelas";
+import { useCanSubmitUser } from "@/src/features/users/hooks/useCanSubmitUser";
+import { UserBasicsFields } from "@/src/features/users/components/UserBasicsFields";
+import { RolePasswordAvatar } from "@/src/features/users/components/RolePasswordAvatar";
+import { EscuelasSection } from "@/src/features/users/components/EscuelasSection";
+
 
 interface FormUserProps {
-  user?: Usuario;
+  user?: Usuario & { escuelas?: { establecimientoId: number }[]; escuelasIds?: number[] };
   onSuccess: () => void;
   onClose?: () => void;
   roles: Rol[];
@@ -23,160 +29,118 @@ interface FormUserProps {
 
 export function FormUser({ user, onSuccess, onClose, roles = [] }: FormUserProps) {
   const isEdit = !!user;
-  const [isUploading, setIsUploading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(userSchema(isEdit)),
+  const schema = buildUserSchema(isEdit);
+  type In = BuildUserSchemaIn<typeof schema>;
+  type Out = BuildUserSchemaOut<typeof schema>;
+
+  const form = useForm<In>({
+    resolver: zodResolver(schema),
     defaultValues: {
       id: user?.id ?? undefined,
-      email: user?.email || "",
+      email: user?.email ?? "",
       password: "",
-      avatarUrl: user?.avatarUrl || "",
-      apellido: user?.apellido || "",
-      nombre: user?.nombre || "",
-      userId: user?.userId || "",
-      rolId: user?.rolId || 0,
+      avatarUrl: user?.avatarUrl ?? "",
+      apellido: user?.apellido ?? "",
+      nombre: user?.nombre ?? "",
+      userId: user?.userId ?? "",
+      rolId: user?.rolId ?? 0,
+      escuelasIds: getEscuelasIdsFromUser(user),
     },
     mode: "onChange",
   });
 
-  const { isSubmitting } = form.formState;
-  const name = form.watch("nombre");
-  const lastName = form.watch("apellido");
+  // reset si cambia el usuario
+  useEffect(() => {
+    if (!user) return;
+    form.reset({
+      id: user.id,
+      email: user.email ?? "",
+      password: "",
+      avatarUrl: user.avatarUrl ?? "",
+      apellido: user.apellido ?? "",
+      nombre: user.nombre ?? "",
+      userId: user.userId ?? "",
+      rolId: user.rolId ?? 0,
+      escuelasIds: getEscuelasIdsFromUser(user),
+    });
+  }, [user, form]);
 
-  const onSubmit = async (values: FormValues) => {
+  // auto-avatar
+  useAutoAvatar(form, {
+    nombre: "nombre",
+    apellido: "apellido",
+    avatarUrl: "avatarUrl",
+  });
+
+  // flags de rol
+  const rolId = form.watch("rolId");
+  const { puedeAsignar, requiereEscuela } = useRoleFlags(rolId, roles);
+
+  // escuelas
+  const { escuelas, loaded: escuelasLoaded } = useEscuelas(puedeAsignar || requiereEscuela);
+
+  // submit
+  const { isSubmitting, isValid } = form.formState;
+  const escuelasIds = form.watch("escuelasIds") ?? [];
+  const canSubmit = useCanSubmitUser({
+    isSubmitting,
+    isValid,
+    requiereEscuela,
+    escuelasLoaded,
+    escuelasIdsLength: escuelasIds.length,
+  });
+
+  const onSubmit = async (values: In) => {
     try {
-      const payload = { ...values };
-
-      if (isEdit) {
-        await axiosInstance.put(`/api/users/${user!.id}`, payload);
-      } else {
-        await axiosInstance.post("/api/users", payload);
-        toast.success(formatApiMessage("success.usersCreated"));
+      const parsed: Out = schema.parse(values);
+      const ids = parsed.escuelasIds ?? [];
+      if (requiereEscuela && ids.length === 0) {
+        toast.error("Este rol requiere al menos una escuela.");
+        return;
       }
 
+      const { password, ...rest } = parsed;
+      const payload = { ...rest, ...(isEdit ? (password ? { password } : {}) : { password }) };
+
+      if (isEdit) {
+        await axiosInstance.put(`/api/users/${user!.id}`, payload);        
+      } else {
+        const res = await axiosInstance.post(`/api/users`, payload);
+        const newId = (res as any)?.data?.created?.id ?? (res as any)?.data?.id ?? "";
+        if (!newId) {
+          toast.error("No se pudo obtener el ID del usuario creado");
+          return;
+        }
+      }
       onSuccess();
       onClose?.();
     } catch (err: any) {
       const msg = err?.response?.data?.error?.includes("Unique constraint failed on the fields: (`email`)")
         ? "El correo electrónico ya está en uso."
-        : "Algo salió mal.";
+        : err?.response?.data?.error || "Algo salió mal.";
       toast.error(formatMessage(msg));
     }
   };
-
-  // Autogenera avatar si el usuario no subió uno propio
-  useEffect(() => {
-    const fullName = `${name} ${lastName}`.trim();
-    const currentAvatar = form.getValues("avatarUrl");
-    const isCustomAvatar = currentAvatar && !currentAvatar.includes("ui-avatars.com");
-
-    if (fullName && !isCustomAvatar) {
-      const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(
-        fullName
-      )}&background=404040&color=fff&size=128&rounded=true&bold=true`;
-      form.setValue("avatarUrl", avatarUrl, { shouldValidate: true });
-    }
-  }, [name, lastName, form]); // ← incluir 'form' evita el warning
+  const loadingEscuelas = !escuelasLoaded;
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {!isEdit && (
-            <FormTextField control={form.control} name="userId" label="User Id" placeholder="id..." />
-          )}
+        <UserBasicsFields control={form.control} isEdit={!!isEdit} />
+        <RolePasswordAvatar control={form.control as any} isEdit={!!isEdit} watch={form.watch as any} setValue={form.setValue as any} roles={roles} />
 
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input placeholder="Email..." type="text" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormTextField control={form.control} name="nombre" label="Nombre" placeholder="Nombre..." uppercase />
-          <FormTextField control={form.control} name="apellido" label="Apellido" placeholder="Apellido..." uppercase />
-
-          <FormField
-            control={form.control}
-            name="rolId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Rol</FormLabel>
-                <Select
-                  value={String(field.value)}
-                  onValueChange={(value) => field.onChange(Number(value))}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Seleccioná un rol" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {roles?.map((rol) => (
-                      <SelectItem key={rol.id} value={String(rol.id)}>
-                        {rol.nombre}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="password"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Contraseña</FormLabel>
-                <FormControl>
-                  <div className="relative">
-                    <Input
-                      placeholder="Contraseña..."
-                      type={showPassword ? "text" : "password"}
-                      {...field}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword((v) => !v)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                      aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
-                    >
-                      <Eye className={showPassword ? "hidden" : ""} size={20} />
-                      <EyeOff className={showPassword ? "" : "hidden"} size={20} />
-                    </button>
-                  </div>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormAvatarUploader
-            name={form.watch("nombre")}
-            avatarUrl={form.watch("avatarUrl")}
-            onAvatarUploaded={(url) => form.setValue("avatarUrl", url, { shouldValidate: true })}
-            isUploading={isUploading}
-            setIsUploading={setIsUploading}
-          />
-        </div>
+        <EscuelasSection
+          visible={puedeAsignar || requiereEscuela}
+          value={escuelasIds}
+          onChange={(ids) => form.setValue("escuelasIds", ids, { shouldValidate: true })}
+          required={requiereEscuela}
+          escuelas={escuelas}
+          loading={loadingEscuelas}
+        />
 
         <div className="mt-4">
-          <SubmitButton
-            loading={isSubmitting || isUploading}
-            label={isEdit ? "Actualizar" : "Crear"}
-            icon={isEdit ? "pencil" : "plus"}
-          />
+          <SubmitButton loading={isSubmitting} disabled={!canSubmit} label={isEdit ? "Actualizar" : "Crear"} icon={isEdit ? "pencil" : "plus"} />
         </div>
       </form>
     </Form>

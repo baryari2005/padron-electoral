@@ -126,8 +126,7 @@ export function AddressSection({ control, modo }: Props) {
               onChange={(val) => field.onChange(val)}
               options={establecimientos}
               getOptionLabel={(e) => e.nombre}
-              getOptionValue={(e) => String(e.id)}
-              withLabel={false}
+              getOptionValue={(e) => String(e.id)}              
               disabled={isReadOnly}
             />
             <FormMessage />
@@ -146,8 +145,7 @@ export function AddressSection({ control, modo }: Props) {
               onChange={(val) => field.onChange(val)}
               options={circuitosFiltrados}
               getOptionLabel={(c) => `${c.codigo ?? ""} - ${c.nombre}`}
-              getOptionValue={(c) => String(c.id)}
-              withLabel={false}
+              getOptionValue={(c) => String(c.id)}              
               disabled={isReadOnly}
             />
             <FormMessage />

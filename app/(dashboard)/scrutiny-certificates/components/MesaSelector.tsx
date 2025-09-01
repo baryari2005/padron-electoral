@@ -37,13 +37,19 @@ export function MesaSelector({
     []
   );
 
+  const [loadingEstabs, setLoadingEstabs] = useState(true);   // 👈 nuevo
+  const [loadingMesas, setLoadingMesas] = useState(false);
+
   useEffect(() => {
     (async () => {
       try {
+        setLoadingEstabs(true);
         const res = await axiosInstance.get("/api/establishments?all=true");
         setEscuelas(res.data.items);
       } catch (err) {
         console.error("Error al cargar escuelas", err);
+      } finally {
+        setLoadingEstabs(false);
       }
     })();
   }, []);
@@ -79,6 +85,7 @@ export function MesaSelector({
                     setEscuelaSeleccionada(establecimiento);
                     onEscuelaSeleccionada?.(establecimiento);
                     try {
+                      setLoadingMesas(true);
                       const res = await axiosInstance.get(
                         `/api/establishments/${establecimiento.id}/available-tables`
                       );
@@ -88,9 +95,13 @@ export function MesaSelector({
                       setMesasDisponibles(mesasFiltradas);
                     } catch (err) {
                       console.error("Error al cargar mesas disponibles", err);
+                    } finally {
+                      setLoadingMesas(false);
                     }
                   }}
-                  disabled={disabled}
+                  loading={loadingEstabs}
+                  disabled={loadingEstabs}
+                  placeholder={loadingEstabs ? "Cargando…" : "Seleccionar"}
                 />
               </FormControl>
               <FormMessage />
@@ -141,7 +152,13 @@ export function MesaSelector({
                   options={mesasDisponibles}
                   getOptionLabel={(m) => `Mesa ${m.numero}`}
                   getOptionValue={(m) => String(m.numero)}
-                  disabled={!escuelaSeleccionada}
+                  disabled={!escuelaSeleccionada || loadingMesas}
+                  loading={loadingMesas}
+                  placeholder={
+                    !escuelaSeleccionada ? "Seleccionar establecimiento primero"
+                      : loadingMesas ? "Cargando…"
+                        : "Seleccionar"
+                  }
                 />
               </FormControl>
               <FormMessage />

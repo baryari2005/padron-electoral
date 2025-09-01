@@ -1,17 +1,16 @@
 'use client';
 
-import { Button } from "@/components/ui/button";
 import { ColumnDef } from "@tanstack/react-table";
-import { ArrowUpDown } from "lucide-react";
-import { TableActions } from "@/components/ui/tableActions";
 import { Rol, Usuario } from "@prisma/client";
 import { buildActionsColumn } from "@/app/(dashboard)/utils/buildActionsColumn";
-import Image from "next/image";
 import { AvatarLogo } from "@/app/(dashboard)/components/common/AvatarLogo";
 import { sortableHeader } from "@/app/(dashboard)/components/table/SortableHeader";
 
-export type UsuarioConRol = Usuario & {
+export type UsuarioConRolYEscuelas = Usuario & {
   rol: Rol | null;
+  // Puede venir con nombres (ideal) o solo ids
+  escuelas?: { establecimientoId: number; establecimiento?: { nombre: string } }[];
+  escuelasIds?: number[];
 };
 
 interface ColumnsProps {
@@ -19,8 +18,8 @@ interface ColumnsProps {
 }
 
 export const columns = (
-  { onDeleted }: ColumnsProps): ColumnDef<UsuarioConRol>[] => {
-  const baseColumns: ColumnDef<UsuarioConRol>[] = [
+  { onDeleted }: ColumnsProps): ColumnDef<UsuarioConRolYEscuelas>[] => {
+  const baseColumns: ColumnDef<UsuarioConRolYEscuelas>[] = [
     {
       accessorKey: "avatarUrl",
       header: "Avatar",
@@ -57,6 +56,31 @@ export const columns = (
             {rol ? rol.nombre : <span className="italic text-muted-foreground">Sin rol</span>}
           </span>
         );
+      },
+    },
+    {
+      id: "escuela",
+      header: "Escuela",
+      cell: ({ row }) => {
+        const escs = row.original.escuelas ?? [];
+        const firstName = escs[0]?.establecimiento?.nombre;
+        const count = escs.length;
+
+        if (firstName) {
+          return (
+            <span className="text-sm">
+              {firstName}{count > 1 ? ` (+${count - 1})` : ""}
+            </span>
+          );
+        }
+
+        // fallback si no trajiste nombres, solo ids
+        const ids = row.original.escuelasIds ?? escs.map(e => e.establecimientoId);
+        if (ids.length > 0) {
+          return <span className="text-sm">#{ids[0]}{ids.length > 1 ? ` (+${ids.length - 1})` : ""}</span>;
+        }
+
+        return <span className="italic text-muted-foreground text-sm">Sin escuela</span>;
       },
     },
     buildActionsColumn({ component: "users", label: "usuario", onDeleted }),
