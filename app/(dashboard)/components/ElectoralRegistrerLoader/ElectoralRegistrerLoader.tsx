@@ -115,8 +115,7 @@ export function ElectoralRegistrerLoader() {
       });
 
       toast.success(
-        `¡Importación ${mode === "replace" ? "con truncado" : "agregada"} exitosa! Registros: ${
-          res.data?.rows ?? 0
+        `¡Importación ${mode === "replace" ? "con truncado" : "agregada"} exitosa! Registros: ${res.data?.rows ?? 0
         }`
       );
     } catch (err) {
@@ -141,9 +140,9 @@ export function ElectoralRegistrerLoader() {
       fileInputRef.current.value = "";
     }
   };
-  
+
   const canCreate = useHasPermission("crear_importarpadron");
-  if (!canCreate) return (<AccessDeniedPage subtitle="Importar Padrón Electoral."/>);
+  if (!canCreate) return (<AccessDeniedPage subtitle="Importar Padrón Electoral." />);
 
 
   return (
@@ -223,8 +222,8 @@ export function ElectoralRegistrerLoader() {
             disabled={isUploading}
           />
         </div>
-          <Separator/>
-          <TextStatsLoader/>
+        <Separator />
+        <TextStatsLoader />
         <div className="flex items-center gap-4">
           <Button onClick={handleUpload} disabled={!file || isUploading}>
             {isUploading ? <Cargando /> : "Subir archivo"}
