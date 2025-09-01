@@ -23,6 +23,8 @@ import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { TextStatsLoader } from "./TextStatsLoader";
+import { AccessDeniedPage } from "@/components/NoPermissions/AccessDeniedPage";
+import { useHasPermission } from "@/lib/permissions/useHasPermission";
 
 type ImportMode = "replace" | "append";
 
@@ -139,6 +141,10 @@ export function ElectoralRegistrerLoader() {
       fileInputRef.current.value = "";
     }
   };
+  
+  const canCreate = useHasPermission("crear_importarpadron");
+  if (!canCreate) return (<AccessDeniedPage subtitle="Importar Padrón Electoral."/>);
+
 
   return (
     <>
