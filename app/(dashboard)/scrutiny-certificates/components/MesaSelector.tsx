@@ -13,8 +13,7 @@ import {
   FormControl,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input"; // si preferís el input de shadcn
-import { FormCombobox } from "../../components/FormsCreate"; // ← tu combo nuevo
+import { Input } from "@/components/ui/input";
 import { FormCombo } from "../../components/FormsCreate/FormCombo";
 
 interface MesaSelectorProps {
@@ -22,6 +21,10 @@ interface MesaSelectorProps {
   setValue: UseFormReturn<CertificadoFormData>["setValue"];
   onEscuelaSeleccionada?: (establecimiento: EstablecimientoConCircuito) => void;
   disabled?: boolean;
+  /** Si viene, NO se carga la lista de escuelas; se usa esta fija */
+  fixedEscuela?: EstablecimientoConCircuito | null;
+  /** Alternativa si sólo tenés el ID; también evita cargar la lista completa */
+  fixedEscuelaId?: number | string;
 }
 
 export function MesaSelector({
@@ -29,18 +32,87 @@ export function MesaSelector({
   setValue,
   onEscuelaSeleccionada,
   disabled,
+  fixedEscuela,
+  fixedEscuelaId,
 }: MesaSelectorProps) {
+  const locked = !!fixedEscuela || !!fixedEscuelaId;
+
+  // Solo se usa en modo libre
   const [escuelas, setEscuelas] = useState<EstablecimientoConCircuito[]>([]);
+  const [loadingEstabs, setLoadingEstabs] = useState(!locked);
+
   const [escuelaSeleccionada, setEscuelaSeleccionada] =
     useState<EstablecimientoConCircuito | null>(null);
-  const [mesasDisponibles, setMesasDisponibles] = useState<{ numero: number }[]>(
-    []
-  );
-
-  const [loadingEstabs, setLoadingEstabs] = useState(true);   // 👈 nuevo
+  const [mesasDisponibles, setMesasDisponibles] = useState<{ numero: number }[]>([]);
   const [loadingMesas, setLoadingMesas] = useState(false);
 
+  /** Carga mesas disponibles para una escuela (filtra no escrutadas) */
+  const loadMesasDisponibles = async (establecimientoId: number | string) => {
+    try {
+      setLoadingMesas(true);
+      const res = await axiosInstance.get(
+        `/api/establishments/${establecimientoId}/available-tables`
+      );
+      const mesasFiltradas = res.data.items.filter((m: any) => !m.escrutada);
+      setMesasDisponibles(mesasFiltradas);
+    } catch (err) {
+      console.error("Error al cargar mesas disponibles", err);
+      setMesasDisponibles([]);
+    } finally {
+      setLoadingMesas(false);
+    }
+  };
+
+  /** Aplica escuela al form + estado + callback + mesas */
+  const applyEscuela = async (establecimiento: EstablecimientoConCircuito | null) => {
+    if (!establecimiento) return;
+    if (escuelaSeleccionada?.id === establecimiento.id) return; // evita re-aplicar
+
+    setValue("mesa.escuelaId", String(establecimiento.id), { shouldDirty: true });
+    const circuitoId = establecimiento.circuito?.id ?? establecimiento.circuito.id;
+    if (circuitoId) {
+      setValue("mesa.circuitoId", String(circuitoId), { shouldDirty: true });
+    }
+    if (!disabled) {
+      // resetear número de mesa al cambiar escuela
+      setValue("mesa.numeroMesa", "", { shouldDirty: true });
+      await loadMesasDisponibles(establecimiento.id);
+    }
+    setEscuelaSeleccionada(establecimiento);
+    onEscuelaSeleccionada?.(establecimiento);
+  };
+
+  /** MODO BLOQUEADO: usar escuela fija (objeto o fetch por id); NO cargar lista */
   useEffect(() => {
+    let mounted = true;
+    (async () => {
+      if (!locked) return;
+
+      if (fixedEscuela) {
+        if (mounted) await applyEscuela(fixedEscuela);
+        return;
+      }
+
+      if (fixedEscuelaId) {
+        try {
+          const { data } = await axiosInstance.get<EstablecimientoConCircuito>(
+            `/api/establishments/${fixedEscuelaId}`
+          );
+          if (mounted) await applyEscuela(data);
+        } catch (e) {
+          console.error("No se pudo cargar la escuela fija por id:", e);
+        }
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locked, fixedEscuela, fixedEscuelaId]);
+
+  /** MODO LIBRE: cargar lista de escuelas solo si NO hay fija */
+  useEffect(() => {
+    if (locked) return; // no cargar lista
     (async () => {
       try {
         setLoadingEstabs(true);
@@ -52,17 +124,39 @@ export function MesaSelector({
         setLoadingEstabs(false);
       }
     })();
-  }, []);
+  }, [locked]);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-[68%_30%] gap-4 md:gap-x-6 md:px-1 items-start">
-      {/* ESCUELA */}
+      {/* ===== ESCUELA ===== */}
       <FormField
         control={control}
         name="mesa.escuelaId"
         render={({ field }) => {
           const triggerId = "escuela-escuelaId-trigger";
           const labelId = "escuela-escuelaId-label";
+
+          // --- MODO BLOQUEADO: no combobox, solo lectura ---
+          if (locked) {
+            return (
+              <FormItem>
+                <FormLabel id={labelId} htmlFor="escuela-readonly">
+                  Escuela / Establecimiento
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    id="escuela-readonly"
+                    value={escuelaSeleccionada?.nombre ?? ""}
+                    disabled
+                    readOnly
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            );
+          }
+
+          // --- MODO LIBRE: combobox normal ---
           return (
             <FormItem>
               <FormLabel id={labelId} htmlFor={triggerId}>
@@ -78,29 +172,11 @@ export function MesaSelector({
                   getOptionLabel={(e) => e.nombre}
                   getOptionValue={(e) => String(e.id)}
                   onOptionSelected={async (establecimiento) => {
-                    if (establecimiento?.circuito?.id) {
-                      setValue("mesa.circuitoId", String(establecimiento.circuito.id));
-                    }
-                    setValue("mesa.numeroMesa", "");
-                    setEscuelaSeleccionada(establecimiento);
-                    onEscuelaSeleccionada?.(establecimiento);
-                    try {
-                      setLoadingMesas(true);
-                      const res = await axiosInstance.get(
-                        `/api/establishments/${establecimiento.id}/available-tables`
-                      );
-                      const mesasFiltradas = res.data.items.filter(
-                        (m: any) => !m.escrutada
-                      );
-                      setMesasDisponibles(mesasFiltradas);
-                    } catch (err) {
-                      console.error("Error al cargar mesas disponibles", err);
-                    } finally {
-                      setLoadingMesas(false);
-                    }
+                    if (disabled) return;
+                    await applyEscuela(establecimiento);
                   }}
                   loading={loadingEstabs}
-                  disabled={loadingEstabs}
+                  disabled={loadingEstabs || !!disabled}
                   placeholder={loadingEstabs ? "Cargando…" : "Seleccionar"}
                 />
               </FormControl>
@@ -110,7 +186,7 @@ export function MesaSelector({
         }}
       />
 
-      {/* NÚMERO DE MESA */}
+      {/* ===== NÚMERO DE MESA ===== */}
       <FormField
         control={control}
         name="mesa.numeroMesa"
@@ -119,7 +195,6 @@ export function MesaSelector({
           const labelId = "escuela-nromesa-label";
 
           if (disabled) {
-            // Solo lectura: mantené accesibilidad con label htmlFor + id del input
             return (
               <FormItem>
                 <FormLabel id={labelId} htmlFor="nro-mesa-readonly">
@@ -155,8 +230,10 @@ export function MesaSelector({
                   disabled={!escuelaSeleccionada || loadingMesas}
                   loading={loadingMesas}
                   placeholder={
-                    !escuelaSeleccionada ? "Seleccionar establecimiento primero"
-                      : loadingMesas ? "Cargando…"
+                    !escuelaSeleccionada
+                      ? "Seleccionar establecimiento primero"
+                      : loadingMesas
+                        ? "Cargando…"
                         : "Seleccionar"
                   }
                 />

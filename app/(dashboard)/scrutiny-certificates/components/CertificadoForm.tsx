@@ -35,6 +35,7 @@ interface CertificadoFormProps {
   onClose?: () => void;
   onSuccess?: () => void;
   onMetadataLoaded?: (data: { seccion: string; circuito: string; mesa: string }) => void;
+  escuelaFija?: EstablecimientoConCircuito | null;
 }
 
 export default function CertificadoForm({
@@ -45,6 +46,7 @@ export default function CertificadoForm({
   onClose,
   onSuccess,
   onMetadataLoaded,
+  escuelaFija,
 }: CertificadoFormProps) {
   // 1) TODOS los hooks siempre al tope y en el mismo orden
   const form = useForm<CertificadoFormData>({
@@ -75,6 +77,14 @@ export default function CertificadoForm({
   );
 
   useCertificadoDefaults(form, modo, agrupaciones, categorias);
+
+  useEffect(() => {
+    if (!escuelaFija) return;
+    form.setValue("mesa.escuelaId", String(escuelaFija.id));
+    form.setValue("mesa.circuitoId", String(escuelaFija.circuito.id));
+    form.setValue("mesa.numeroMesa", ""); // forzar a elegir mesa
+    onEscuelaSeleccionada?.(escuelaFija);
+  }, [escuelaFija, form, onEscuelaSeleccionada]);
 
   // Hooks de estado ANTES de cualquier return condicional
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -151,7 +161,8 @@ export default function CertificadoForm({
           control={form.control}
           setValue={form.setValue}
           onEscuelaSeleccionada={onEscuelaSeleccionada}
-          disabled={modo === "editar"}
+          disabled={modo === "editar"} 
+          fixedEscuela={escuelaFija}
         />
         <Separator />
 

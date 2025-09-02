@@ -3,9 +3,13 @@
 import { useHasPermission } from "@/lib/permissions/useHasPermission";
 import CertificadosResumenPage from "../components/CertificadosResumenPage";
 import { AccessDeniedPage } from "@/components/NoPermissions/AccessDeniedPage";
+import { useEffect } from "react";
 
 export default function ScrutinyCertificatePage() {
-  const canView = useHasPermission("ver_certificado");
+  const canView = useHasPermission("ver_certificados");
+  useEffect(() => {
+    console.log("Permiso ver_certificados =", canView);
+  }, [canView]);
 
   if (!canView) {
     return <AccessDeniedPage subtitle="Listado Certificado Escrutinio." />;

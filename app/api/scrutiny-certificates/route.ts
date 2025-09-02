@@ -4,13 +4,13 @@ export const revalidate = 0;
 export const fetchCache = "force-no-store";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { checkUserRole } from "@/lib/auth/checkUserRole";
+import { getUserIdFromRequest } from "@/lib/auth/getUserIdFromRequest";
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-
-    const userId = (await checkUserRole(req, ["ADMINISTRADOR", "CARGADOR"])).userId;
+    
+    const userId = getUserIdFromRequest(req);
 
     const {
       mesa,
