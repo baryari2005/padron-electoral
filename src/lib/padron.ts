@@ -110,7 +110,7 @@ function mapRowToPadron<T extends Record<string, any>>(row: T, ctx: {
   const genero = norm(s(getField(row, GENERO_KEYS)));
   const domicilio = norm(s(getField(row, DOMICILIO_KEYS)));
   const seccion = norm(s(getField(row, SECCION_KEYS)));
-  const localidad = norm(s(getField(row, LOCALIDAD_KEYS))) || "SAN MIGUEL";
+  const localidad = norm(s(getField(row, LOCALIDAD_KEYS))) || "San Miguel 2025";
   const codigoPostal = (s(getField(row, CP_KEYS)) || "") as string;
   const tipoNacionalidad = norm(s(getField(row, NACIONALIDAD_KEYS))) || "ARGENTINO";
   const votoBruto = norm(s(getField(row, VOTO_KEYS)));
@@ -220,7 +220,7 @@ export async function persistPadronFromRowsBatched<T extends Record<string, any>
       genero: r.genero ?? "",
       domicilio: r.domicilio ?? "",
       seccion: r.seccion ?? "",
-      localidad: r.localidad ?? "SAN MIGUEL",
+      localidad: r.localidad ?? "San Miguel 2025",
       codigoPostal: r.codigoPostal ?? "",
       tipoNacionalidad: r.tipoNacionalidad ?? "ARGENTINO",
       votoSiNo: r.votoSiNo ?? "S",

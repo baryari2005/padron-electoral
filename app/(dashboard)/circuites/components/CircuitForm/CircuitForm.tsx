@@ -78,7 +78,7 @@ export function FormCircuit({
             control={form.control}
             name="nombre"
             label="Nombre del Circuito"
-            placeholder="Ej: SAN MIGUEL"
+            placeholder="Ej: San Miguel 2025"
             disabled={isReadOnly}
             uppercase
           />

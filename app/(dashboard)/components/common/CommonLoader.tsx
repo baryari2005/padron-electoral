@@ -13,7 +13,7 @@ export function CommonLoader( props: Props) {
           sizes = "180px"
           fill
           className="object-contain dark:hidden rounded-lg"
-          priority
+          // priority
         />
         <Image
           src={props.alternativeLogo}
@@ -21,7 +21,7 @@ export function CommonLoader( props: Props) {
           sizes = "180px"
           fill
           className="object-contain hidden dark:block rounded-lg"
-          priority
+          // priority
         />
       </div>
 

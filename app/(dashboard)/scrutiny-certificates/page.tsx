@@ -11,8 +11,8 @@ import { useAuthStore } from "@/auth";
 
 type UsuarioEstablecimientoLite = {
   principal?: boolean;
-  establecimiento?: EstablecimientoConCircuito;   
-  establecimientoId?: number;                     
+  establecimiento?: EstablecimientoConCircuito;
+  establecimientoId?: number;
 };
 
 function getDefaultEscuelaFromUser(
@@ -25,7 +25,7 @@ function getDefaultEscuelaFromUser(
     Array.isArray((user as any).escuelas)
   ) {
     const escuelas = (user as any).escuelas as UsuarioEstablecimientoLite[];
-    const conPrioridad = escuelas.find((e) => e?.principal) ?? escuelas[0];    
+    const conPrioridad = escuelas.find((e) => e?.principal) ?? escuelas[0];
     if (conPrioridad?.establecimiento) return conPrioridad.establecimiento as EstablecimientoConCircuito;
   }
   return null;
@@ -53,28 +53,32 @@ export default function ScrutinyCertificatePage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto py-4 px-4 font-sans">
-      <h1 className="text-2xl font-bold mb-6">Carga de Certificado de Escrutinio</h1>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl">Carga de Certificado de Escrutinio</h2>
+      </div>
+      <div className="rounded-xl border bg-card p-6 shadow space-y-2">
 
-      <CertificadoHeader
-        modo="crear"
-        seccion="53 - SAN MIGUEL"
-        circuito={
-          escuela
-            ? `${escuela?.circuito?.nombre ?? ""} (${escuela?.circuito?.codigo ?? ""})`
-            : "-"
-        }
-        mesa={mesa !== "0" ? mesa : "-"}
-      />
-      <Separator className="mb-8" />
+        <CertificadoHeader
+          modo="crear"
+          seccion="53 - SAN MIGUEL"
+          circuito={
+            escuela
+              ? `${escuela?.circuito?.nombre ?? ""} (${escuela?.circuito?.codigo ?? ""})`
+              : "-"
+          }
+          mesa={mesa !== "0" ? mesa : "-"}
+        />
+        <Separator className="mb-8" />
 
-      {/* Pasamos la escuela fija al form (ver nota abajo) */}
-      <CertificadoForm
-        modo="crear"
-        onMesaChange={setMesa}
-        onEscuelaSeleccionada={setEscuela}
-        escuelaFija={escuela}
-      />
+        {/* Pasamos la escuela fija al form (ver nota abajo) */}
+        <CertificadoForm
+          modo="crear"
+          onMesaChange={setMesa}
+          onEscuelaSeleccionada={setEscuela}
+          escuelaFija={escuela}
+        />
+      </div>
     </div>
   );
 }

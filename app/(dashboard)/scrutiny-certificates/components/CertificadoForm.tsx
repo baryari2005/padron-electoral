@@ -35,7 +35,15 @@ interface CertificadoFormProps {
   onClose?: () => void;
   onSuccess?: () => void;
   onMetadataLoaded?: (data: { seccion: string; circuito: string; mesa: string }) => void;
+
+  /** Prefija la escuela (objeto) */
   escuelaFija?: EstablecimientoConCircuito | null;
+
+  /**
+   * Si es true, el usuario NO puede ver ni cambiar de escuela (solo lectura).
+   * Si es false (default), se usa como PREFILL pero puede ver/cambiar a cualquiera.
+   */
+  escuelaFijaRestrictiva?: boolean;
 }
 
 export default function CertificadoForm({
@@ -47,6 +55,7 @@ export default function CertificadoForm({
   onSuccess,
   onMetadataLoaded,
   escuelaFija,
+  escuelaFijaRestrictiva = false,
 }: CertificadoFormProps) {
   // 1) TODOS los hooks siempre al tope y en el mismo orden
   const form = useForm<CertificadoFormData>({
@@ -78,14 +87,6 @@ export default function CertificadoForm({
 
   useCertificadoDefaults(form, modo, agrupaciones, categorias);
 
-  useEffect(() => {
-    if (!escuelaFija) return;
-    form.setValue("mesa.escuelaId", String(escuelaFija.id));
-    form.setValue("mesa.circuitoId", String(escuelaFija.circuito.id));
-    form.setValue("mesa.numeroMesa", ""); // forzar a elegir mesa
-    onEscuelaSeleccionada?.(escuelaFija);
-  }, [escuelaFija, form, onEscuelaSeleccionada]);
-
   // Hooks de estado ANTES de cualquier return condicional
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [confirmarGuardado, setConfirmarGuardado] = useState(false);
@@ -110,9 +111,9 @@ export default function CertificadoForm({
       <CommonLoader
         logo="/logo.png"
         alternativeLogo="/logo-white.png"
-        alternativeText="Más San Miguel"
-        title="Votaciones 2025"
-        subTitle="San Miguel"
+        alternativeText=""
+        title="Elecciones Provinciales"
+        subTitle="San Miguel 2025"
         loaderText="Cargando certificado de escrutinio ..."
       />
     );
@@ -161,8 +162,9 @@ export default function CertificadoForm({
           control={form.control}
           setValue={form.setValue}
           onEscuelaSeleccionada={onEscuelaSeleccionada}
-          disabled={modo === "editar"} 
-          fixedEscuela={escuelaFija}
+          disabled={modo === "editar"}             // bloquea SOLO el N° de mesa
+          fixedEscuela={escuelaFija || undefined}  // prefill si viene
+          restrictToFixed={!!escuelaFijaRestrictiva}
         />
         <Separator />
 

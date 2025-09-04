@@ -83,7 +83,7 @@ export async function recomputeAllStats(): Promise<RecomputeStatsResult> {
   const [{ count: padronCount }] =
     await db.$queryRawUnsafe<{ count: bigint }[]>(`SELECT COUNT(*) FROM "PadronElectoral"`);
   const [{ count: mesasCount }] =
-    await db.$queryRawUnsafe<{ count: bigint }[]>(`SELECT COUNT(*) FROM "MesasPorEstablecimiento"`);
+    await db.$queryRawUnsafe<{ count: bigint }[]>(`select count(*) from "MesasPorEstablecimiento" mpe, "Establecimiento" e where mpe."establecimientoId" = e.id`);
 
   await db.globalStats.upsert({
     where: { id: 1 },

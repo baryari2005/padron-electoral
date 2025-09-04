@@ -1,6 +1,7 @@
 // components/reports/VotesAccordionItem/legend/PartyLegend.tsx
 "use client";
 
+import { PartyLogo } from "@/components/common/PartyLogo";
 import Image from "next/image";
 
 export type LegendItem = {
@@ -47,15 +48,8 @@ export function PartyLegend({
   const ItemInline = ({ it }: { it: LegendItem }) => (
     <div className="flex items-center gap-2 min-w-0">
       <Chip color={it.color} />
-      {it.logo ? (
-        <Image
-          src={it.logo}
-          alt={it.name}
-          width={logoSize}
-          height={logoSize}
-          className="rounded-sm object-contain"
-          unoptimized={true}
-        />
+      {it.logo ? (        
+        <PartyLogo src={it.logo} alt={it.name} size={logoSize} zoom={1.1} ring={false}/>
       ) : null}
       <span className="text-xs text-muted-foreground truncate max-w-[14ch] sm:max-w-[20ch]">
         {it.name}

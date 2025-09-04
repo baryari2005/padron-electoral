@@ -76,7 +76,7 @@ export default function DashboardCategoryPies({
   return (
     <Card>
       <CardHeader className="flex-row items-center justify-between">
-        <CardTitle className="text-sm">{title}</CardTitle>
+        <CardTitle className="text-sm text-muted-foreground">{title}</CardTitle>
         {showControls && (
           <Button size="sm" variant="ghost" onClick={() => setVariant(v => (v === "pie" ? "donut" : "pie"))} className="text-xs font-semibold">
             {variant === "pie" ? "Ver dona" : "Ver torta"}

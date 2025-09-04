@@ -20,12 +20,23 @@ export function Logo() {
       className="min-h-20 h-20 flex items-center px-6 border-b cursor-pointer gap-2"
       onClick={() => router.push("/")}
     >
-      <Image src={logoSrc} alt="Logo" width={30} height={30} className="rounded-lg" priority />
+      <Image
+        src={logoSrc}
+        alt="Logo"
+        width={45}
+        height={45}
+        className="h-auto w-[45px] rounded-lg" // si fijás una, poné la otra en auto
+        priority={false} // opcional: quitalo si no es hero visible al cargar
+        sizes="45px"
+      />
       <div className="flex flex-col leading-tight ml-4">
-        <h1 className="font-bold text-xl">
-          {capitalizeEachWord("Votaciones 2025")}
+        <h1 className="font-semibold text-sm-plus text-center">
+          {capitalizeEachWord("Elecciones")}
         </h1>
-        <h2 className="text-sm text-center">{capitalizeEachWord("San Miguel")}</h2>
+        <h1 className="font-semibold text-xl text-center">
+          {capitalizeEachWord("Provinciales")}
+        </h1>
+        <h2 className="text-xs-plus text-center">{capitalizeEachWord("San Miguel 2025")}</h2>
       </div>
     </div>
   );

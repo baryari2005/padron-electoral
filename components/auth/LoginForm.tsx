@@ -34,7 +34,7 @@ export default function LoginForm() {
         <Logo />
         <div className="text-center">
           <h1 className="text-3xl my-2 font-bold">
-            {formatMessage("bienvenido al dashboard de votaciones 2025")}
+            {formatMessage("bienvenido al dashboard de Elecciones Provinciales")}
           </h1>
         </div>
 

@@ -16,6 +16,7 @@ import { ProgressList } from "./components/Dashboard/lists/ProgressList";
 import { ParticipationList } from "./components/Dashboard/lists/ParticipationList";
 import { LeadersGrid } from "./components/Dashboard/LeadersGrid";
 import { DashboardRefreshBridge } from "./components/Dashboard/DashboardRefreshBridge";
+import { GradientProgress } from "@/components/ui/GradientProgress";
 
 // ======= Página principal =======
 export default function DashboardClient({ data: initial }: { data: SummaryResponse }) {
@@ -76,7 +77,10 @@ export default function DashboardClient({ data: initial }: { data: SummaryRespon
                     icono={Table}
                 >
                     <div className="mt-2 flex items-center gap-2">
-                        <div className="min-w-[120px]"><Progress value={municipio.porcentajeEscrutado} /></div>
+                        <div className="min-w-[120px]">
+                            {/* <Progress value={municipio.porcentajeEscrutado} /> */}
+                            <GradientProgress value={municipio.porcentajeEscrutado} height={18} durationMs={600} />
+                        </div>
                         <PercentPill value={municipio.porcentajeEscrutado} tiers thresholds={{ low: 5, mid: 60 }} />
                     </div>
                 </KPIStat>
@@ -112,23 +116,34 @@ export default function DashboardClient({ data: initial }: { data: SummaryRespon
             )} */}
 
             {/* Tops */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <TopList title="Top establecimientos por votos (share municipal)" items={top.establecimientos} labelKey="establecimiento" icono={School} />
                 <TopList title="Top circuitos por votos (share municipal)" items={top.circuitos} labelKey="circuito" icono={MapPinned} />
-            </div>
+            </div> */}
 
-            <Separator />
+            {/* <Separator /> */}
 
             {/* Progreso */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <ProgressList title="Progreso por escuela" items={progreso.porEscuela} labelKey="establecimiento" icono={School} />
-                <ProgressList title="Progreso por circuito" items={progreso.porCircuito} labelKey="circuito" icono={MapPinned} />
+                <ProgressList
+                    title="Progreso por establecimiento (mesas escrutadas)"
+                    items={progreso.porEscuela}                 // ProgresoItem[]
+                    labelKey="establecimiento"
+                    limit={10}                   // ítems por página
+                    autoCarousel                 // ← activa el carrusel
+                    intervalMs={4000}            // opcional (default 5000ms)
+                    pauseOnHover                 // opcional (default true)
+                    loop                         // opcional (default true)
+                    showControls                 // opcional (default true)
+                    icono={School}
+                />
+                <ProgressList title="Progreso por circuito (mesas escrutadas)" items={progreso.porCircuito} labelKey="circuito" icono={MapPinned} />
             </div>
 
             {/* Participación */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <ParticipationList title="Top participación por escuela" items={participacion.porEscuela} labelKey="establecimiento" icono={School} />
-                <ParticipationList title="Top participación por circuito" items={participacion.porCircuito} labelKey="circuito" icono={MapPinned} />
+                <ParticipationList title="Top 10 - participación de votantes por escuela" items={participacion.porEscuela} labelKey="establecimiento" icono={School} />
+                <ParticipationList title="Top 10 - participación de votantes por circuito" items={participacion.porCircuito} labelKey="circuito" icono={MapPinned} />
             </div>
 
             {/* Votos especiales */}

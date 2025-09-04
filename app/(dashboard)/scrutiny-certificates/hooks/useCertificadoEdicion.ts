@@ -26,7 +26,7 @@ export function useCertificadoEdicion(
         opts.onData(data);
 
         opts.onMetadataLoaded?.({
-          seccion: "53 - SAN MIGUEL",
+          seccion: "53 - San Miguel 2025",
           circuito: data.mesa.circuitoId,
           mesa: data.mesa.numeroMesa,
         });

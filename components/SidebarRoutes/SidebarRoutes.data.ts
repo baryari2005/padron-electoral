@@ -20,7 +20,8 @@ import {
     BookmarkCheck,
     CircleFadingArrowUp,
     Users2,
-    Import
+    Import,
+    BrushCleaning
 } from 'lucide-react'
 
 export const dataGeneralSidebar = [
@@ -97,7 +98,12 @@ export const dataToolsSidebar = [
         icon: BookmarkCheck,
         label: "Modificar estado de votación",
         href: "/electoral-rolls/quick-marking"
-    }
+    },
+    {
+        icon: BrushCleaning,
+        label: "Reiniciar certificados de escrutinio.",
+        href: "/scrutiny-certificates/clean"
+    },
 ];
 
 export const dataAnalyticsSidebar = [

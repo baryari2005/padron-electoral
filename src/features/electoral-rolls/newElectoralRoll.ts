@@ -9,7 +9,7 @@ export type NuevoPadron = {
   genero: string | null;
   domicilio: string | null;
   seccion: string | null;
-  localidad: string | null;        // default "SAN MIGUEL"
+  localidad: string | null;        // default "San Miguel 2025"
   codigoPostal: string | null;     // default ""
   tipoNacionalidad: string | null; // default "ARGENTINO"
   numeroMesa: number | null;
