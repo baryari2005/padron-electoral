@@ -28,12 +28,12 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const id = parseIdOrThrow(params.id);
-    const { nombre } = await req.json();
+    const { nombre, requiereEstablecimientos, puedeAsignarEstablecimientos } = await req.json();
     if (!nombre) return jsonError("required.name");
 
     const updated = await db.rol.update({
       where: { id },
-      data: { nombre },
+      data: { nombre, requiereEstablecimientos, puedeAsignarEstablecimientos },
     });
 
     return NextResponse.json(updated);

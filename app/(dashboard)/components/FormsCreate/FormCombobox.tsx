@@ -1,15 +1,7 @@
 "use client";
 
-import {
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import {
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-} from "@/components/ui/popover";
+import { FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import {
   Command,
   CommandInput,
@@ -24,10 +16,9 @@ import { useId, useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 
 export type FormComboboxProps<T> = {
-  /** id base para relacionar label y trigger (recomendado) */
   id?: string;
   label?: string;
-  withLabel?: boolean;                // ← controla si se muestra o no el label (default true si label existe)
+  withLabel?: boolean;
   placeholder?: string;
   options: T[];
   value?: string;
@@ -37,12 +28,10 @@ export type FormComboboxProps<T> = {
   onOptionSelected?: (option: T) => void;
   disabled?: boolean;
   loading?: boolean;
-
-  /** Personalización opcional */
-  className?: string;                 // contenedor
-  buttonClassName?: string;           // botón trigger
-  emptyText?: string;                 // texto cuando no hay resultados
-  searchPlaceholder?: string;         // placeholder del buscador
+  className?: string;
+  buttonClassName?: string;
+  emptyText?: string;
+  searchPlaceholder?: string;
 };
 
 export function FormCombobox<T>({
@@ -65,7 +54,6 @@ export function FormCombobox<T>({
 }: FormComboboxProps<T>) {
   const [open, setOpen] = useState(false);
 
-  // ids accesibles y estables
   const reactId = useId();
   const baseId = id ?? `cb-${reactId}`;
   const triggerId = `${baseId}-trigger`;
@@ -88,7 +76,7 @@ export function FormCombobox<T>({
         </FormLabel>
       ) : null}
 
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover open={open} onOpenChange={setOpen} modal={false}>
         <PopoverTrigger asChild>
           <Button
             id={triggerId}
@@ -118,12 +106,14 @@ export function FormCombobox<T>({
         </PopoverTrigger>
 
         <PopoverContent
-          className="w-[var(--radix-popover-trigger-width)] p-0"
           align="start"
           side="bottom"
           sideOffset={2}
           avoidCollisions={false}
           collisionPadding={8}
+          className="pointer-events-auto z-[120] p-0 w-[--radix-popover-trigger-width] overflow-hidden"
+          onWheel={(e) => e.stopPropagation()}
+          onTouchMove={(e) => e.stopPropagation()}
         >
           <Command>
             <CommandInput
@@ -131,7 +121,13 @@ export function FormCombobox<T>({
               placeholder={computedSearchPlaceholder}
               className="h-9"
             />
-            <CommandList id={listId} aria-labelledby={withLabel && label ? labelId : undefined}>
+
+            {/* 👇 ÚNICO contenedor con scroll */}
+            <CommandList
+              id={listId}
+              aria-labelledby={withLabel && label ? labelId : undefined}
+              className="max-h-72 overflow-y-auto overscroll-contain"
+            >
               {loading ? (
                 <div className="flex items-center gap-2 p-3 text-sm text-muted-foreground">
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -140,7 +136,9 @@ export function FormCombobox<T>({
               ) : (
                 <>
                   <CommandEmpty>{emptyText}</CommandEmpty>
-                  <CommandGroup className="max-h-[300px] overflow-auto">
+
+                  {/* sin overflow acá */}
+                  <CommandGroup>
                     {options.map((opt) => {
                       const optValue = getOptionValue(opt);
                       const optLabel = getOptionLabel(opt);
@@ -157,7 +155,12 @@ export function FormCombobox<T>({
                           }}
                         >
                           {optLabel}
-                          <Check className={cn("ml-auto h-4 w-4", selected ? "opacity-100" : "opacity-0")} />
+                          <Check
+                            className={cn(
+                              "ml-auto h-4 w-4",
+                              selected ? "opacity-100" : "opacity-0"
+                            )}
+                          />
                         </CommandItem>
                       );
                     })}

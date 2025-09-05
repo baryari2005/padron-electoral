@@ -20,21 +20,19 @@ export function AuthRehydrationProvider() {
             alt="Logo"
             fill
             sizes="160px"
-            className="object-contain dark:hidden rounded-lg"
-            priority
+            className="object-contain dark:hidden rounded-lg"            
           />
           <Image
             src="/logo-white.png"
             alt="Logo blanco"
             sizes="160px"
             fill
-            className="object-contain hidden dark:block rounded-lg"
-            priority
+            className="object-contain hidden dark:block rounded-lg"            
           />
         </div>
 
-        <h1 className="text-2xl font-bold">Votaciones 2025</h1>
-        <p className="text-muted-foreground">San Miguel</p>
+        <h1 className="text-2xl font-bold">Elecciones Provinciales</h1>
+        <p className="text-muted-foreground">San Miguel 2025</p>
         <hr className="w-1/4 border-muted my-6" />
         <div className="flex items-center gap-3">
           <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />

@@ -18,11 +18,12 @@ import axiosInstance from "@/utils/axios";
 import { formatApiMessage, formatMessage } from "@/lib/utils/formatters";
 import { Cargando } from "@/components/ui/upload";
 
-// 👇 shadcn/ui (opcional): Switch y RadioGroup
-import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { TextStatsLoader } from "./TextStatsLoader";
+import { AccessDeniedPage } from "@/components/NoPermissions/AccessDeniedPage";
+import { useHasPermission } from "@/lib/permissions/useHasPermission";
+import { supabase } from "@/utils/supabaseClient";
 
 type ImportMode = "replace" | "append";
 
@@ -77,29 +78,45 @@ export function ElectoralRegistrerLoader() {
       return;
     }
 
-    const formData = new FormData();
-    formData.append("file", file);
-    // 👇 Enviamos el modo y (opcional) los truncados
-    formData.append("mode", mode);
-    if (mode === "replace") {
-      formData.append("truncateCircuito", String(truncateCircuito));
-      formData.append("truncateEstablecimiento", String(truncateEstablecimiento));
-      formData.append("truncateMesas", String(truncateMesas));
-    }
-
     setIsUploading(true);
     setRowsImported(null);
     setImportSummary(null);
-
     const interval = simulateProgress();
 
     try {
+      // 1) Pedir URL firmada al server
+      const pre = await axiosInstance.post("/api/uploads/presign", {
+        filename: file.name,
+        upsert: true,
+      });
+      const { bucket, path, token } = pre.data;
+      if (!bucket || !path || !token) throw new Error("Pre-firma inválida");
+      
+      // 2) Subir directo al bucket usando la URL firmada
+      const up = await supabase
+        .storage
+        .from(bucket)
+        .uploadToSignedUrl(path, token, file);
+
+      if (up.error) {
+        throw new Error(up.error.message || "Fallo la subida al Storage");
+      }
+
+      // 3) Avisar a tu API SOLO la ruta + flags
       const res = await axiosInstance.post(
         "/api/electoral-rolls/electoral-rolls-loader",
-        formData
+        {
+          path: path,
+          mode,
+          truncateCircuito,
+          truncateEstablecimiento,
+          truncateMesas,
+        }
       );
 
-      if (res.status !== 200) throw new Error(formatMessage("Error al importar los datos"));
+      if (res.status !== 200 || !res.data?.ok) {
+        throw new Error(formatMessage("Error al importar los datos"));
+      }
 
       setProgress(100);
       setRowsImported(res.data?.rows ?? 0);
@@ -113,9 +130,7 @@ export function ElectoralRegistrerLoader() {
       });
 
       toast.success(
-        `¡Importación ${mode === "replace" ? "con truncado" : "agregada"} exitosa! Registros: ${
-          res.data?.rows ?? 0
-        }`
+        `¡Importación ${mode === "replace" ? "con truncado" : "agregada"} exitosa! Registros: ${res.data?.rows ?? 0}`
       );
     } catch (err) {
       console.error("[error]", err);
@@ -125,11 +140,10 @@ export function ElectoralRegistrerLoader() {
       clearInterval(interval);
       setIsUploading(false);
       setFile(null);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
+
 
   const handleReset = () => {
     setFile(null);
@@ -139,6 +153,10 @@ export function ElectoralRegistrerLoader() {
       fileInputRef.current.value = "";
     }
   };
+
+  const canCreate = useHasPermission("crear_importarpadron");
+  if (!canCreate) return (<AccessDeniedPage subtitle="Importar Padrón Electoral." />);
+
 
   return (
     <>
@@ -166,45 +184,6 @@ export function ElectoralRegistrerLoader() {
           </RadioGroup>
         </div>
 
-        {/* Flags de truncado sólo si modo = replace */}
-        {/* {mode === "replace" && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="flex items-center justify-between rounded-md border p-3">
-              <div>
-                <Label htmlFor="truncateCircuito">Truncar Circuitos</Label>
-              </div>
-              <Switch
-                id="truncateCircuito"
-                checked={truncateCircuito}
-                onCheckedChange={setTruncateCircuito}
-                disabled={isUploading}
-              />
-            </div>
-            <div className="flex items-center justify-between rounded-md border p-3">
-              <div>
-                <Label htmlFor="truncateEstablecimiento">Truncar Establecimientos</Label>
-              </div>
-              <Switch
-                id="truncateEstablecimiento"
-                checked={truncateEstablecimiento}
-                onCheckedChange={setTruncateEstablecimiento}
-                disabled={isUploading}
-              />
-            </div>
-            <div className="flex items-center justify-between rounded-md border p-3">
-              <div>
-                <Label htmlFor="truncateMesas">Truncar Mesas</Label>
-              </div>
-              <Switch
-                id="truncateMesas"
-                checked={truncateMesas}
-                onCheckedChange={setTruncateMesas}
-                disabled={isUploading}
-              />
-            </div>
-          </div>
-        )} */}
-
         {/* Archivo */}
         <div className="flex flex-col space-y-2">
           <Label htmlFor="padronFile">Seleccioná el archivo del padrón:</Label>
@@ -217,8 +196,8 @@ export function ElectoralRegistrerLoader() {
             disabled={isUploading}
           />
         </div>
-          <Separator/>
-          <TextStatsLoader/>
+        <Separator />
+        <TextStatsLoader />
         <div className="flex items-center gap-4">
           <Button onClick={handleUpload} disabled={!file || isUploading}>
             {isUploading ? <Cargando /> : "Subir archivo"}

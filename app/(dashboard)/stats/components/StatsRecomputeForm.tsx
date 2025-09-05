@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Cargando } from "@/components/ui/upload";
 import { CircleFadingArrowUp, Timer, Database, FolderTree, Table, UsersRound, ClipboardList } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { useHasPermission } from "@/lib/permissions/useHasPermission";
+import { AccessDeniedPage } from "@/components/NoPermissions/AccessDeniedPage";
 
 // ——— Types
 type Result = {
@@ -69,6 +71,9 @@ export default function StatsRecomputeForm() {
       setLoading(false);
     }
   };
+
+  const canCreate = useHasPermission("crear_estadisticas");
+  if (!canCreate) return (<AccessDeniedPage subtitle="Correr Estadísticas." />);
 
   return (
     <div className="space-y-6">

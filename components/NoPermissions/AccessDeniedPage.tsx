@@ -17,7 +17,7 @@ type AccessDeniedPageProps = {
   secondaryLabel?: string;
   title?: string;
   subtitle?: string;
-  location?: string;         // ej: "San Miguel"
+  location?: string;         // ej: "San Miguel 2025"
   message?: string;
   className?: string;        // por si querés estilos extra
 };
@@ -29,9 +29,9 @@ export function AccessDeniedPage({
   primaryLabel = "Ir al inicio",
   onSecondaryAction,
   secondaryLabel = "Volver",
-  title = "Votaciones 2025",
+  title = "Elecciones Provinciales",
   subtitle = "Informe de votos totales",
-  location = "San Miguel",
+  location = "San Miguel 2025",
   message = "No tenés permiso para ver esta sección.",
   className,
 }: AccessDeniedPageProps) {
@@ -68,7 +68,7 @@ export function AccessDeniedPage({
             sizes="160px"
             fill
             className="object-contain rounded-lg dark:hidden"
-            priority
+            // priority
           />
           <Image
             src="/logo-white.png"
@@ -76,7 +76,7 @@ export function AccessDeniedPage({
             sizes="160px"
             fill
             className="object-contain hidden rounded-lg dark:block"
-            priority
+            // priority
           />
         </div>
 

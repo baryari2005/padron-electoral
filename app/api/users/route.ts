@@ -49,7 +49,21 @@ export async function GET(req: NextRequest) {
   const [usuarios, total] = await Promise.all([
     db.usuario.findMany({
       where,
-      include: { rol: true },
+      select: {
+        id: true,
+        userId: true,
+        nombre: true,
+        apellido: true,
+        avatarUrl: true,
+        rol: { select: { id: true, nombre: true } },
+        // 👇 Traemos el nombre del establecimiento
+        escuelas: {
+          select: {
+            establecimientoId: true,
+            establecimiento: { select: { nombre: true } },
+          },
+        },
+      },
       skip,
       take: limit,
       orderBy: { nombre: "asc" },
@@ -72,33 +86,62 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { nombre, apellido, avatarUrl, password, userId, rolId, email } = body;
+
+    console.log(body);
+
+    const {
+      userId, nombre, apellido, email, rolId,
+      avatarUrl, password, escuelasIds = [],
+    } = body;
 
     let nombreLargo = nombre + " " + apellido;
     const finalProfileImage =
       avatarUrl?.trim() ||
-      `https://ui-avatars.com/api/?nombre=${encodeURIComponent(nombreLargo)}&background=adf5d7&color=000&size=128&rounded=true&bold=true`;
+      `https://ui-avatars.com/api/?nombre=${encodeURIComponent(nombreLargo)}&background=adf5d7&color=000&size=128&rounded=true&bold=true&format=png`;
 
 
     if (!nombre || !apellido || !userId || !password || !rolId) {
       return NextResponse.json({ error: "Faltan datos requeridos" }, { status: 400 });
     }
 
-    const userData: any = {
-      ...body,
-    };
+    const hashPassword =
+      await hash(password, 10);
 
-    if (password && password.trim() !== "") {
-      const hashPassword = await hash(password, 10);
-      userData.password = hashPassword;
-    }
+    const created = await db.$transaction(async (tx) => {
+      // 1) Usuario
+      const user = await tx.usuario.create({
+        data: {
+          userId,
+          nombre,
+          apellido,
+          email,
+          password: hashPassword,
+          avatarUrl,
+          rolId: Number(rolId),
+        },
+        select: { id: true },
+      });
 
-    const createdUser = await db.usuario.create({
-      data: userData,
+      // 2) Relaciones con establecimientos (si hay)
+      if (Array.isArray(escuelasIds) && escuelasIds.length > 0) {
+        await tx.usuarioEstablecimiento.createMany({
+          data: escuelasIds.map((establecimientoId) => ({
+            usuarioId: user.id,
+            establecimientoId,
+          })),
+          skipDuplicates: true,
+        });
+      }
+
+      return user;
     });
 
-    return NextResponse.json({ createdUser }, { status: 201 });
+    console.log(created);
+
+    return NextResponse.json({ created }, { status: 201 });
   } catch (error: any) {
+    console.error("POST /api/users error:", error?.code, error?.message, error);
+
     if (
       error instanceof Prisma.PrismaClientKnownRequestError &&
       error.code === "P2002"

@@ -23,7 +23,7 @@ export function TopList({ title, items, labelKey, icono: Icon, iconClassName = "
       </CardHeader>
       <CardContent>
         <ol className="list-decimal pl-4 space-y-1">
-          {items.map((x, i) => (
+          {items.slice(0, 10).map((x, i) => (
             <li key={`${labelKey}-${i}`} className="flex justify-between">
               <span className="truncate">{(x as any)[labelKey]}</span>
               <span className="text-muted-foreground">{fmtAR.format(x.votos)} votos</span>

@@ -30,7 +30,7 @@ export async function GET(req: Request) {
 
     const user = await db.usuario.findUnique({
       where: { id: decoded.sub },
-      include: {
+      include: {        
         rol: {
           include: {
             permisos: {
@@ -40,6 +40,15 @@ export async function GET(req: Request) {
             },
           },
         },
+        escuelas: {
+          include: {
+            establecimiento: {
+              include: {
+                circuito: true
+              }
+            }
+          }
+        }
       },
     });
 

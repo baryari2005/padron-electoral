@@ -25,6 +25,8 @@ export function FormCircuit({
   modo = "editar",
   onSuccess,
   onClose }: FormCircuitProps) {
+  const isEdit = !!circuit;
+  
   const isReadOnly = modo === "ver";
 
   const form = useForm<CircuitFormValues>({
@@ -36,11 +38,13 @@ export function FormCircuit({
     mode: "onChange",
   });
 
-  const { isSubmitting } = form.formState;
+  const { isSubmitting, isValid, isDirty } = form.formState;
+  const canSubmit = isValid && !isSubmitting && (!isEdit || isDirty);
+
 
   const onSubmit = async (values: CircuitFormValues) => {
     try {
-      if (circuit) {
+      if (isEdit) {
         await axiosInstance.put(`/api/circuites/${circuit.id}`, values);
       } else {
         await axiosInstance.post("/api/circuites", values);
@@ -74,7 +78,7 @@ export function FormCircuit({
             control={form.control}
             name="nombre"
             label="Nombre del Circuito"
-            placeholder="Ej: SAN MIGUEL"
+            placeholder="Ej: San Miguel 2025"
             disabled={isReadOnly}
             uppercase
           />
@@ -83,6 +87,7 @@ export function FormCircuit({
         {!isReadOnly && (
           <div className="mt-4">
             <SubmitButton
+              disabled={!canSubmit}
               loading={isSubmitting}
               label={circuit ? "Actualizar" : "Crear"}
               icon={circuit ? "pencil" : "plus"}

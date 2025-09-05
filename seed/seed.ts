@@ -44,7 +44,24 @@ async function main() {
   console.log('✅ Seed completado.');
 
   // 2. Definir módulos y acciones
-  const modulos = ["usuarios", "circuitos", "establecimientos", "agrupaciones", "mesas"];
+
+  const modulos = ["usuarios",
+    "circuitos",
+    "establecimientos",
+    "agrupaciones",
+    "mesas",
+    "categorias",
+    "votantes",
+    "reportes",
+    "estadoelector",
+    "generarusuario",
+    "permisos",
+    "permisosrol",
+    "roles",
+    "estadisticas",
+    "importarpadron",
+    "certificados"];
+
   const acciones = ["ver", "crear", "editar", "eliminar"] as const;
 
   // 3. Crear todos los permisos combinando módulo + acción

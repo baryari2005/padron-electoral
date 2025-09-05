@@ -20,6 +20,7 @@ interface FormCategoryProps {
 }
 
 export function FormCategory({ category, onSuccess, onClose }: FormCategoryProps) {
+  const isEdit = !!category;
   const form = useForm<CategoryFormValues>({
     resolver: zodResolver(categoryFormSchema),
     defaultValues: {
@@ -29,12 +30,11 @@ export function FormCategory({ category, onSuccess, onClose }: FormCategoryProps
     mode: "onChange",
   });
 
-  const { isSubmitting } = form.formState;
+  const { isSubmitting, isValid, isDirty } = form.formState;
+  const canSubmit = isValid && !isSubmitting && (!isEdit || isDirty);
 
   const onSubmit = async (values: CategoryFormValues) => {
-    try {
-      const isEdit = !!category;
-
+    try {      
       if (isEdit) {
         await axiosInstance.put(`/api/categories/${category.id}`, values);
       } else {
@@ -68,12 +68,13 @@ export function FormCategory({ category, onSuccess, onClose }: FormCategoryProps
             placeholder="1"
             type="number"
             min={1}
-            step={1}            
+            step={1}
           />
         </div>
 
         <div className="mt-4">
           <SubmitButton
+            disabled={!canSubmit}
             loading={isSubmitting}
             label={category ? "Actualizar" : "Crear"}
             icon={category ? "pencil" : "plus"}

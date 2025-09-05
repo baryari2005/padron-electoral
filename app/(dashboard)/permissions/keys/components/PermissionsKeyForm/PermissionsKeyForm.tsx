@@ -29,6 +29,7 @@ export function PermissionsKeyForm({
   onSuccess,
   onClose }:
   PermissionsKeyFormProps) {
+  const [isUploading, setIsUploading] = useState(false);
 
   const form = useForm<PermissionFormValues>({
     resolver: zodResolver(permissionFormSchema),
@@ -64,6 +65,7 @@ export function PermissionsKeyForm({
 
   const onSubmit = async (values: PermissionFormValues) => {
     try {
+      setIsUploading(true);
       if (permission) {
         await axiosInstance.put(`/api/permissions/keys/${permission.id}`, values);
       } else {
@@ -76,6 +78,9 @@ export function PermissionsKeyForm({
     } catch (err: any) {
       const msg = err?.response?.data?.error || "Algo salió mal.";
       toast.error(formatMessage(msg));
+    } finally
+    {
+      setIsUploading(false);
     }
   };
 
@@ -111,6 +116,9 @@ export function PermissionsKeyForm({
                 options={[...MODULOS]}
                 getOptionLabel={(m) => MODULO_LABELS[m]}
                 getOptionValue={(m) => m}
+                loading={isUploading}
+                disabled={isUploading}
+                placeholder={isUploading ? "Cargando…" : "Seleccionar"}
               />
             )}
           />

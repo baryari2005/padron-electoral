@@ -36,7 +36,7 @@ export default function PermissionsKeyPage() {
             iconModal={<ShieldPlus className="w-5 h-5 text-muted-foreground" />}
             titleCreate={`Crear ${component}`}
             titleUpdate={`Editar ${component}`}
-            description={`Crear y configurar una nuevo ${component}`}
+            description={`Crear y configurar un nuevo ${component}`}
             mode="create"
             buttonTextCreate={`Nuevo ${component}`}
             buttonTextUpdate={`Editar ${component}`}

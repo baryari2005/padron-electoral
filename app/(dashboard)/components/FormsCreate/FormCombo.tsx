@@ -57,7 +57,7 @@ export function FormCombo<T>({
 
   return (
     <>
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover open={open} onOpenChange={setOpen} modal={false}>
         <PopoverTrigger asChild>
           <Button
             id={triggerId}
@@ -82,7 +82,7 @@ export function FormCombo<T>({
         </PopoverTrigger>
 
         <PopoverContent
-          className="w-[var(--radix-popover-trigger-width)] p-0"
+          className="z-[70] p-0 w-[--radix-popover-trigger-width] pointer-events-auto"
           align="start"
           side="bottom"
           sideOffset={2}

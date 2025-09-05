@@ -45,7 +45,7 @@ export function FormCreateOrUpdateElectoralRoll({
         clase: new Date().getFullYear() - 16,
         genero: "M", // o el que quieras por defecto
         domicilio: "",
-        seccion: "53 - SAN MIGUEL",
+        seccion: "53 - San Miguel 2025",
         circuitoId: 0,
         localidad: "",
         codigoPostal: "",

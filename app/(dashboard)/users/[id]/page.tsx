@@ -18,7 +18,7 @@ export default function UserIdPage({ params }: { params: { id: string } }) {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [roles, setRoles] = useState<{ id: number; nombre: string }[]>([]);
+  const [roles, setRoles] = useState<{ id: number; nombre: string; puedeAsignarEstablecimientos: boolean;  requiereEstablecimientos: boolean;}[]>([]);
   const [loadingRoles, setLoadingRoles] = useState(true);
 
   useEffect(() => {
@@ -42,7 +42,9 @@ export default function UserIdPage({ params }: { params: { id: string } }) {
         const resRoles = await axiosInstance.get("/api/roles");
         const rolesConNombre = (resRoles.data.items || []).map((rol: { id: number; nombre: string }) => ({
           id: rol.id,
-          nombre: rol.nombre, // renombramos aquí para que coincida con lo que espera FormUser
+          nombre: rol.nombre, 
+          puedeAsignarEstablicimientos: false,
+          requiereEstablecimientos: false,
         }));
 
         setRoles(rolesConNombre);

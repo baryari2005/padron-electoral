@@ -102,7 +102,7 @@ export function ResultadosPresidencialesForm({
             className="grid items-center gap-2 even:bg-muted/50 p-2 rounded-md"
           >
             <div>
-              <LogoConFallback src={imagen} alt={nombre} />
+              <LogoConFallback src={imagen} alt={nombre}  unoptimized={true}/>
             </div>
 
             <div className="text-sm flex items-center gap-1 uppercase">

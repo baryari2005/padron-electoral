@@ -46,6 +46,8 @@ export async function GET(req: NextRequest) {
       db.rol.count({ where }),
     ]);
 
+    // console.log(items);
+
     return NextResponse.json({ items, total });
   }
   catch (error) {
@@ -56,12 +58,12 @@ export async function GET(req: NextRequest) {
 // POST: crear roles
 export async function POST(req: NextRequest) {
   try {
-    const { nombre } = await req.json();
+    const { nombre, puedeAsignarEstablecimientos, requiereEstablecimientos } = await req.json();
 
     if (!nombre) return NextResponse.json({ error: formatApiMessage("required.name") }, { status: 400 });
 
     const created = await db.rol.create({
-      data: { nombre },
+      data: { nombre, puedeAsignarEstablecimientos, requiereEstablecimientos },
     });
 
     return NextResponse.json(created, { status: 201 });

@@ -56,6 +56,9 @@ export default function ElectoralQuickMarkingPage() {
   const [mesaVoters, setMesaVoters] = useState<VoterSeat[]>([]);
   const [loadingMesa, setLoadingMesa] = useState(false);
 
+  const [loadingEstabs, setLoadingEstabs] = useState(true);   // 👈 nuevo
+  const [loadingMesas, setLoadingMesas] = useState(false);
+
   // UI: cuál tab está activa
   const [view, setView] = useState<"grid" | "table">("grid");
 
@@ -95,15 +98,33 @@ export default function ElectoralQuickMarkingPage() {
     });
   }
 
+  function Field({ label, children, className = "" }: {
+    label: string; children: React.ReactNode; className?: string;
+  }) {
+    return (
+      <div className={`min-w-0 ${className}`}>
+        <Label className="block text-sm font-medium leading-5 mb-4 mt-2 whitespace-nowrap">
+          {label}
+        </Label>
+        <div className="grid gap-2">
+          {children}
+        </div>
+      </div>
+    );
+  }
+
   /** Prefetch establecimientos */
   useEffect(() => {
     if (!canView) return; // ✅ FIX: guardamos por permiso
     (async () => {
       try {
+        setLoadingEstabs(true);
         const { data } = await axiosInstance.get("/api/establishments?all=true");
         setEstablecimientos(data.items ?? data);
       } catch {
         toast.error(formatMessage("No se pudieron cargar los establecimientos"));
+      } finally {
+        setLoadingEstabs(false);
       }
     })();
   }, [canView]); // ✅ FIX: depende de canView
@@ -118,10 +139,13 @@ export default function ElectoralQuickMarkingPage() {
     }
     (async () => {
       try {
+        setLoadingMesas(true);
         const { data } = await axiosInstance.get(`/api/electoral-rolls/mesas?establecimientoId=${establecimientoId}`);
         setMesas(data.items ?? data);
       } catch {
         toast.error(formatMessage("No se pudieron cargar las mesas"));
+      } finally {
+        setLoadingMesas(false);
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -175,22 +199,30 @@ export default function ElectoralQuickMarkingPage() {
   /** Traer votantes de la mesa (para la grilla) */
   useEffect(() => {
     if (!canView || !canList) {
-      // ✅ FIX: también corto si no hay permiso
       setMesaVoters([]);
       return;
     }
     (async () => {
       setLoadingMesa(true);
       try {
-        const { data } = await axiosInstance.get("/api/electoral-rolls/quick-search", {
-          params: { page: 1, limit: 400, establecimientoId, mesaId },
-        });
+        const params: any = {
+          page: 1,
+          limit: 400,
+          establecimientoId,
+          mesaId,
+        };
+        const q = (query ?? "").trim();
+        if (q) params.q = q;          // 👈 aplicar filtro también en la grilla
+
+        const { data } = await axiosInstance.get("/api/electoral-rolls/quick-search", { params });
+
         const items = data.items ?? [];
         items.sort((a: any, b: any) => {
           const ap = (a.apellido ?? "").localeCompare(b.apellido ?? "", "es", { sensitivity: "base" });
           if (ap !== 0) return ap;
           return (a.nombre ?? "").localeCompare(b.nombre ?? "", "es", { sensitivity: "base" });
         });
+
         const mapped: VoterSeat[] = items.map((e: any, idx: number) => ({
           id: e.id,
           position: Number(e.numeroOrden ?? idx + 1),
@@ -206,11 +238,13 @@ export default function ElectoralQuickMarkingPage() {
         setLoadingMesa(false);
       }
     })();
-  }, [canView, canList, establecimientoId, mesaId, refreshToken]); // ✅ FIX
+    // 👇 mantené refreshToken (Enter/Botón) para disparar la búsqueda
+  }, [canView, canList, establecimientoId, mesaId, refreshToken, query]);
+
 
   // ✅ FIX: ahora recién acá corto la UI, después de haber llamado TODOS los hooks
   if (!canView) {
-    return <AccessDeniedPage subtitle="Ver Electores que votaron."/>;
+    return <AccessDeniedPage subtitle="Ver Electores que votaron." />;
   }
 
   return (
@@ -230,66 +264,91 @@ export default function ElectoralQuickMarkingPage() {
         </div>
 
         {/* Filtros */}
-        <Card className="p-4 space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <Card className="p-4"> {/* 👈 sin space-y */}
+          {/* fila de combos */}
+          <div className="grid gap-3 md:grid-cols-3 items-start mb-2 md:mb-3">
             {/* Establecimiento */}
             <FormField
               control={form.control}
               name="establecimientoId"
               render={({ field }) => (
-                <div>
-                  <Label>Establecimiento</Label>
+                <div className="min-w-0">
+                  <Label className="block text-sm font-medium leading-5 mb-1">Establecimiento</Label>
                   <FormCombobox
                     label=""
                     value={field.value}
                     onChange={(v: string) => {
                       field.onChange(v);
                       form.setValue("mesaId", "");
-                      setPendingMarks([]); setRefreshToken((x) => x + 1);
+                      setPendingMarks([]);
+                      setRefreshToken((x) => x + 1);
                     }}
                     options={establecimientos}
                     getOptionLabel={(e: Establecimiento) => e.nombre}
                     getOptionValue={(e: Establecimiento) => String(e.id)}
+                    loading={loadingEstabs}
+                    disabled={loadingEstabs}
+                    placeholder={loadingEstabs ? "Cargando…" : "Seleccionar"}
                   />
                 </div>
               )}
             />
+
             {/* Mesa */}
             <FormField
               control={form.control}
               name="mesaId"
               render={({ field }) => (
-                <div>
-                  <Label>Mesa</Label>
+                <div className="min-w-0">
+                  <Label className="block text-sm font-medium leading-5 mb-1">Mesa</Label>
                   <FormCombobox
                     label=""
                     value={field.value}
                     onChange={(v: string) => {
                       field.onChange(v);
-                      setPendingMarks([]); setRefreshToken((x) => x + 1);
+                      setPendingMarks([]);
+                      setRefreshToken((x) => x + 1);
                     }}
                     options={mesas}
                     getOptionLabel={(m: Mesa) => `Mesa ${m.numero}`}
                     getOptionValue={(m: Mesa) => String(m.id)}
-                    disabled={!establecimientoId}
+                    disabled={!establecimientoId || loadingMesas}
+                    loading={loadingMesas}
+                    placeholder={
+                      !establecimientoId ? "Seleccionar establecimiento primero"
+                        : loadingMesas ? "Cargando…"
+                          : "Seleccionar"
+                    }
                   />
                 </div>
               )}
             />
-            {/* Búsqueda manual (global) */}
+
+            {/* Búsqueda manual */}
             <FormField
               control={form.control}
               name="query"
               render={({ field }) => (
-                <div>
-                  <Label>Búsqueda manual</Label>
-                  <div className="flex gap-2 mt-3">
+                <div className="min-w-0">
+                  <Label className="block text-sm font-medium leading-5 mb-1">Búsqueda manual</Label>
+                  <div className="flex gap-2">
                     <Input
                       {...field}
                       placeholder="Apellido, Nombre o DNI"
-                      onKeyDown={(e) => e.key === "Enter" && setRefreshToken((x) => x + 1)}
+                      onKeyDownCapture={(e) => e.stopPropagation()}
+                      onKeyDown={(e) => {
+                        e.stopPropagation();
+                        if (e.key === "Enter") {                          
+                          setRefreshToken((x) => x + 1);
+                        }
+                      }}
                     />
-                    <Button onClick={() => setRefreshToken((x) => x + 1)} disabled={loading}>
+                    <Button
+                      onClick={() => {                        
+                        setRefreshToken((x) => x + 1);
+                      }}
+                      disabled={loading}
+                    >
                       <Search width={20} height={20} />
                       {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Buscar"}
                     </Button>
@@ -299,12 +358,15 @@ export default function ElectoralQuickMarkingPage() {
             />
           </div>
 
-          <Separator />
+          {/* separador pegadito */}
+          <Separator className="my-1 md:my-2" />   {/* 👈 controla el aire exacto */}
 
-          <div className="text-sm text-muted-foreground">
+          {/* ayuda debajo con poco margen */}
+          <div className="text-sm text-muted-foreground mt-1 md:mt-2">
             Elegí Establecimiento y Mesa para ver la grilla; o usá la búsqueda para listar globalmente.
           </div>
         </Card>
+
 
         {/* Tabs: Grilla / Tabla */}
         <Tabs value={view} onValueChange={(v) => setView(v as any)} className="w-full">
@@ -353,7 +415,7 @@ export default function ElectoralQuickMarkingPage() {
 
                 {/* OVERLAY que cubre TODO el Card */}
                 {loadingMesa && (
-                  <Cargando label="Cargando datos..."/>
+                  <Cargando label="Cargando datos..." />
                 )}
               </Card>
             )}
@@ -387,7 +449,7 @@ export default function ElectoralQuickMarkingPage() {
               )}
           </TabsContent>
         </Tabs>
-      </div>
-    </Form>
+      </div >
+    </Form >
   );
 }

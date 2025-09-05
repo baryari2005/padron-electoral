@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
       (profileImage && profileImage.trim()) ||
       `https://ui-avatars.com/api/?name=${encodeURIComponent(
         nombre
-      )}&background=adf5d7&color=000&size=128&rounded=true&bold=true`;
+      )}&background=adf5d7&color=000&size=128&rounded=true&bold=true&format=png`;
 
     // (opcional) validación: no duplicar por nombre (insensitive)
     const existing = await findByNombreInsensitive(nombre);

@@ -10,6 +10,16 @@ export const MODULOS = [
     "votantes",
     "reportes",
     "estadoelector",
+    "generarusuario",
+    "permisos",
+    "permisosrol",
+    "roles",
+    "estadisticas",
+    "importarpadron",
+    "certificados",
+    "resultados",
+
+
 ] as const;
 
 export const ACCIONES = ["ver", "crear", "editar", "eliminar"] as const;
@@ -26,7 +36,15 @@ export const MODULO_LABELS: Record<Modulo, string> = {
     categorias: "Cargos Políticos",
     votantes: "Electores",
     reportes: "Reportes",
-    estadoelector: "Flag Voto"
+    estadoelector: "Flag Voto",
+    generarusuario: "Generar usuarios",
+    permisos: "Permisos",
+    permisosrol: "Permisos Por Rol",
+    roles: "Roles",
+    estadisticas: "Estadisticas",
+    importarpadron: "Importar Padrón",
+    certificados: "Certificado Escrutinio",
+    resultados: "Resultados de Escrutinio"
 };
 
 export const ACCION_LABELS: Record<Accion, string> = {
