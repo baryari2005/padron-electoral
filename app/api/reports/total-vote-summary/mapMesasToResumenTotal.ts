@@ -27,11 +27,11 @@ export function mapMesasToResumenTotal(mesas: MesaEscrutadaConDatosCompletos[]) 
     for (const e of mesa.resultadosEspeciales) {
       const categoria = e.cargoPolitico.nombre;
       const tipos = [
-        { tipo: "Nulo", cantidad: e.votosNulos },
+        // { tipo: "Nulo", cantidad: e.votosNulos },
         { tipo: "En blanco", cantidad: e.votosEnBlanco },
-        { tipo: "Recurrido", cantidad: e.votosRecurridos },
+        // { tipo: "Recurrido", cantidad: e.votosRecurridos },
         { tipo: "Impugnado", cantidad: e.votosImpugnados },
-        { tipo: "Comando", cantidad: e.votosComandoElectoral },
+        // { tipo: "Comando", cantidad: e.votosComandoElectoral },
       ];
 
       for (const { tipo, cantidad } of tipos) {

@@ -77,17 +77,30 @@ export async function POST(req: NextRequest) {
       });
 
       // Insertar votos especiales
+      // const votosEspecialesData = Object.entries(votosEspeciales).map(
+      //   ([categoriaIdStr, valores]: [string, any]) => ({
+      //     mesaId,
+      //     categoriaId: parseInt(categoriaIdStr),
+      //     // votosNulos: valores.nulos,
+      //     // votosRecurridos: valores.recurridos,
+      //     votosImpugnados: valores.impugnados,
+      //     // votosComandoElectoral: valores.comandoElectoral,
+      //     votosEnBlanco: valores.blancos,
+      //   })
+      // );
+
       const votosEspecialesData = Object.entries(votosEspeciales).map(
         ([categoriaIdStr, valores]: [string, any]) => ({
           mesaId,
           categoriaId: parseInt(categoriaIdStr),
-          votosNulos: valores.nulos,
-          votosRecurridos: valores.recurridos,
+          votosNulos: 0,
+          votosRecurridos: 0,
           votosImpugnados: valores.impugnados,
-          votosComandoElectoral: valores.comandoElectoral,
+          votosComandoElectoral: 0,
           votosEnBlanco: valores.blancos,
         })
       );
+
 
       await tx.resultadoVotosEspeciales.createMany({
         data: votosEspecialesData,
@@ -126,10 +139,10 @@ export async function POST(req: NextRequest) {
 
         const especiales = votosEspeciales[categoriaIdStr];
         const totalEspeciales =
-          especiales.nulos +
-          especiales.recurridos +
+          // especiales.nulos +
+          // especiales.recurridos +
           especiales.impugnados +
-          especiales.comandoElectoral +
+          // especiales.comandoElectoral +
           especiales.blancos;
 
         const totalAgrupaciones = resultadosPresidenciales.reduce((acc: number, agrupacion: any) => {

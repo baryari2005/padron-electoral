@@ -39,7 +39,21 @@ export const columns = ({
         {
             accessorKey: "nombre",
             header: sortableHeader("Agrupación Política"),
-            
+
+        },
+        {
+            accessorKey: "color_hex",
+            header: "Color",
+            cell: ({ row }) => {
+                const hex = row.original.color_hex || "#000000";
+                return (
+                    <span
+                        className="inline-block h-5 w-5 rounded-full border border-border shadow-sm"
+                        style={{ backgroundColor: hex }}
+                        title={hex}
+                    />
+                );
+            },
         },
         buildActionsColumn({ component: "political-groups", label: "agrupación política", onDeleted, canEdit, canDelete }),
     ];

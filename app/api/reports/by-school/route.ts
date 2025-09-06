@@ -32,11 +32,11 @@ export async function GET() {
         establecimientoNombre: string;
         resultados: Record<string, Record<string, { votos: number; logo?: string | null }>>;
         votosEspeciales: Record<string, {
-          votosNulos: number;
+          // votosNulos: number;
           votosEnBlanco: number;
-          votosRecurridos: number;
+          // votosRecurridos: number;
           votosImpugnados: number;
-          votosComandoElectoral: number;
+          // votosComandoElectoral: number;
         }>;
       }
     > = {};
@@ -78,19 +78,19 @@ export async function GET() {
 
         if (!resumenPorEscuela[establecimientoId].votosEspeciales[categoria]) {
           resumenPorEscuela[establecimientoId].votosEspeciales[categoria] = {
-            votosNulos: 0,
+            // votosNulos: 0,
             votosEnBlanco: 0,
-            votosRecurridos: 0,
+            // votosRecurridos: 0,
             votosImpugnados: 0,
-            votosComandoElectoral: 0,
+            // votosComandoElectoral: 0,
           };
         }
 
-        resumenPorEscuela[establecimientoId].votosEspeciales[categoria].votosNulos += ve.votosNulos;
+        // resumenPorEscuela[establecimientoId].votosEspeciales[categoria].votosNulos += ve.votosNulos;
         resumenPorEscuela[establecimientoId].votosEspeciales[categoria].votosEnBlanco += ve.votosEnBlanco;
-        resumenPorEscuela[establecimientoId].votosEspeciales[categoria].votosRecurridos += ve.votosRecurridos;
+        // resumenPorEscuela[establecimientoId].votosEspeciales[categoria].votosRecurridos += ve.votosRecurridos;
         resumenPorEscuela[establecimientoId].votosEspeciales[categoria].votosImpugnados += ve.votosImpugnados;
-        resumenPorEscuela[establecimientoId].votosEspeciales[categoria].votosComandoElectoral += ve.votosComandoElectoral;
+        // resumenPorEscuela[establecimientoId].votosEspeciales[categoria].votosComandoElectoral += ve.votosComandoElectoral;
       }
     }
 
