@@ -103,11 +103,11 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       votosEspeciales: mesa.resultadosEspeciales.reduce((acc, voto) => {
         const catId = String(voto.categoriaId);
         acc[catId] = {
-          nulos: voto.votosNulos,
+          // nulos: voto.votosNulos,
           blancos: voto.votosEnBlanco,
-          recurridos: voto.votosRecurridos,
+          // recurridos: voto.votosRecurridos,
           impugnados: voto.votosImpugnados,
-          comandoElectoral: voto.votosComandoElectoral,
+          // comandoElectoral: voto.votosComandoElectoral,
         };
         return acc;
       }, {} as any),
@@ -158,17 +158,30 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
         },
       });
 
+      // const votosEspecialesData = Object.entries(votosEspeciales).map(
+      //   ([categoriaIdStr, valores]: [string, any]) => ({
+      //     mesaId,
+      //     categoriaId: parseInt(categoriaIdStr),
+      //     // votosNulos: valores.nulos,
+      //     // votosRecurridos: valores.recurridos,
+      //     votosImpugnados: valores.impugnados,
+      //     // votosComandoElectoral: valores.comandoElectoral,
+      //     votosEnBlanco: valores.blancos,
+      //   })
+      // );
+
       const votosEspecialesData = Object.entries(votosEspeciales).map(
         ([categoriaIdStr, valores]: [string, any]) => ({
           mesaId,
           categoriaId: parseInt(categoriaIdStr),
-          votosNulos: valores.nulos,
-          votosRecurridos: valores.recurridos,
+          votosNulos: 0,
+          votosRecurridos: 0,
           votosImpugnados: valores.impugnados,
-          votosComandoElectoral: valores.comandoElectoral,
+          votosComandoElectoral: 0,
           votosEnBlanco: valores.blancos,
         })
       );
+
 
       if (votosEspecialesData.length > 0) {
         await tx.resultadoVotosEspeciales.createMany({ data: votosEspecialesData });
@@ -202,10 +215,10 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
         const especiales = votosEspeciales[categoriaIdStr];
 
         const totalEspeciales =
-          especiales.nulos +
-          especiales.recurridos +
+          // especiales.nulos +
+          // especiales.recurridos +
           especiales.impugnados +
-          especiales.comandoElectoral +
+          // especiales.comandoElectoral +
           especiales.blancos;
 
         const totalAgrupaciones = resultadosPresidenciales.reduce(

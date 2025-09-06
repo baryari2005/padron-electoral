@@ -194,19 +194,19 @@ export async function getDashboardSummary() {
   // --------- VOTOS ESPECIALES ----------
   const especialesAgg = await db.resultadoVotosEspeciales.aggregate({
     _sum: {
-      votosNulos: true,
+      // votosNulos: true,
       votosEnBlanco: true,
-      votosRecurridos: true,
+      // votosRecurridos: true,
       votosImpugnados: true,
-      votosComandoElectoral: true,
+      // votosComandoElectoral: true,
     },
   });
   const especiales = {
-    nulos: especialesAgg._sum.votosNulos ?? 0,
+    // nulos: especialesAgg._sum.votosNulos ?? 0,
     blancos: especialesAgg._sum.votosEnBlanco ?? 0,
-    recurridos: especialesAgg._sum.votosRecurridos ?? 0,
+    // recurridos: especialesAgg._sum.votosRecurridos ?? 0,
     impugnados: especialesAgg._sum.votosImpugnados ?? 0,
-    comando: especialesAgg._sum.votosComandoElectoral ?? 0,
+    // comando: especialesAgg._sum.votosComandoElectoral ?? 0,
   };
   const especialesTotal = Object.values(especiales).reduce((a, b) => a + b, 0);
   const especialesPctSobreVotantes = pct(especialesTotal, Math.max(votantesRegistrados, 1));

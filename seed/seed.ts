@@ -60,7 +60,8 @@ async function main() {
     "roles",
     "estadisticas",
     "importarpadron",
-    "certificados"];
+    "certificados",
+    "resultados"];
 
   const acciones = ["ver", "crear", "editar", "eliminar"] as const;
 

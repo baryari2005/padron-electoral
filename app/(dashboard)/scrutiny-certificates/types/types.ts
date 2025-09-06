@@ -86,10 +86,10 @@ export type Categoria = {
 
 /** Claves válidas de filas en VotosEspecialesForm */
 export type VotoEspecialKey =
-  | "nulos"
-  | "recurridos"
+  // | "nulos"
+  // | "recurridos"
   | "impugnados"
-  | "comandoElectoral"
+  // | "comandoElectoral"
   | "blancos";
 
 /** Auxiliar: respuesta de summary tipada (por comodidad en axios.get) */
