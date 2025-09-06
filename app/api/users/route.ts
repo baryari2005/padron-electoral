@@ -8,45 +8,119 @@ import { Prisma, Rol } from '@prisma/client';
 import { getAuthOrThrow } from "@/utils/auth";
 import { hash } from "bcryptjs";
 
-// Obtener todos los usuario con su rol
+// // Obtener todos los usuario con su rol
+// export async function GET(req: NextRequest) {
+//   const { searchParams } = new URL(req.url);
+//   const search = searchParams.get("search") || "";
+//   const page = parseInt(searchParams.get("page") || "1");
+//   const limit = parseInt(searchParams.get("limit") || "10");
+//   const skip = (page - 1) * limit;
+
+//   const terms = search.trim().split(" ").filter(Boolean);
+//   const part1 = terms[0] ?? "";
+//   const part2 = terms[1] ?? "";
+//   let where: Prisma.UsuarioWhereInput | undefined = undefined;
+
+//   if (terms.length > 0) {
+//     where = {
+//       AND: [
+//         {
+//           OR: [
+//             { nombre: { startsWith: search, mode: Prisma.QueryMode.insensitive } },
+//             { apellido: { startsWith: search, mode: Prisma.QueryMode.insensitive } },
+//             {
+//               AND: [
+//                 { nombre: { contains: part1, mode: Prisma.QueryMode.insensitive } },
+//                 { apellido: { contains: part2, mode: Prisma.QueryMode.insensitive } },
+//               ],
+//             },
+//             {
+//               AND: [
+//                 { nombre: { contains: part1, mode: Prisma.QueryMode.insensitive } },
+//                 { apellido: { contains: part2, mode: Prisma.QueryMode.insensitive } },
+//               ],
+//             },
+//           ],
+//         },
+//       ],
+//     };
+//   }
+
+//   const [usuarios, total] = await Promise.all([
+//     db.usuario.findMany({
+//       where,
+//       select: {
+//         id: true,
+//         userId: true,
+//         nombre: true,
+//         apellido: true,
+//         avatarUrl: true,
+//         rol: { select: { id: true, nombre: true } },
+//         // 👇 Traemos el nombre del establecimiento
+//         escuelas: {
+//           select: {
+//             establecimientoId: true,
+//             establecimiento: { select: { nombre: true } },
+//           },
+//         },
+//       },
+//       skip,
+//       take: limit,
+//       orderBy: { nombre: "asc" },
+//     }),
+//     db.usuario.count({ where }),
+//   ]);
+
+//   return NextResponse.json({ items: usuarios, total });
+// }
+// ...tus imports y constantes
+
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
-  const search = searchParams.get("search") || "";
-  const page = parseInt(searchParams.get("page") || "1");
-  const limit = parseInt(searchParams.get("limit") || "10");
-  const skip = (page - 1) * limit;
+  const search = (searchParams.get("search") || "").trim();
+  const page   = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
+  const limit  = Math.min(100, parseInt(searchParams.get("limit") || "10", 10));
+  const skip   = (page - 1) * limit;
 
-  const terms = search.trim().split(" ").filter(Boolean);
-  const part1 = terms[0] ?? "";
-  const part2 = terms[1] ?? "";
+  const sortBy  = (searchParams.get("sortBy") || "id") as "id" | "userId" | "nombre";
+  const sortDir = (searchParams.get("sortDir") || "asc") as "asc" | "desc";
+
+  // 🔎 filtros (incluye búsqueda por escuela)
   let where: Prisma.UsuarioWhereInput | undefined = undefined;
 
-  if (terms.length > 0) {
+  if (search) {
+    const [part1, part2] = search.split(/\s+/);
+
     where = {
-      AND: [
-        {
-          OR: [
-            { nombre: { startsWith: search, mode: Prisma.QueryMode.insensitive } },
-            { apellido: { startsWith: search, mode: Prisma.QueryMode.insensitive } },
-            {
+      OR: [
+        { nombre:   { contains: search, mode: "insensitive" } },
+        { apellido: { contains: search, mode: "insensitive" } },
+        { email:    { contains: search, mode: "insensitive" } },
+        { userId:   { contains: search, mode: "insensitive" } },
+
+        // 👇 busca por NOMBRE DE ESCUELA asociada al usuario
+        { escuelas: { some: { establecimiento: { nombre: { contains: search, mode: "insensitive" } } } } },
+
+        // nombre + apellido en dos palabras
+        part1 && part2
+          ? {
               AND: [
-                { nombre: { contains: part1, mode: Prisma.QueryMode.insensitive } },
-                { apellido: { contains: part2, mode: Prisma.QueryMode.insensitive } },
+                { nombre:   { contains: part1, mode: "insensitive" } },
+                { apellido: { contains: part2,  mode: "insensitive" } },
               ],
-            },
-            {
-              AND: [
-                { nombre: { contains: part1, mode: Prisma.QueryMode.insensitive } },
-                { apellido: { contains: part2, mode: Prisma.QueryMode.insensitive } },
-              ],
-            },
-          ],
-        },
-      ],
+            }
+          : undefined,
+      ].filter(Boolean) as Prisma.UsuarioWhereInput["OR"],
     };
   }
 
-  const [usuarios, total] = await Promise.all([
+  // ✅ orden estable
+  const orderBy: Prisma.UsuarioOrderByWithRelationInput[] =
+    sortBy === "userId" ? [{ userId: sortDir }, { id: "asc" }] :
+    sortBy === "nombre" ? [{ nombre: sortDir }, { id: "asc" }] :
+                          [{ id: sortDir }];
+
+  const [items, total] = await Promise.all([
     db.usuario.findMany({
       where,
       select: {
@@ -56,7 +130,6 @@ export async function GET(req: NextRequest) {
         apellido: true,
         avatarUrl: true,
         rol: { select: { id: true, nombre: true } },
-        // 👇 Traemos el nombre del establecimiento
         escuelas: {
           select: {
             establecimientoId: true,
@@ -64,15 +137,17 @@ export async function GET(req: NextRequest) {
           },
         },
       },
+      orderBy,
       skip,
       take: limit,
-      orderBy: { nombre: "asc" },
     }),
     db.usuario.count({ where }),
   ]);
 
-  return NextResponse.json({ items: usuarios, total });
+  return NextResponse.json({ items, total, page, limit });
 }
+
+
 
 export async function POST(req: NextRequest) {
   let userId: string;

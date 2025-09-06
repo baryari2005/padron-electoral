@@ -12,6 +12,7 @@ import { getPagination } from "@/lib/_server/pagination";
 import { buildOrderBy, create, existItem, findByNameInsensitive, findByNumber, resurrect, SearchWhere } from "@/lib/_server/political-group.service";
 import { mergeAndWhere } from "@/lib/_server/helper.service";
 
+
 // GET: listar agrupaciones con paginación + búsqueda
 export async function GET(req: NextRequest) {
   try {
@@ -55,7 +56,7 @@ export async function GET(req: NextRequest) {
 // POST: crear agrupación política
 export async function POST(req: NextRequest) {
   try {
-    const { nombre, numero, profileImage, color_hex, cargoIds } = await req.json();
+    const { nombre, numero, profileImage, color_hex, orden, cargoIds } = await req.json();
     const userId = getUserIdFromRequest(req);
 
     if (!nombre) return NextResponse.json({ error: formatApiMessage("required.name") }, { status: 400 });
@@ -81,7 +82,7 @@ export async function POST(req: NextRequest) {
 
     if (!existing) {
       const created = await create({
-        nombre, numero, profileImage: finalProfileImage, color_hex, userId, cargoIds
+        nombre, numero, profileImage: finalProfileImage, color_hex, orden, userId, cargoIds
       });
       return NextResponse.json(created, { status: 201 });
     }

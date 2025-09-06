@@ -31,12 +31,12 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   try {
     const userId = getUserIdFromRequest(req);
     const id = parseIdOrThrow(params.id);
-    const { nombre, numero, profileImage, color_hex, cargoIds } = await req.json();
+    const { nombre, numero, profileImage, color_hex, orden, cargoIds } = await req.json();
 
     if (!nombre) return jsonError("required.name");
     if (!numero) return jsonError("required.number");
 
-    const updated = await update(id, {nombre, numero, profileImage, color_hex, userId, cargoIds});
+    const updated = await update(id, {nombre, numero, profileImage, color_hex, orden,  userId, cargoIds});
     return NextResponse.json(updated);
   } catch (error) {
     if (error instanceof Error && error.message === "INVALID_ID") return jsonError("errors.idInvalid");

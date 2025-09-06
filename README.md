@@ -35,7 +35,7 @@ Aquí se documenta el flujo de trabajo con **Git**, convenciones y comandos más
 **Cuando la rama ya existe en remoto:**
     
    ```bash
-       git add .
+       git add -A
        git commit -m "fix: detalle del cambio"
        git push    
    ```
@@ -69,7 +69,12 @@ Aquí se documenta el flujo de trabajo con **Git**, convenciones y comandos más
 7. Correr el proyecto ```npm run dev```
 
 
+## Crear una nueva migracion
+npx prisma migrate dev --name add-userNumber
 
+npx prisma generate
+
+npx prisma migrate deploy
 
 ## Correr en prod
 

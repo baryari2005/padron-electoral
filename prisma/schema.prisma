@@ -335,6 +335,7 @@ model AgrupacionPolitica {
   profileImage           String?
   color_hex              String                           @default("#cccccc")
   userId                 String
+  orden                  Int?
   createdAt              DateTime                         @default(now())
   updatedAt              DateTime                         @updatedAt
   deletedAt              DateTime?

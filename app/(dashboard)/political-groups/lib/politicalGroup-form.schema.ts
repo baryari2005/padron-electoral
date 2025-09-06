@@ -16,6 +16,11 @@ export const politicalGroupFormSchema = z.object({
   color_hex: z.string()
     .regex(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/, formatMessage("Color HEX inválido"))
     .default("#2D3135"),
+  orden: z
+    .number({ invalid_type_error: formatMessage("El orden debe ser un número") })
+    .int(formatMessage("Debe ser un entero"))
+    .min(1, formatMessage("El orden debe ser al menos 1"))
+    .optional(),
   cargoIds: z.array(z.number()).default([]),
 });
 

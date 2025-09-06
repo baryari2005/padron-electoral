@@ -55,6 +55,11 @@ export const columns = ({
                 );
             },
         },
+        {
+            accessorKey: "orden",
+            header: "Orden",
+            cell: ({ row }) => row.original.orden
+        },
         buildActionsColumn({ component: "political-groups", label: "agrupación política", onDeleted, canEdit, canDelete }),
     ];
 
