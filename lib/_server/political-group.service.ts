@@ -21,6 +21,21 @@ export function SearchWhere(search: string): Prisma.AgrupacionPoliticaWhereInput
   };
 }
 
+// export function buildOrderBy(
+//   sortBy?: string | null,
+//   sortDir: "asc" | "desc" = "asc"
+// ): Prisma.AgrupacionPoliticaOrderByWithRelationInput {
+//   switch (sortBy) {
+//     case "nombre":
+//       return { nombre: sortDir };
+//     case "numero":
+//       return { numero: sortDir };
+//     // podés agregar más campos acá
+//     default:
+//       return { nombre: "asc" }; // orden por defecto
+//   }
+// }
+
 export function buildOrderBy(
   sortBy?: string | null,
   sortDir: "asc" | "desc" = "asc"
@@ -28,11 +43,8 @@ export function buildOrderBy(
   switch (sortBy) {
     case "nombre":
       return { nombre: sortDir };
-    case "numero":
-      return { numero: sortDir };
-    // podés agregar más campos acá
     default:
-      return { nombre: "asc" }; // orden por defecto
+      return { orden: "asc" }; // orden por defecto
   }
 }
 
@@ -79,6 +91,7 @@ export async function update(id: number, input: {
   profileImage?: string;
   color_hex: string;
   userId?: string;
+  orden?: number;
   cargoIds?: number[]; // 👈 puede venir undefined
 }) {
   const agrupacionId = Number(id);
@@ -158,6 +171,7 @@ export async function create(input: {
   numero: number;
   profileImage?: string;
   color_hex: string;
+  orden?: number;
   userId: string;
   cargoIds: number[];
 }) {

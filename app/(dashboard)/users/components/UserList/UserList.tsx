@@ -20,7 +20,7 @@ export function UserList({ search, onDeleted, refresh }: Props) {
       DataTableComponent={(props) => (
         <GenericDataTable
           {...props}
-          searchPlaceholder="Filtrar por nombre o apellido..."
+          searchPlaceholder="Filtrar por nombre/apellido o escuela..."
         />
       )}
     />

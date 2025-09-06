@@ -30,6 +30,15 @@ export function NumberNameFields<T extends Record<string, any>>({
                 uppercase
                 disabled={readOnly}
             />
+            <FormTextField
+                control={control}
+                name="orden"
+                label="Orden (opcional)"
+                placeholder="1"
+                type="number"
+                min={1}
+                step={1}
+            />
         </div>
     );
 }

@@ -26,6 +26,7 @@ interface FormPoliticalGroupProps {
     numero: number;
     profileImage: string;
     color_hex: string;
+    orden: number;
   };
   modo?: "ver" | "editar";
   onSuccess: () => void;
@@ -47,6 +48,7 @@ export function FormPoliticalGroup({
       numero: politicalGroup?.numero ?? undefined,
       profileImage: politicalGroup?.profileImage ?? "",
       color_hex: politicalGroup?.color_hex ?? "#2D3135",
+      orden: politicalGroup?.orden ?? 0,
       cargoIds: [],
     },
     mode: "onChange",
