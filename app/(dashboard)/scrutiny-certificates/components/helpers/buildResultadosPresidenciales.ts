@@ -5,7 +5,7 @@ export function buildResultadosPresidenciales(
     nombre: string;
     numero: number;
     profileImage?: string | null;
-    userId: string;   
+    userId: string;       
   }[],
 
 
@@ -15,7 +15,7 @@ export function buildResultadosPresidenciales(
     const base: any = {
       id: a.id,
       nombre: a.nombre,
-      numero: a.numero,
+      numero: a.numero,      
       profileImage: a.profileImage ?? "",
     };
     categorias.forEach((cat) => {

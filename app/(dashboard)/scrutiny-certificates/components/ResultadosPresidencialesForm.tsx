@@ -53,6 +53,46 @@ export function ResultadosPresidencialesForm({
     gridTemplateColumns: `60px 1fr repeat(${categorias.length}, 100px)`,
   };
 
+
+  // 🔎 LOG de props recibidas
+  useEffect(() => {
+    console.groupCollapsed("[RPF] props recibidas");
+
+    console.log("[RPF] agrupaciones (ordenadas):",
+      agrupaciones.map(a => ({ id: a.id, orden: a.orden, nombre: a.nombre }))
+    );
+
+    console.log("[RPF] resultadosPresidenciales (por índice):",
+      (resultadosPresidenciales ?? []).map((r, i) => ({
+        idx: i,
+        agrupacionId: r.agrupacionId,
+        // opcional: valores por categoría
+        ...Object.fromEntries((categorias ?? []).map(c => [c.id, r?.[c.id] ?? 0])),
+      }))
+    );
+
+    // Comparación 1: ¿coinciden los ids por posición?
+    // const comparacion = agrupaciones.map((a, i) => ({
+    //   idx: i,
+    //   aId: a.id,
+    //   aNombre: a.nombre,
+    //   rId: resultadosPresidenciales?.[i]?.agrupacionId ?? null,
+    //   ok: resultadosPresidenciales?.[i]?.agrupacionId === a.id,
+    // }));
+    // console.table(comparacion);
+
+    // // Comparación 2: faltantes / sobrantes
+    // const setAgs = new Set(agrupaciones.map(a => a.id));
+    // const idsRP = new Set((resultadosPresidenciales ?? []).map(r => r.agrupacionId));
+    // //const faltanEnRP = [...setAgs].filter(id => !idsRP.has(id));
+    // const sobranEnRP = (resultadosPresidenciales ?? []).filter(r => !setAgs.has(r.agrupacionId));
+    // console.log("[RPF] faltan en resultadosPresidenciales:", faltanEnRP);
+    // console.log("[RPF] sobran en resultadosPresidenciales:", sobranEnRP);
+
+    // console.groupEnd();
+  }, [agrupaciones, resultadosPresidenciales, categorias]);
+
+
   useEffect(() => {
     const nuevosTotales: Record<string, number> = {};
     categorias.forEach((cat) => {
@@ -76,7 +116,7 @@ export function ResultadosPresidencialesForm({
       {/* Encabezado */}
       <div style={gridStyle} className="grid font-semibold text-xs gap-2 px-2">
         <div>LOGO</div>
-        <div>AGRUPACIONES POLITICAS</div>        
+        <div>AGRUPACIONES POLITICAS</div>
         {categorias.map((cat) => (
           <div key={cat.id} className="text-center">
             {cat.nombre.toUpperCase()}
@@ -102,13 +142,13 @@ export function ResultadosPresidencialesForm({
             className="grid items-center gap-2 even:bg-muted/50 p-2 rounded-md"
           >
             <div>
-              <LogoConFallback src={imagen} alt={nombre}  unoptimized={true}/>
+              <LogoConFallback src={imagen} alt={nombre} unoptimized={true} />
             </div>
 
             <div className="text-sm flex items-center gap-1 uppercase">
               Lista {numero} - {nombre}
             </div>
-            
+
             {categorias.map((cat) => {
               const habilitado = isHabilitado(agrupacionId, cat.id);
 
@@ -123,9 +163,8 @@ export function ResultadosPresidencialesForm({
                         <Input
                           type="number"
                           min={0}
-                          className={`h-8 text-sm px-2 text-right ${
-                            !habilitado ? "bg-muted/60 opacity-70 cursor-not-allowed" : ""
-                          }`}
+                          className={`h-8 text-sm px-2 text-right ${!habilitado ? "bg-muted/60 opacity-70 cursor-not-allowed" : ""
+                            }`}
                           {...field}
                           disabled={!habilitado}
                           onChange={(e) => field.onChange(Number(e.target.value))}
