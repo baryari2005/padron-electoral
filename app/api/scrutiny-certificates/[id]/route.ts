@@ -50,12 +50,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
           r.agrupacionPolitica,
         ])
       ).values()
-    ).sort((a, b) => {
-      const ao = a.orden ?? 999999; // fallback grande
-      const bo = b.orden ?? 999999;
-      if (ao !== bo) return ao - bo;
-      return a.nombre.localeCompare(b.nombre, "es");
-    });
+    ).sort((a, b) => a.nombre.localeCompare(b.nombre));
 
     const categoriasUnicas = Array.from(
       new Map(
