@@ -9,7 +9,7 @@ import { getUserIdFromRequest } from "@/lib/auth/getUserIdFromRequest";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    
+
     const userId = getUserIdFromRequest(req);
 
     const {
@@ -89,13 +89,25 @@ export async function POST(req: NextRequest) {
       //   })
       // );
 
+      // const votosEspecialesData = Object.entries(votosEspeciales).map(
+      //   ([categoriaIdStr, valores]: [string, any]) => ({
+      //     mesaId,
+      //     categoriaId: parseInt(categoriaIdStr),
+      //     votosNulos: 0,
+      //     votosRecurridos: 0,
+      //     votosImpugnados: valores.impugnados,
+      //     votosComandoElectoral: 0,
+      //     votosEnBlanco: valores.blancos,
+      //   })
+      // );
+
       const votosEspecialesData = Object.entries(votosEspeciales).map(
         ([categoriaIdStr, valores]: [string, any]) => ({
           mesaId,
           categoriaId: parseInt(categoriaIdStr),
-          votosNulos: 0,
-          votosRecurridos: 0,
-          votosImpugnados: valores.impugnados,
+          votosNulos: valores.nulos,
+          votosRecurridos: valores.recurridos,
+          votosImpugnados: valores.impugnados,          
           votosComandoElectoral: 0,
           votosEnBlanco: valores.blancos,
         })
@@ -139,8 +151,8 @@ export async function POST(req: NextRequest) {
 
         const especiales = votosEspeciales[categoriaIdStr];
         const totalEspeciales =
-          // especiales.nulos +
-          // especiales.recurridos +
+          especiales.nulos +
+          especiales.recurridos +
           especiales.impugnados +
           // especiales.comandoElectoral +
           especiales.blancos;

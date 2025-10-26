@@ -108,9 +108,9 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       votosEspeciales: mesa.resultadosEspeciales.reduce((acc, voto) => {
         const catId = String(voto.categoriaId);
         acc[catId] = {
-          // nulos: voto.votosNulos,
+          nulos: voto.votosNulos,
           blancos: voto.votosEnBlanco,
-          // recurridos: voto.votosRecurridos,
+          recurridos: voto.votosRecurridos,
           impugnados: voto.votosImpugnados,
           // comandoElectoral: voto.votosComandoElectoral,
         };
@@ -182,7 +182,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
           votosNulos: 0,
           votosRecurridos: 0,
           votosImpugnados: valores.impugnados,
-          votosComandoElectoral: 0,
+          //votosComandoElectoral: 0,
           votosEnBlanco: valores.blancos,
         })
       );
@@ -220,8 +220,8 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
         const especiales = votosEspeciales[categoriaIdStr];
 
         const totalEspeciales =
-          // especiales.nulos +
-          // especiales.recurridos +
+          especiales.nulos +
+          especiales.recurridos +
           especiales.impugnados +
           // especiales.comandoElectoral +
           especiales.blancos;

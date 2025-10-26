@@ -44,9 +44,9 @@ export default function DashboardClient({ data: initial }: { data: SummaryRespon
     const faltanMesas = Math.max((municipio?.mesasTotales ?? 0) - (municipio?.mesasEscrutadas ?? 0), 0);
     const specialsData = useMemo(
         () => [
-            // { name: "Nulos", value: especiales.nulos },
+            { name: "Nulos", value: especiales.nulos },
             { name: "En blanco", value: especiales.blancos },
-            // { name: "Recurridos", value: especiales.recurridos },
+            { name: "Recurridos", value: especiales.recurridos },
             { name: "Impugnados", value: especiales.impugnados },
             // { name: "Comando Electoral", value: especiales.comando },
         ],
