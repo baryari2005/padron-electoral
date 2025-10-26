@@ -179,10 +179,10 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
         ([categoriaIdStr, valores]: [string, any]) => ({
           mesaId,
           categoriaId: parseInt(categoriaIdStr),
-          votosNulos: 0,
-          votosRecurridos: 0,
+          votosNulos: valores.nulo,
+          votosRecurridos: valores.recurridos,
           votosImpugnados: valores.impugnados,
-          //votosComandoElectoral: 0,
+          votosComandoElectoral: 0,
           votosEnBlanco: valores.blancos,
         })
       );
