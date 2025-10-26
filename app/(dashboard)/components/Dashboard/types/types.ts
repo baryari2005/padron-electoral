@@ -29,9 +29,9 @@ export type SummaryResponse = {
         porCircuito: ParticipacionItem[];
     };
     especiales: {
-        // nulos: number;
+        nulos: number;
         blancos: number;
-        // recurridos: number;
+        recurridos: number;
         impugnados: number;
         // comando: number;
         total: number;

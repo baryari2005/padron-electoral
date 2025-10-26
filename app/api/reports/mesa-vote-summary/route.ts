@@ -44,9 +44,9 @@ export async function GET() {
         votos: r.votos,
       })),
       votosEspeciales: mesa.resultadosEspeciales.flatMap((e) => [
-        // { categoria: e.cargoPolitico.nombre, tipo: "Nulo", cantidad: e.votosNulos },
+        { categoria: e.cargoPolitico.nombre, tipo: "Nulo", cantidad: e.votosNulos },
         { categoria: e.cargoPolitico.nombre, tipo: "En blanco", cantidad: e.votosEnBlanco },
-        // { categoria: e.cargoPolitico.nombre, tipo: "Recurrido", cantidad: e.votosRecurridos },
+        { categoria: e.cargoPolitico.nombre, tipo: "Recurrido", cantidad: e.votosRecurridos },
         { categoria: e.cargoPolitico.nombre, tipo: "Impugnado", cantidad: e.votosImpugnados },
         // { categoria: e.cargoPolitico.nombre, tipo: "Comando", cantidad: e.votosComandoElectoral },
       ]),
