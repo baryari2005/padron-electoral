@@ -211,7 +211,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
         await tx.resultadoPorAgrupacionPolitica.createMany({ data: resultadosData });
       }
 
-      // Calcular diferencias por categoría
+      // Calcular diferencias por categoría 
       const sobresEnUrna = totales.sobres;
       const categoriaIds = Object.keys(votosEspeciales);
 
