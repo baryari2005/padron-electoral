@@ -197,11 +197,58 @@ export default function ElectoralQuickMarkingPage() {
   );
 
   /** Traer votantes de la mesa (para la grilla) */
+  // useEffect(() => {
+  //   if (!canView || !canList) {
+  //     setMesaVoters([]);
+  //     return;
+  //   }
+  //   (async () => {
+  //     setLoadingMesa(true);
+  //     try {
+  //       const params: any = {
+  //         page: 1,
+  //         limit: 400,
+  //         establecimientoId,
+  //         mesaId,
+  //       };
+  //       const q = (query ?? "").trim();
+  //       if (q) params.q = q;          // 👈 aplicar filtro también en la grilla
+
+  //       const { data } = await axiosInstance.get("/api/electoral-rolls/quick-search", { params });
+
+  //       const items = data.items ?? [];
+  //       items.sort((a: any, b: any) => {
+  //         const ap = (a.apellido ?? "").localeCompare(b.apellido ?? "", "es", { sensitivity: "base" });
+  //         if (ap !== 0) return ap;
+  //         return (a.nombre ?? "").localeCompare(b.nombre ?? "", "es", { sensitivity: "base" });
+  //       });
+
+  //       const mapped: VoterSeat[] = items.map((e: any, idx: number) => ({
+  //         id: e.id,
+  //         position: Number(e.numeroOrden ?? idx + 1),
+  //         apellido: e.apellido,
+  //         nombre: e.nombre,
+  //         votedAt: e.votedAt,
+  //         votoSiNo: e.votoSiNo,
+  //       }));
+  //       setMesaVoters(mapped);
+  //     } catch {
+  //       toast.error("No se pudieron cargar los votantes de la mesa");
+  //     } finally {
+  //       setLoadingMesa(false);
+  //     }
+  //   })();
+  //   // 👇 mantené refreshToken (Enter/Botón) para disparar la búsqueda
+  // }, [canView, canList, establecimientoId, mesaId, refreshToken, query]);
+
+  /** Traer votantes de la mesa (para la grilla) */
   useEffect(() => {
+    // si no puede ver o no eligió mesa, limpio
     if (!canView || !canList) {
       setMesaVoters([]);
       return;
     }
+
     (async () => {
       setLoadingMesa(true);
       try {
@@ -212,34 +259,62 @@ export default function ElectoralQuickMarkingPage() {
           mesaId,
         };
         const q = (query ?? "").trim();
-        if (q) params.q = q;          // 👈 aplicar filtro también en la grilla
+        if (q) params.q = q; // 👈 que también filtre la grilla
 
-        const { data } = await axiosInstance.get("/api/electoral-rolls/quick-search", { params });
-
-        const items = data.items ?? [];
-        items.sort((a: any, b: any) => {
-          const ap = (a.apellido ?? "").localeCompare(b.apellido ?? "", "es", { sensitivity: "base" });
-          if (ap !== 0) return ap;
-          return (a.nombre ?? "").localeCompare(b.nombre ?? "", "es", { sensitivity: "base" });
+        const { data } = await axiosInstance.get("/api/electoral-rolls/quick-search", {
+          params,
         });
 
-        const mapped: VoterSeat[] = items.map((e: any, idx: number) => ({
-          id: e.id,
-          position: Number(e.numeroOrden ?? idx + 1),
-          apellido: e.apellido,
-          nombre: e.nombre,
-          votedAt: e.votedAt,
-          votoSiNo: e.votoSiNo,
+        // a veces viene { items: [...] } y a veces viene directamente [...]
+        const items: any[] = Array.isArray(data) ? data : Array.isArray(data.items) ? data.items : [];
+
+        // helper para sacar el orden de mesa de cada fila
+        const getOrdenMesa = (row: any, fallback: number) => {
+          // puede venir en varias formas según el backend
+          const o1 = row?.padronElectoral?.ordenMesa;
+          const o2 = row?.ordenMesa;
+          const o3 = row?.numeroOrden;
+
+          // parseo seguro (|| y no ?? porque Number(...) puede dar NaN)
+          const n =
+            parseInt(o1 ?? "", 10) ||
+            parseInt(o2 ?? "", 10) ||
+            parseInt(o3 ?? "", 10) ||
+            fallback;
+
+          return n;
+        };
+
+        // 1) ordenamos por el número de orden de la mesa
+        items.sort((a, b) => {
+          const oa = getOrdenMesa(a, 999999); // grande para que los sin orden queden al final
+          const ob = getOrdenMesa(b, 999999);
+          return oa - ob;
+        });
+
+        // 2) mapeamos al formato que espera VoterSeatMap
+        const mapped: VoterSeat[] = items.map((row, idx) => ({
+          id: row.id,
+          // 👇 ESTE es el número que va al lado del icono
+          position: getOrdenMesa(row, idx + 1),
+          apellido: row.apellido,
+          nombre: row.nombre,
+          votedAt: row.votedAt,
+          votoSiNo: row.votoSiNo,
         }));
+
         setMesaVoters(mapped);
-      } catch {
+      } catch (error) {
+        console.error("error cargando votantes", error);
         toast.error("No se pudieron cargar los votantes de la mesa");
+        setMesaVoters([]);
       } finally {
         setLoadingMesa(false);
       }
     })();
-    // 👇 mantené refreshToken (Enter/Botón) para disparar la búsqueda
+    // 👇 mantener dependencias como las tenías
   }, [canView, canList, establecimientoId, mesaId, refreshToken, query]);
+
 
 
   // ✅ FIX: ahora recién acá corto la UI, después de haber llamado TODOS los hooks
@@ -338,13 +413,13 @@ export default function ElectoralQuickMarkingPage() {
                       onKeyDownCapture={(e) => e.stopPropagation()}
                       onKeyDown={(e) => {
                         e.stopPropagation();
-                        if (e.key === "Enter") {                          
+                        if (e.key === "Enter") {
                           setRefreshToken((x) => x + 1);
                         }
                       }}
                     />
                     <Button
-                      onClick={() => {                        
+                      onClick={() => {
                         setRefreshToken((x) => x + 1);
                       }}
                       disabled={loading}

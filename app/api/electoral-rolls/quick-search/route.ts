@@ -96,6 +96,7 @@ export async function GET(req: NextRequest) {
           apellido: true,
           nombre: true,
           numeroMesa: true,
+          ordenMesa: true,
           establecimientoId: true,
           votoSiNo: true,        // 👈 NUEVO
           votedAt: true,
