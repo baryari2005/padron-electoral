@@ -1,12 +1,7 @@
-// src/features/stats/recompute.ts
 "use server";
 
 import { db } from "@/lib/db";
 
-/**
- * Recalcula estadísticas de padrón por mesa / establecimiento / circuito.
- * Sin transacción larga (idempotente) para evitar timeouts/tx cerradas.
- */
 export type RecomputeStatsResult = {
   mesaStatsRows: number;
   establecimientoStatsRows: number;
@@ -16,87 +11,123 @@ export type RecomputeStatsResult = {
   durationMs: number;
 };
 
-export async function recomputeAllStats(): Promise<RecomputeStatsResult> {
+export async function recomputeAllStats(
+  eleccionId: number
+): Promise<RecomputeStatsResult> {
   const t0 = Date.now();
 
-  // 1) Limpiar tablas de stats (DELETE es más compatible que TRUNCATE)
-  await db.$executeRawUnsafe(`DELETE FROM "MesaStats"`);
-  await db.$executeRawUnsafe(`DELETE FROM "EstablecimientoStats"`);
-  await db.$executeRawUnsafe(`DELETE FROM "CircuitoStats"`);
+  // 1️⃣ Limpiar SOLO stats de esa elección
+  await db.mesaStats.deleteMany({ where: { eleccionId } });
+  await db.establecimientoStats.deleteMany({ where: { eleccionId } });
+  await db.circuitoStats.deleteMany({ where: { eleccionId } });
 
-  // 2) MesaStats: padrón por mesa (match por establecimiento + número de mesa)
+  // 2️⃣ MesaStats
   await db.$executeRawUnsafe(`
-    INSERT INTO "MesaStats" ("mesaId","padronTotal","updatedAt")
+    INSERT INTO "MesaStats" ("mesaId","padronTotal","updatedAt","eleccionId")
     SELECT m."id",
            COUNT(*)::int AS padronTotal,
-           NOW()         AS updatedAt
+           NOW(),
+           ${eleccionId}
     FROM "PadronElectoral" p
     JOIN "MesasPorEstablecimiento" m
       ON m."establecimientoId" = p."establecimientoId"
+     AND m."eleccionId" = ${eleccionId}
+     AND p."eleccionId" = ${eleccionId}
      AND p."numeroMesa" IS NOT NULL
      AND m."numero" = p."numeroMesa"
     GROUP BY m."id";
   `);
 
-  // 3) EstablecimientoStats: padrón total + cantidad de mesas por establecimiento
+  // 3️⃣ EstablecimientoStats
   await db.$executeRawUnsafe(`
-    INSERT INTO "EstablecimientoStats" ("establecimientoId","padronTotal","mesasCount","updatedAt")
-    SELECT e."id" AS establecimientoId,
-           COALESCE(pad."padronTotal", 0)::int AS padronTotal,
-           COALESCE(mes."mesasCount",   0)::int AS mesasCount,
-           NOW() AS updatedAt
+    INSERT INTO "EstablecimientoStats"
+    ("establecimientoId","padronTotal","mesasCount","updatedAt","eleccionId")
+    SELECT e."id",
+           COALESCE(pad."padronTotal", 0)::int,
+           COALESCE(mes."mesasCount",   0)::int,
+           NOW(),
+           ${eleccionId}
     FROM "Establecimiento" e
     LEFT JOIN (
       SELECT p."establecimientoId", COUNT(*) AS "padronTotal"
       FROM "PadronElectoral" p
+      WHERE p."eleccionId" = ${eleccionId}
       GROUP BY p."establecimientoId"
     ) pad ON pad."establecimientoId" = e."id"
     LEFT JOIN (
       SELECT m."establecimientoId", COUNT(*) AS "mesasCount"
       FROM "MesasPorEstablecimiento" m
+      WHERE m."eleccionId" = ${eleccionId}
       GROUP BY m."establecimientoId"
-    ) mes ON mes."establecimientoId" = e."id";
+    ) mes ON mes."establecimientoId" = e."id"
+    WHERE e."eleccionId" = ${eleccionId};
   `);
 
-  // 4) CircuitoStats: padrón total + cantidad de mesas por circuito
+  // 4️⃣ CircuitoStats
   await db.$executeRawUnsafe(`
-    INSERT INTO "CircuitoStats" ("circuitoId","padronTotal","mesasCount","updatedAt")
-    SELECT c."id" AS circuitoId,
-           COALESCE(pad."padronTotal", 0)::int AS padronTotal,
-           COALESCE(mes."mesasCount",   0)::int AS mesasCount,
-           NOW() AS updatedAt
+    INSERT INTO "CircuitoStats"
+    ("circuitoId","padronTotal","mesasCount","updatedAt","eleccionId")
+    SELECT c."id",
+           COALESCE(pad."padronTotal", 0)::int,
+           COALESCE(mes."mesasCount",   0)::int,
+           NOW(),
+           ${eleccionId}
     FROM "Circuito" c
     LEFT JOIN (
       SELECT p."circuitoId", COUNT(*) AS "padronTotal"
       FROM "PadronElectoral" p
+      WHERE p."eleccionId" = ${eleccionId}
       GROUP BY p."circuitoId"
     ) pad ON pad."circuitoId" = c."id"
     LEFT JOIN (
       SELECT e."circuitoId", COUNT(m."id") AS "mesasCount"
       FROM "Establecimiento" e
-      LEFT JOIN "MesasPorEstablecimiento" m ON m."establecimientoId" = e."id"
+      LEFT JOIN "MesasPorEstablecimiento" m
+        ON m."establecimientoId" = e."id"
+       AND m."eleccionId" = ${eleccionId}
+      WHERE e."eleccionId" = ${eleccionId}
       GROUP BY e."circuitoId"
-    ) mes ON mes."circuitoId" = c."id";
+    ) mes ON mes."circuitoId" = c."id"
+    WHERE c."eleccionId" = ${eleccionId};
   `);
 
-  // 5) Totales globales
+  // 5️⃣ Totales globales por elección
   const [{ count: padronCount }] =
-    await db.$queryRawUnsafe<{ count: bigint }[]>(`SELECT COUNT(*) FROM "PadronElectoral"`);
+    await db.$queryRawUnsafe<{ count: bigint }[]>(`
+      SELECT COUNT(*)
+      FROM "PadronElectoral"
+      WHERE "eleccionId" = ${eleccionId}
+    `);
+
   const [{ count: mesasCount }] =
-    await db.$queryRawUnsafe<{ count: bigint }[]>(`select count(*) from "MesasPorEstablecimiento" mpe, "Establecimiento" e where mpe."establecimientoId" = e.id`);
+    await db.$queryRawUnsafe<{ count: bigint }[]>(`
+      SELECT COUNT(*)
+      FROM "MesasPorEstablecimiento"
+      WHERE "eleccionId" = ${eleccionId}
+    `);
 
   await db.globalStats.upsert({
-    where: { id: 1 },
-    create: { id: 1, padronTotal: Number(padronCount), mesasTotales: Number(mesasCount), updatedAt: new Date() },
-    update: { padronTotal: Number(padronCount), mesasTotales: Number(mesasCount), updatedAt: new Date() },
+    where: { eleccionId }, // ⚠️ importante
+    create: {
+      padronTotal: Number(padronCount),
+      mesasTotales: Number(mesasCount),
+      eleccionId,
+      updatedAt: new Date(),
+    },
+    update: {
+      padronTotal: Number(padronCount),
+      mesasTotales: Number(mesasCount),
+      updatedAt: new Date(),
+    },
   });
 
-  // 6) Métricas resultantes
-  const [mesaStatsRows, establecimientoStatsRows, circuitoStatsRows] = await Promise.all([
-    db.mesaStats.count(),
-    db.establecimientoStats.count(),
-    db.circuitoStats.count(),
-  ]);
+  // 6️⃣ Métricas finales
+  const [mesaStatsRows, establecimientoStatsRows, circuitoStatsRows] =
+    await Promise.all([
+      db.mesaStats.count({ where: { eleccionId } }),
+      db.establecimientoStats.count({ where: { eleccionId } }),
+      db.circuitoStats.count({ where: { eleccionId } }),
+    ]);
 
   return {
     mesaStatsRows,

@@ -35,37 +35,48 @@ export function buildOrderBy(
     }
 }
 
-export async function findByNombreInsensitive(nombre: string) {
+export async function findByNombreInsensitive(nombre: string, eleccionId: number) {
     return db.circuito.findFirst({
-        where: { nombre: { equals: nombre, mode: Prisma.QueryMode.insensitive } },
+        where: { eleccionId, nombre: { equals: nombre, mode: Prisma.QueryMode.insensitive } },
         select: { id: true, deletedAt: true },
     });
 }
 
-export async function getCircuitoById(id: number) {
-    return db.circuito.findFirst({ where: { id } });
+export async function getCircuitoById(id: number, eleccionId: number) {
+    return db.circuito.findFirst({
+        where:
+        {
+            id,
+            eleccionId,
+            deletedAt: null
+        }
+    });
 }
 
 export async function updateCircuito(data: {
     id: number,
     nombre: string,
     codigo: string,
-    userId?: string
+    userId?: string,
+    eleccionId: number,
 }) {
     const id = data.id;
-    return db.circuito.update({ where: { id }, data: { ...data } });
+    const eleccionId = data.eleccionId;
+
+    return db.circuito.update({ where: { id, eleccionId }, data: { ...data } });
 }
 
-export async function softDeleteCircuito(id: number, userId?: string) {
+export async function softDeleteCircuito(id: number,  eleccionId: number, userId?: string) {
     const data: Prisma.CircuitoUpdateInput = { deletedAt: { set: new Date() } };
     if (userId) data.userId = userId;
-    return db.circuito.update({ where: { id }, data });
+    return db.circuito.update({ where: { id,  eleccionId }, data });
 }
 
 export async function createCircuito(input: {
     nombre: string;
     codigo: string;
-    userId: string;            // ⬅️ requerido
+    userId: string;
+    eleccionId: number;
 }) {
     const { userId } = input;
 

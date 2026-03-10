@@ -8,6 +8,8 @@ import { FormCreateOrUpdateElectoralRoll } from "./components/FormCreateOrUpdate
 import { DialogCrudEntity } from "../components/DialogCreateEntity";
 import { useHasPermission } from "@/lib/permissions/useHasPermission";
 import { AccessDeniedPage } from "@/components/NoPermissions/AccessDeniedPage";
+import { StatusPage } from "@/components/status/StatusPage";
+import { useActiveElection } from "@/hooks/useActiveElection";
 
 
 export default function ElectoralRollPage() {
@@ -17,6 +19,9 @@ export default function ElectoralRollPage() {
     localidad?: string;
     circuitoId?: number;
     establecimientoId?: number;
+    referenteId?: number;
+    planilleroId?: number;
+    choferId?: number;
   }>({});
 
   const [open, setOpen] = useState(false);
@@ -29,13 +34,30 @@ export default function ElectoralRollPage() {
     setOpen(false);
   };
   const handleClose = () => setOpen(false);
+
+  const { loading, hasActive, electionType } = useActiveElection();
   
+
   const canView = useHasPermission("ver_votantes");
   const canCreate = useHasPermission("crear_votantes");
   const canEdit = useHasPermission("editar_votantes");
   const canDelete = useHasPermission("eliminar_votantes");
 
-  if (!canView) return (<AccessDeniedPage subtitle="Ver Padrón Electoral."/>);
+  if (!canView) return (<AccessDeniedPage subtitle="Ver Padrón Electoral." />);
+
+  if (loading) return null;
+
+  if (!hasActive) {
+    return (
+      <StatusPage
+        code="403"
+        title="Acceso denegado."
+        description="Para acceder a esta sección tiene que existir una elección activa."
+        imageSrc="/robot-nea.png"
+        primaryAction={{ label: "Ir al inicio", href: "/" }}
+      />
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -58,6 +80,7 @@ export default function ElectoralRollPage() {
             <FormCreateOrUpdateElectoralRoll
               onSuccess={handleSuccess}
               onClose={handleClose}
+              electionType={electionType}
             />
           </DialogCrudEntity>
         )}
@@ -66,11 +89,13 @@ export default function ElectoralRollPage() {
       <div className="rounded-xl border bg-card p-6 shadow space-y-2">
         <ElectoralRollHeader
           onFiltersChange={handleFiltersChange}
+          electionType={electionType}
         />
         <ElectoralRollList
           key={String(refresh) + search + JSON.stringify(filters)}
           search={search}
           filters={filters}
+          electionType={electionType}
           onDeleted={handleRefresh}
           refresh={refresh}
           canEdit={canEdit}

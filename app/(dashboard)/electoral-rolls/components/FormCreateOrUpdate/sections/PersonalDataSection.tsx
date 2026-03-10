@@ -11,6 +11,7 @@ import {
 import { Control } from "react-hook-form";
 import { ElectoralRollFormValues } from "../../../lib";
 import { UppercaseInput } from "@/components/ui/uppercaseInput";
+import { PhoneInput } from "@/app/(dashboard)/components/FormsCreate/PhoneInput";
 
 interface Props {
   control: Control<ElectoralRollFormValues>;
@@ -119,6 +120,10 @@ export function PersonalDataSection({ control, isEdit, modo = "editar" }: Props)
           </FormItem>
         )}
       />
+      <PhoneInput 
+        control={control}
+        name="telefono"
+        label="Teléfono (Opcional)"/>
     </div>
   );
 }

@@ -38,6 +38,11 @@ export function ElectoralRegistrerLoader() {
     people: number;
     circuits: number;
     errors: number;
+    statsPersonas?: {
+      REFERENTE: number;
+      PLANILLERO: number;
+      CHOFER: number;
+    }
     errorDetails?: { numeroMatricula: string; nombre: string; apellido: string; motivo: string }[];
   } | null>(null);
 
@@ -91,7 +96,7 @@ export function ElectoralRegistrerLoader() {
       });
       const { bucket, path, token } = pre.data;
       if (!bucket || !path || !token) throw new Error("Pre-firma inválida");
-      
+
       // 2) Subir directo al bucket usando la URL firmada
       const up = await supabase
         .storage
@@ -126,6 +131,7 @@ export function ElectoralRegistrerLoader() {
         people: res.data?.people ?? 0,
         circuits: res.data?.circuits ?? 0,
         errors: res.data?.errors ?? 0,
+        statsPersonas: res.data?.statsPersonas,
         errorDetails: res.data?.errorDetails ?? [],
       });
 
@@ -245,9 +251,34 @@ export function ElectoralRegistrerLoader() {
                   tooltipText="Cantidad de circuitos únicos importados."
                 />
               </div>
+
+              {importSummary?.statsPersonas && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                  <CardSummary
+                    key="referentes"
+                    icon={User}
+                    total={`${importSummary.statsPersonas.REFERENTE} referentes`}
+                    title="Referentes"
+                    tooltipText="Cantidad de referentes únicos creados."
+                  />
+                  <CardSummary
+                    key="planilleros"
+                    icon={User}
+                    total={`${importSummary.statsPersonas.PLANILLERO} planilleros`}
+                    title="Planilleros"
+                    tooltipText="Cantidad de planilleros únicos creados."
+                  />
+                  <CardSummary
+                    key="choferes"
+                    icon={User}
+                    total={`${importSummary.statsPersonas.CHOFER} choferes`}
+                    title="Choferes"
+                    tooltipText="Cantidad de choferes únicos creados."
+                  />
+                </div>
+              )}
             </AccordionContent>
           </AccordionItem>
-
           {importSummary?.errors > 0 &&
             Array.isArray(importSummary.errorDetails) &&
             importSummary.errorDetails.length > 0 && (

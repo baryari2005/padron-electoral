@@ -1,0 +1,483 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider     = "postgresql"
+  url          = env("DATABASE_URL")
+  relationMode = "prisma"
+}
+
+model Usuario {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  email     String   @unique
+  password  String
+  nombre    String?
+  apellido  String?
+  avatarUrl String?
+  telefono  String?
+  rolId     Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  rol                  Rol                      @relation(fields: [rolId], references: [id])
+  escuelas             UsuarioEstablecimiento[]
+  padronElectorals     PadronElectoral[]
+  actorPadronHistories ActorPadronHistory[]
+
+  @@index([rolId])
+}
+
+model Rol {
+  id     Int    @id @default(autoincrement())
+  nombre String @unique
+
+  usuarios Usuario[]
+  permisos PermisoPorRol[]
+
+  puedeAsignarEstablecimientos Boolean @default(false)
+  requiereEstablecimientos     Boolean @default(false)
+}
+
+model Permiso {
+  id          Int       @id @default(autoincrement())
+  clave       String    @unique
+  descripcion String
+  deletedAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  accion      String
+  modulo      String
+
+  roles PermisoPorRol[]
+}
+
+model PermisoPorRol {
+  id        String    @id @default(uuid())
+  rolId     Int
+  permisoId Int
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  rol     Rol     @relation(fields: [rolId], references: [id])
+  permiso Permiso @relation(fields: [permisoId], references: [id])
+
+  @@unique([rolId, permisoId])
+  @@index([rolId])
+  @@index([permisoId])
+}
+
+model Eleccion {
+  id        Int       @id @default(autoincrement())
+  nombre    String
+  fecha     DateTime?
+  tipo      String
+  estado    String
+  version   Int       @default(1)
+  activa    Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  circuitos                       Circuito[]
+  establecimientos                Establecimiento[]
+  mesasPorEstablecimientos        MesasPorEstablecimiento[]
+  cargos                          CargoPolitico[]
+  agrupaciones                    AgrupacionPolitica[]
+  planillas                       Planilla[]
+  padrones                        PadronElectoral[]
+  mesasEscrutadas                 MesaEscrutada[]
+  permisos                        AgrupacionCargoPerm[]
+  personaOperativas               PersonaOperativa[]
+  resultadoPorMesas               ResultadoPorMesa[]
+  resultadoVotosEspeciales        ResultadoVotosEspeciales[]
+  resultadoPorAgrupacionPoliticas ResultadoPorAgrupacionPolitica[]
+  mesaStats                       MesaStats[]
+  establecimientoStats            EstablecimientoStats[]
+  circuitoStats                   CircuitoStats[]
+  globalStats                     GlobalStats[]
+  diferenciasPorCargosPoliticos   DiferenciasPorCargosPoliticos[]
+
+  @@index([activa])
+}
+
+model Circuito {
+  id         Int       @id @default(autoincrement())
+  codigo     String
+  nombre     String
+  eleccionId Int
+  userId     String
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+
+  eleccion         Eleccion          @relation(fields: [eleccionId], references: [id])
+  establecimientos Establecimiento[]
+  padrones         PadronElectoral[]
+  mesasEscrutadas  MesaEscrutada[]
+  stats            CircuitoStats?    @relation("Circ_CircuitoStats")
+
+  @@unique([codigo, eleccionId])
+  @@index([eleccionId])
+  @@index([deletedAt])
+}
+
+model Establecimiento {
+  id           Int       @id @default(autoincrement())
+  nombre       String
+  direccion    String
+  circuitoId   Int
+  eleccionId   Int
+  userId       String
+  profileImage String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+
+  circuito Circuito @relation(fields: [circuitoId], references: [id])
+  eleccion Eleccion @relation(fields: [eleccionId], references: [id])
+
+  mesasPorEstablecimiento               MesasPorEstablecimiento[]
+  padrones                              PadronElectoral[]
+  mesasEscrutadas                       MesaEscrutada[]
+  stats                                 EstablecimientoStats?     @relation("Est_EstablecimientoStats")
+  autoridades                           UsuarioEstablecimiento[]
+  establecimientoStatsEstablecimientoId Int?
+
+  @@unique([nombre, direccion, eleccionId])
+  @@index([eleccionId])
+  @@index([deletedAt])
+}
+
+model MesasPorEstablecimiento {
+  id                Int       @id @default(autoincrement())
+  numero            Int
+  establecimientoId Int
+  eleccionId        Int
+  userId            String
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  deletedAt         DateTime?
+
+  establecimiento Establecimiento @relation(fields: [establecimientoId], references: [id])
+  eleccion        Eleccion        @relation(fields: [eleccionId], references: [id])
+
+  mesaEscrutada MesaEscrutada? @relation("MesasPorEstablecimientoToEscrutada")
+
+  stats MesaStats? @relation("Mesa_MesaStats")
+
+  @@unique([numero, establecimientoId, eleccionId])
+  @@index([deletedAt])
+}
+
+model PadronElectoral {
+  id                Int       @id @default(autoincrement())
+  eleccionId        Int
+  distrito          String
+  tipoEjemplar      String
+  numeroMatricula   String
+  apellido          String
+  nombre            String
+  clase             Int
+  genero            String
+  domicilio         String
+  seccion           String
+  localidad         String
+  codigoPostal      String
+  telefono          String?
+  tipoNacionalidad  String
+  numeroMesa        Int
+  ordenMesa         Int
+  votoSiNo          String
+  userId            String
+  circuitoId        Int
+  establecimientoId Int
+  actorId           String?
+  referenteId       Int?
+  planilleroId      Int?
+  choferId          Int?
+  planillaId        Int?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  deletedAt         DateTime?
+  votedAt           DateTime?
+  votedBy           String?
+
+  eleccion             Eleccion             @relation(fields: [eleccionId], references: [id])
+  circuito             Circuito             @relation(fields: [circuitoId], references: [id])
+  establecimiento      Establecimiento      @relation(fields: [establecimientoId], references: [id])
+  planilla             Planilla?            @relation(fields: [planillaId], references: [id])
+  actor                Usuario?             @relation(fields: [actorId], references: [id])
+  actorPadronHistories ActorPadronHistory[]
+  referente            PersonaOperativa?    @relation("PadronReferente", fields: [referenteId], references: [id])
+  planillero           PersonaOperativa?    @relation("PadronPlanillero", fields: [planilleroId], references: [id])
+  chofer               PersonaOperativa?    @relation("PadronChofer", fields: [choferId], references: [id])
+
+  @@unique([numeroMatricula, eleccionId])
+  @@index([deletedAt])
+}
+
+model MesaEscrutada {
+  id                Int       @id @default(autoincrement())
+  eleccionId        Int
+  numero            Int
+  circuitoId        Int
+  establecimientoId Int
+  resumenJson       Json?
+  userId            String
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  deletedAt         DateTime?
+
+  eleccion        Eleccion        @relation(fields: [eleccionId], references: [id])
+  circuito        Circuito        @relation(fields: [circuitoId], references: [id])
+  establecimiento Establecimiento @relation(fields: [establecimientoId], references: [id])
+
+  resultadosAgrupaciones ResultadoPorAgrupacionPolitica[]
+  resultadosEspeciales   ResultadoVotosEspeciales[]
+  firmas                 Firma[]
+  resultadoFinal         ResultadoPorMesa?
+  diferenciasCargos      DiferenciasPorCargosPoliticos[]
+
+  mesaPorEstablecimiento MesasPorEstablecimiento @relation("MesasPorEstablecimientoToEscrutada", fields: [numero, establecimientoId, eleccionId], references: [numero, establecimientoId, eleccionId])
+
+  @@unique([numero, establecimientoId, eleccionId])
+  @@index([deletedAt])
+}
+
+model CargoPolitico {
+  id         Int       @id @default(autoincrement())
+  nombre     String
+  userId     String
+  eleccionId Int
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+  orden      Int?
+
+  eleccion Eleccion @relation(fields: [eleccionId], references: [id])
+
+  resultadosAgrupaciones ResultadoPorAgrupacionPolitica[]
+  resultadosEspeciales   ResultadoVotosEspeciales[]
+  diferenciasCargos      DiferenciasPorCargosPoliticos[]
+  Firma                  Firma[]
+  AgrupacionCargoPerm    AgrupacionCargoPerm[]
+
+  @@unique([nombre, eleccionId])
+  @@index([deletedAt])
+}
+
+model AgrupacionPolitica {
+  id           Int       @id @default(autoincrement())
+  nombre       String
+  numero       Int
+  profileImage String?
+  color_hex    String    @default("#cccccc")
+  userId       String
+  orden        Int?
+  eleccionId   Int
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+
+  eleccion Eleccion @relation(fields: [eleccionId], references: [id])
+
+  resultadosAgrupaciones ResultadoPorAgrupacionPolitica[]
+  firmas                 Firma[]
+  AgrupacionCargoPerm    AgrupacionCargoPerm[]
+
+  @@unique([nombre, eleccionId])
+  @@unique([numero, eleccionId])
+  @@index([deletedAt])
+}
+
+model Planilla {
+  id         Int      @id @default(autoincrement())
+  numero     String
+  nombre     String
+  eleccionId Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  eleccion Eleccion          @relation(fields: [eleccionId], references: [id])
+  padrones PadronElectoral[]
+
+  @@unique([numero, eleccionId])
+}
+
+model ActorPadronHistory {
+  id        Int      @id @default(autoincrement())
+  padronId  Int
+  actorId   String?
+  changedBy String?
+  changedAt DateTime @default(now())
+
+  padron PadronElectoral @relation(fields: [padronId], references: [id])
+  actor  Usuario?        @relation(fields: [actorId], references: [id])
+}
+
+model AgrupacionCargoPerm {
+  id           Int     @id @default(autoincrement())
+  agrupacionId Int
+  cargoId      Int
+  eleccionId   Int
+  allowed      Boolean @default(true)
+
+  agrupacion AgrupacionPolitica @relation(fields: [agrupacionId], references: [id])
+  cargo      CargoPolitico      @relation(fields: [cargoId], references: [id])
+  eleccion   Eleccion           @relation(fields: [eleccionId], references: [id])
+
+  @@unique([agrupacionId, cargoId, eleccionId])
+}
+
+// Ver de aca que se hace
+model ResultadoPorMesa {
+  id               Int @id @default(autoincrement())
+  mesaId           Int @unique
+  electoresVotaron Int
+  sobresEnUrna     Int
+  diferencia       Int
+  eleccionId       Int
+
+  mesaEscrutada MesaEscrutada @relation(fields: [mesaId], references: [id])
+  eleccion      Eleccion      @relation(fields: [eleccionId], references: [id])
+}
+
+model ResultadoVotosEspeciales {
+  id                    Int @id @default(autoincrement())
+  mesaId                Int
+  categoriaId           Int
+  votosNulos            Int
+  votosEnBlanco         Int
+  votosRecurridos       Int
+  votosImpugnados       Int
+  votosComandoElectoral Int
+  eleccionId            Int
+
+  mesaEscrutada MesaEscrutada @relation(fields: [mesaId], references: [id])
+  cargoPolitico CargoPolitico @relation(fields: [categoriaId], references: [id])
+  eleccion      Eleccion      @relation(fields: [eleccionId], references: [id])
+
+  @@unique([mesaId, categoriaId, eleccionId])
+  @@index([categoriaId])
+}
+
+model ResultadoPorAgrupacionPolitica {
+  id           Int @id @default(autoincrement())
+  mesaId       Int
+  categoriaId  Int
+  agrupacionId Int
+  votos        Int
+  eleccionId   Int
+
+  mesaEscrutada      MesaEscrutada      @relation(fields: [mesaId], references: [id])
+  cargoPolitico      CargoPolitico      @relation(fields: [categoriaId], references: [id])
+  agrupacionPolitica AgrupacionPolitica @relation(fields: [agrupacionId], references: [id])
+  eleccion           Eleccion           @relation(fields: [eleccionId], references: [id])
+
+  @@unique([mesaId, categoriaId, agrupacionId, eleccionId])
+  @@index([categoriaId])
+  @@index([agrupacionId])
+}
+
+model UsuarioEstablecimiento {
+  id                Int      @id @default(autoincrement())
+  usuarioId         String
+  establecimientoId Int
+  createdAt         DateTime @default(now())
+
+  usuario         Usuario         @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  establecimiento Establecimiento @relation(fields: [establecimientoId], references: [id], onDelete: Cascade)
+
+  @@unique([usuarioId, establecimientoId]) // una vez por par
+  @@index([usuarioId])
+  @@index([establecimientoId])
+}
+
+model MesaStats {
+  mesaId      Int                     @id
+  padronTotal Int
+  updatedAt   DateTime                @updatedAt
+  mesa        MesasPorEstablecimiento @relation("Mesa_MesaStats", fields: [mesaId], references: [id], onDelete: Cascade)
+  eleccionId  Int
+  eleccion    Eleccion                @relation(fields: [eleccionId], references: [id])
+}
+
+model EstablecimientoStats {
+  establecimientoId Int             @id
+  padronTotal       Int
+  mesasCount        Int
+  updatedAt         DateTime        @updatedAt
+  establecimiento   Establecimiento @relation("Est_EstablecimientoStats", fields: [establecimientoId], references: [id], onDelete: Cascade)
+  eleccionId        Int
+  eleccion          Eleccion        @relation(fields: [eleccionId], references: [id])
+}
+
+model CircuitoStats {
+  circuitoId  Int      @id
+  padronTotal Int
+  mesasCount  Int
+  updatedAt   DateTime @updatedAt
+  circuito    Circuito @relation("Circ_CircuitoStats", fields: [circuitoId], references: [id], onDelete: Cascade)
+  eleccionId  Int
+  eleccion    Eleccion @relation(fields: [eleccionId], references: [id])
+}
+
+model GlobalStats {
+  id           Int      @id @default(1)
+  padronTotal  Int
+  mesasTotales Int
+  updatedAt    DateTime @updatedAt
+  eleccionId   Int
+  eleccion     Eleccion @relation(fields: [eleccionId], references: [id])
+}
+
+model DiferenciasPorCargosPoliticos {
+  id            Int           @id @default(autoincrement())
+  mesaId        Int
+  categoriaId   Int
+  diferencia    Int
+  mesaEscrutada MesaEscrutada @relation(fields: [mesaId], references: [id])
+  cargoPolitico CargoPolitico @relation(fields: [categoriaId], references: [id])
+  eleccionId    Int
+  eleccion      Eleccion      @relation(fields: [eleccionId], references: [id])
+
+  @@unique([mesaId, categoriaId, eleccionId])
+  @@index([categoriaId])
+}
+
+model Firma {
+  id                 Int                 @id @default(autoincrement())
+  mesaId             Int
+  nombre             String
+  dni                String
+  agrupacionId       Int?
+  cargoId            Int
+  mesaEscrutada      MesaEscrutada       @relation(fields: [mesaId], references: [id])
+  cargoPolitico      CargoPolitico       @relation(fields: [cargoId], references: [id])
+  agrupacionPolitica AgrupacionPolitica? @relation(fields: [agrupacionId], references: [id])
+
+  @@index([mesaId])
+  @@index([cargoId])
+  @@index([agrupacionId])
+}
+
+model PersonaOperativa {
+  id         Int      @id @default(autoincrement())
+  nombre     String
+  telefono   String?
+  tipo       String // REFERENTE | PLANILLERO | CHOFER
+  eleccionId Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  eleccion               Eleccion          @relation(fields: [eleccionId], references: [id])
+  padronesComoReferente  PadronElectoral[] @relation("PadronReferente")
+  padronesComoPlanillero PadronElectoral[] @relation("PadronPlanillero")
+  padronesComoChofer     PadronElectoral[] @relation("PadronChofer")
+
+  @@unique([nombre, tipo, eleccionId])
+  @@index([eleccionId])
+  @@index([tipo])
+}

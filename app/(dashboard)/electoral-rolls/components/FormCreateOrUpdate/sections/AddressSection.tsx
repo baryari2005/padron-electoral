@@ -36,31 +36,37 @@ export function AddressSection({ control, modo }: Props) {
 
   useEffect(() => {
     const fetchOptions = async () => {
-      const res = await axiosInstance.get("/api/establishments?all=true&includeCircuito=true");
+      const res = await axiosInstance.get(
+        "/api/establishments?all=true&includeCircuito=true"
+      );
       setEstablecimientos(res.data.items);
     };
 
     fetchOptions();
   }, []);
 
-  // 🔁 Cuando cambia el establecimiento seleccionado → setear circuitoId automáticamente
+  // 🔁 Cuando cambia el establecimiento → setear circuito automáticamente
   useEffect(() => {
     const est = establecimientos.find(
       (e) => String(e.id) === String(selectedEstablecimientoId)
     );
+
     if (est?.circuitoId) {
       setValue("circuitoId", est.circuitoId);
     }
   }, [selectedEstablecimientoId, establecimientos, setValue]);
 
-  // ✅ Obtener circuito filtrado directamente desde el establecimiento seleccionado
   const selectedEst = establecimientos.find(
     (e) => String(e.id) === String(selectedEstablecimientoId)
   );
-  const circuitosFiltrados = selectedEst?.circuito ? [selectedEst.circuito] : [];
+
+  const circuitosFiltrados = selectedEst?.circuito
+    ? [selectedEst.circuito]
+    : [];
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {/* DOMICILIO */}
       <FormField
         control={control}
         name="domicilio"
@@ -68,26 +74,29 @@ export function AddressSection({ control, modo }: Props) {
           <FormItem>
             <FormLabel>Domicilio</FormLabel>
             <FormControl>
-              <UppercaseInput {...field} disabled={isReadOnly}/>
+              <UppercaseInput {...field} disabled={isReadOnly} />
             </FormControl>
             <FormMessage />
           </FormItem>
         )}
       />
+
+      {/* LOCALIDAD */}
       <FormField
         control={control}
         name="localidad"
-        disabled={isReadOnly}
         render={({ field }) => (
           <FormItem>
             <FormLabel>Localidad</FormLabel>
             <FormControl>
-              <UppercaseInput {...field} />
+              <UppercaseInput {...field} disabled={isReadOnly} />
             </FormControl>
             <FormMessage />
           </FormItem>
         )}
       />
+
+      {/* CODIGO POSTAL */}
       <FormField
         control={control}
         name="codigoPostal"
@@ -95,12 +104,29 @@ export function AddressSection({ control, modo }: Props) {
           <FormItem>
             <FormLabel>Código Postal</FormLabel>
             <FormControl>
-              <UppercaseInput {...field} disabled={isReadOnly}/>
+              <UppercaseInput {...field} disabled={isReadOnly} />
             </FormControl>
             <FormMessage />
           </FormItem>
         )}
       />
+
+      {/* DISTRITO */}
+      <FormField
+        control={control}
+        name="distrito"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Distrito</FormLabel>
+            <FormControl>
+              <UppercaseInput {...field} disabled={isReadOnly} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      {/* SECCION */}
       <FormField
         control={control}
         name="seccion"
@@ -108,50 +134,61 @@ export function AddressSection({ control, modo }: Props) {
           <FormItem>
             <FormLabel>Sección</FormLabel>
             <FormControl>
-              <UppercaseInput {...field} disabled={isReadOnly}/>
+              <UppercaseInput {...field} disabled={isReadOnly} />
             </FormControl>
             <FormMessage />
           </FormItem>
         )}
       />
-      <FormField
-        control={control}
-        name="establecimientoId"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Establecimiento</FormLabel>
-            <FormCombobox
-              label="Establecimiento"
-              value={String(field.value ?? "")}
-              onChange={(val) => field.onChange(val)}
-              options={establecimientos}
-              getOptionLabel={(e) => e.nombre}
-              getOptionValue={(e) => String(e.id)}              
-              disabled={isReadOnly}
-            />
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={control}
-        name="circuitoId"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Circuito</FormLabel>
-            <FormCombobox
-              label="Circuito"
-              value={String(field.value ?? "")}
-              onChange={(val) => field.onChange(val)}
-              options={circuitosFiltrados}
-              getOptionLabel={(c) => `${c.codigo ?? ""} - ${c.nombre}`}
-              getOptionValue={(c) => String(c.id)}              
-              disabled={isReadOnly}
-            />
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+
+      {/* ESTABLECIMIENTO + CIRCUITO EN MISMA FILA */}
+      <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* ESTABLECIMIENTO */}
+        <FormField
+          control={control}
+          name="establecimientoId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Establecimiento</FormLabel>
+              <FormControl>
+                <FormCombobox
+                  value={String(field.value ?? "")}
+                  onChange={(val) => field.onChange(Number(val))}
+                  options={establecimientos}
+                  getOptionLabel={(e) => e.nombre}
+                  getOptionValue={(e) => String(e.id)}
+                  disabled={isReadOnly}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* CIRCUITO */}
+        <FormField
+          control={control}
+          name="circuitoId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Circuito</FormLabel>
+              <FormControl>
+                <FormCombobox
+                  value={String(field.value ?? "")}
+                  onChange={(val) => field.onChange(Number(val))}
+                  options={circuitosFiltrados}
+                  getOptionLabel={(c) =>
+                    `${c.codigo ?? ""} - ${c.nombre}`
+                  }
+                  getOptionValue={(c) => String(c.id)}
+                  disabled={true} // normalmente circuito es automático
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
     </div>
   );
 }

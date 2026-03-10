@@ -18,6 +18,11 @@ export type NuevoPadron = {
   circuitoId: number;
   establecimientoId: number;
   userId: string;
+  telefono?: string | null;
+  referenteNombre?: string | null;
+  planilleroNombre?: string | null;
+  choferNombre?: string | null;
+  planillaNumero?: string | null;
 };
 
 export type ImportErrorDetail = {

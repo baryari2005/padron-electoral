@@ -15,6 +15,7 @@ export default function TotalSummaryPage() {
   const [data, setData] = useState<TotalVoteSummary>();
   const [loading, setLoading] = useState(true);
   const [stacked, setStacked] = useState(true);
+  const currentYear = new Date().getFullYear();
 
   const canView = useHasPermission("ver_reportes");
 
@@ -32,9 +33,9 @@ export default function TotalSummaryPage() {
   if (!canView) return <AccessDeniedPage subtitle="Informe Votos Totales." />;
   if (loading) return <CommonLoader logo="/logo.png"
     alternativeLogo="/logo-white.png"
-    alternativeText="Más San Miguel 2025"
-    title="Elecciones Provinciales"
-    subTitle="San Miguel 2025"
+    alternativeText={`Más San Miguel ${currentYear}`}
+    title="Elecciones Generales"
+    subTitle={`San Miguel ${currentYear}`}
     loaderText="Cargando Reportes ..." />;
 
   return (

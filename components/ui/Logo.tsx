@@ -23,9 +23,9 @@ export function Logo() {
       <Image src={logoSrc} alt="Logo" width={50} height={50} className="rounded-lg" priority />
       <div className="flex flex-col leading-tight ml-4">
         <h1 className="font-bold text-xl">
-          {capitalizeEachWord("Elecciones Provinciales")}
+          {capitalizeEachWord("Elecciones Generales")}
         </h1>
-        <h2 className="text-sm text-center">{capitalizeEachWord("San Miguel 2025")}</h2>
+        <h2 className="text-sm text-center">{capitalizeEachWord(`San Miguel ${new Date().getFullYear()}`)}</h2>
       </div>
     </div>
   );

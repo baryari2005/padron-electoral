@@ -2,13 +2,16 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 export const fetchCache = "force-no-store";
+import { withActiveElection } from "@/lib/_server/withActiveElection";
 import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
 
-export async function GET() {
+export const GET = withActiveElection(async(req, {election}) => {
   try {
     const mesas = await db.mesaEscrutada.findMany({
-      where: { deletedAt: null },
+      where: { 
+        eleccionId: election.id,
+        deletedAt: null },
       include: {
         establecimiento: {
           include: {
@@ -52,9 +55,9 @@ export async function GET() {
       ]),
       resumen: mesa.resultadoFinal
         ? {
-            sobresEnUrna: mesa.resultadoFinal.sobresEnUrna,
-            electoresVotaron: mesa.resultadoFinal.electoresVotaron,
-            diferencia: mesa.resultadoFinal.diferencia,
+            sobresEnUrna: mesa.resultadoFinal[0].sobresEnUrna,
+            electoresVotaron: mesa.resultadoFinal[0].electoresVotaron,
+            diferencia: mesa.resultadoFinal[0].diferencia,
           }
         : null,
     }));
@@ -64,5 +67,5 @@ export async function GET() {
     console.error("[GET /reports/mesa-vote-summary]", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
-}
+});
 

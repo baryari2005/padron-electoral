@@ -35,6 +35,11 @@ export type ImportResult = {
   mesasCreadas: number;         // mesas creadas
   errors: number;
   errorDetails: ImportErrorDetail[];
+  statsPersonas?: {
+    REFERENTE: number;
+    PLANILLERO: number;
+    CHOFER: number;
+  }
 };
 
 export type ImportMode = "replace" | "append";

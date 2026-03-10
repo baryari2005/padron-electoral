@@ -8,6 +8,7 @@ export type NuevoCircuito = {
   codigo: string;
   nombre: string;
   userId: string;
+  eleccionId: number;
 };
 
 export function buildCircuitosFromRows<T extends Record<string, any>>(
@@ -16,10 +17,11 @@ export function buildCircuitosFromRows<T extends Record<string, any>>(
     getField: (row: T, keys: string[]) => string;
     norm: (s: string) => string;
     userId: string;
+    eleccionId: number;
     debug?: boolean;
   }
 ): NuevoCircuito[] {
-  const { getField, norm, userId, debug } = opts;
+  const { getField, norm, userId, eleccionId, debug } = opts;
 
   const circuitosUnicos = Array.from(
     new Set(
@@ -32,13 +34,15 @@ export function buildCircuitosFromRows<T extends Record<string, any>>(
       const [codigoRaw, nombreRaw] = (raw ?? "").split(/\s*-\s*/);
       const codigo = stripLeadingZeros(norm(codigoRaw));
       const nombre = norm(nombreRaw ?? codigoRaw);
-      return { codigo, nombre, userId };
+      return { codigo, nombre, userId, eleccionId };
     })
     .filter((c) => !!c.codigo);
 
   // Deduplicar por código ya normalizado
   const mapa = new Map<string, NuevoCircuito>();
-  for (const c of preliminares) if (!mapa.has(c.codigo)) mapa.set(c.codigo, c);
+  for (const c of preliminares)
+    if (!mapa.has(c.codigo)) mapa.set(c.codigo, c);
+
   const nuevosCircuitos = Array.from(mapa.values());
 
   if (debug) console.log("🧭 circuitos únicos (no vacíos):", nuevosCircuitos.length);
@@ -74,7 +78,7 @@ export async function persistCircuitos(
     // Tabla ya vacía por TRUNCATE en el orquestador: inserción directa, más rápida.
     const res = await prisma.circuito.createMany({
       data: circuitos,
-      skipDuplicates: false, // no hace falta, la tabla está limpia
+      skipDuplicates: true, // no hace falta, la tabla está limpia
     });
     insertedCircuits = res.count;
   } else {
@@ -85,7 +89,12 @@ export async function persistCircuitos(
       let count = 0;
       for (const c of circuitos) {
         await prisma.circuito.upsert({
-          where: { codigo: c.codigo },
+          where: {
+            codigo_eleccionId: {
+              codigo: c.codigo,
+              eleccionId: c.eleccionId,
+            },
+          },
           create: c,
           update: { nombre: c.nombre, userId: c.userId }, // ajustá qué campos querés actualizar
         });
@@ -105,7 +114,10 @@ export async function persistCircuitos(
   // Mapear codigo -> id (solo de los códigos involucrados en esta corrida)
   const circuitoMap = new Map<string, number>();
   const circuitosDB = await prisma.circuito.findMany({
-    where: { codigo: { in: circuitos.map((c) => c.codigo) } },
+    where: {
+      eleccionId: circuitos[0].eleccionId,
+      codigo: { in: circuitos.map((c) => c.codigo) },
+    },
     select: { id: true, codigo: true },
   });
   for (const c of circuitosDB) circuitoMap.set(c.codigo, c.id);

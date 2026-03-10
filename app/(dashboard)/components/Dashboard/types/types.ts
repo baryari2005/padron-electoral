@@ -23,6 +23,7 @@ export type SummaryResponse = {
     progreso: {
         porEscuela: ProgresoItem[];
         porCircuito: ProgresoItem[];
+        porReferente?: ProgresoItem[];
     };
     participacion: {
         porEscuela: ParticipacionItem[];

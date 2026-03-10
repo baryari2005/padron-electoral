@@ -7,6 +7,7 @@ export type NuevaMesa = {
   numero: number;
   establecimientoId: number;
   userId: string;
+  eleccionId: number;
 };
 
 const ESTABLECIMIENTO_KEYS = [
@@ -31,11 +32,12 @@ export function buildMesasFromRows<T extends Record<string, any>>(
     norm: (s: string) => string;
     toInt: (s: string | number) => number;
     userId: string;
+    eleccionId: number;
     establecimientoMapByNombre: Map<string, number>; // clave = toUpperEs(norm(nombre))
     debug?: boolean;
   }
 ): NuevaMesa[] {
-  const { getField, norm, toInt, userId, establecimientoMapByNombre, debug } = opts;
+  const { getField, norm, toInt, userId, eleccionId, establecimientoMapByNombre, debug } = opts;
 
   let totalVistos = 0;
   let skipSinNombre = 0;
@@ -67,7 +69,7 @@ export function buildMesasFromRows<T extends Record<string, any>>(
 
     const key = `${establecimientoId}|${numeroMesa}`;
     if (!dedup.has(key)) {
-      dedup.set(key, { numero: numeroMesa, establecimientoId, userId });
+      dedup.set(key, { numero: numeroMesa, establecimientoId, userId, eleccionId });
     }
   }
 
@@ -129,10 +131,10 @@ export async function persistMesas(
       for (const m of mesas) {
         await prisma.mesasPorEstablecimiento.upsert({
           where: {
-            // usa el nombre que existe en tu client d.ts
-            numero_establecimientoId: { // <-- probablemente este
+            numero_establecimientoId_eleccionId: {
               numero: m.numero,
               establecimientoId: m.establecimientoId,
+              eleccionId: m.eleccionId,
             },
           },
           create: m,

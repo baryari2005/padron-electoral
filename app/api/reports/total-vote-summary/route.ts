@@ -5,11 +5,15 @@ export const fetchCache = "force-no-store";
 import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { mapMesasToResumenTotal } from "./mapMesasToResumenTotal";
+import { withActiveElection } from "@/lib/_server/withActiveElection";
 
-export async function GET() {
+export const GET = withActiveElection(async (req, { election }) => {
   try {
     const mesas = await db.mesaEscrutada.findMany({
-      where: { deletedAt: null },
+      where: {
+        eleccionId: election.id,
+        deletedAt: null
+      },
       include: {
         establecimiento: {
           include: {
@@ -28,16 +32,16 @@ export async function GET() {
           },
         },
         resultadoFinal: true,
-      }      
+      }
     });
 
     const agrupado = mapMesasToResumenTotal(mesas);
-    
-    return NextResponse.json(agrupado);  
+
+    return NextResponse.json(agrupado);
 
   } catch (error) {
     console.error("[GET /reports/total-vote-summary]", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
-}
+});
 

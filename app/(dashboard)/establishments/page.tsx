@@ -8,6 +8,8 @@ import { EstablishmentsList } from "./components/EstablishmentList";
 import { School } from "lucide-react";
 import { useHasPermission } from "@/lib/permissions/useHasPermission";
 import { AccessDeniedPage } from "@/components/NoPermissions/AccessDeniedPage";
+import { useActiveElection } from "@/hooks/useActiveElection";
+import { StatusPage } from "@/components/status/StatusPage";
 
 export default function EstablishmentsPage() {
   const [refresh, setRefresh] = useState(false);
@@ -29,7 +31,24 @@ export default function EstablishmentsPage() {
   const canEdit = useHasPermission("editar_establecimientos");
   const canDelete = useHasPermission("eliminar_establecimientos");
 
-  if (!canView) return (<AccessDeniedPage subtitle="Ver Establecimientos."/>);
+  const { loading, hasActive } = useActiveElection();
+
+  if (!canView) return (<AccessDeniedPage subtitle="Ver Establecimientos." />);
+
+
+  if (loading) return null;
+
+  if (!hasActive) {
+    return (
+      <StatusPage
+        code="403"
+        title="Acceso denegado."
+        description="Para acceder a esta sección tiene que existir una elección activa."
+        imageSrc="/robot-nea.png"
+        primaryAction={{ label: "Ir al inicio", href: "/" }}
+      />
+    );
+  }
 
   return (
     <div className="space-y-4">

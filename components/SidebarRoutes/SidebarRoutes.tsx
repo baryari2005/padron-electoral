@@ -1,13 +1,29 @@
 'use client';
 
-import { SidebarItem } from '../SidebarItem';
-import { dataAdminSidebar, dataGeneralSidebar, dataScrutinyCertificatesSidebar, dataSupportSidebar, dataToolsSidebar, dataConfigSidebar, dataAnalyticsSidebar } from './SidebarRoutes.data';
-import { Separator } from '@/components/ui/separator';
-import { Button } from '@/components/ui/button';
-import { formatMessage } from '@/lib/utils/formatters';
-import { Copyright } from 'lucide-react';
+import { useActiveElection } from "@/hooks/useActiveElection";
+import { SidebarItem } from "../SidebarItem";
+import {
+    dataGeneralSidebar,
+    dataSupportSidebar,
+    getToolsSidebar,
+    getdataAnalyticsSidebar,
+    getAdminSidebar,
+    getScrutinyCertificatesSidebar,
+    getDataConfigSidebar,
+} from "./SidebarRoutes.data";
+import { Separator } from "@/components/ui/separator";
+import { formatMessage } from "@/lib/utils/formatters";
+import { Copyright } from "lucide-react";
 
 export function SidebarRoutes() {
+    const { electionType, electionState,  loading } = useActiveElection();
+
+    const adminItems = getAdminSidebar(electionType, electionState) ?? [];
+    const scrutinyItems = getScrutinyCertificatesSidebar(electionType, electionState) ?? [];
+    const toolsItems = getToolsSidebar(electionType, electionState) ?? [];
+    const analyticsItems = getdataAnalyticsSidebar(electionType, electionState) ?? [];
+    const usersItems = getDataConfigSidebar(electionType, electionState) ?? [];
+
     return (
         <div className='flex flex-col justify-between h-full'>
             <div>
@@ -18,54 +34,69 @@ export function SidebarRoutes() {
                     ))}
                 </div>
 
+                {/* CERTIFICADO */}
+                {scrutinyItems.length > 0 && (
+                    <>
                 <Separator />
-                <div className='p-2 md:p-6'>
-                    <p className='text-slate-500 mb-2'>CERTIFICADO DE ESCRUTINIO</p>
-                    {dataScrutinyCertificatesSidebar.map((item) => (
+                        <div className="p-2 md:p-6">
+                            <p className="text-slate-500 mb-2">CERTIFICADO DE ESCRUTINIO</p>
+                            {scrutinyItems.map((item) => (
                         <SidebarItem key={item.label} item={item} />
                     ))}
                 </div>
+                    </>
+                )}
 
+                {/* ADMIN */}
+                {adminItems.length > 0 && (
+                    <>
                 <Separator />
-                <div className='p-2 md:p-6'>
-                    <p className='text-slate-500 mb-2'>ADMINISTRACIÓN</p>
-                    {dataAdminSidebar.map((item) => (
+                        <div className="p-2 md:p-6">
+                            <p className="text-slate-500 mb-2">ADMINISTRACIÓN</p>
+                    {adminItems.map((item) => (
                         <SidebarItem key={item.label} item={item} />
                     ))}
                 </div>
+                    </>
+                )}
 
+                {/* TOOLS */}
+                {toolsItems.length > 0 && (
+                    <>
                 <Separator />
-                <div className='p-2 md:p-6'>
-                    <p className='text-slate-500 mb-2'>HERRAMIENTAS</p>
-                    {dataToolsSidebar.map((item) => (
+                        <div className="p-2 md:p-6">
+                            <p className="text-slate-500 mb-2">HERRAMIENTAS</p>
+                            {toolsItems.map((item) => (
                         <SidebarItem key={item.label} item={item} />
                     ))}
                 </div>
+                    </>
+                )}
 
                 <Separator />
-                <div className='p-2 md:p-6'>
-                    <p className='text-slate-500 mb-2'>SOPORTE</p>
+                <div className="p-2 md:p-6">
+                    <p className="text-slate-500 mb-2">SOPORTE</p>
                     {dataSupportSidebar.map((item) => (
                         <SidebarItem key={item.label} item={item} />
                     ))}
                 </div>
 
                 <Separator />
-                <div className='p-2 md:p-6'>
-                    <p className='text-slate-500 mb-2'>REPORTES</p>
-                    {dataAnalyticsSidebar.map((item) => (
+                <div className="p-2 md:p-6">
+                    <p className="text-slate-500 mb-2">REPORTES</p>
+                    {analyticsItems.map((item) => (
                         <SidebarItem key={item.label} item={item} />
                     ))}
                 </div>
 
 
                 <Separator />
-                <div className='p-2 md:p-6'>
-                    <p className='text-slate-500 mb-2'>CONFIGURACION</p>
-                    {dataConfigSidebar.map((item) => (
+                <div className="p-2 md:p-6">
+                    <p className="text-slate-500 mb-2">CONFIGURACION</p>
+                    {usersItems.map((item) => (
                         <SidebarItem key={item.label} item={item} />
                     ))}
-                </div>                
+                </div>
             </div>
 
             <div>
@@ -78,5 +109,5 @@ export function SidebarRoutes() {
                 </div>
             </div>
         </div>
-    )
+    );
 }

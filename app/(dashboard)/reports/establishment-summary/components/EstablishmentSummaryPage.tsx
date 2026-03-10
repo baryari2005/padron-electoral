@@ -18,6 +18,7 @@ export default function EstablishmentSummaryPage() {
   const [selectedEscuela, setSelectedEscuela] = useState("__all__");
   const [stacked, setStacked] = useState(true);
   const canView = useHasPermission("ver_reportes");
+  const currentYear = new Date().getFullYear();
 
   useEffect(() => {
     axiosInstance
@@ -53,9 +54,9 @@ export default function EstablishmentSummaryPage() {
   if (!canView) return <AccessDeniedPage subtitle="Informe por Establecimiento." />;
   if (loading) return <CommonLoader logo="/logo.png"
     alternativeLogo="/logo-white.png"
-    alternativeText="Más San Miguel 2025"
-    title="Elecciones Provinciales"
-    subTitle="San Miguel 2025"
+    alternativeText={`Más San Miguel ${currentYear}`}
+    title="Elecciones Generales"
+    subTitle={`San Miguel ${currentYear}`}
     loaderText="Cargando Reportes por establecimiento..." />;
 
   return (

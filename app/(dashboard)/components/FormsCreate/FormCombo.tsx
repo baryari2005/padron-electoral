@@ -2,7 +2,11 @@
 
 import { useId, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover";
 import {
   Command,
   CommandInput,
@@ -11,15 +15,12 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { ChevronsUpDown, Check } from "lucide-react";
+import { ChevronsUpDown, Check, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Props<T> {
-  /** ID del botón/trigger para enlazar con <label htmlFor> */
   id?: string;
-  /** ID del <label> externo, para aria-labelledby del input de búsqueda */
   labelId?: string;
-
   placeholder?: string;
   options: T[];
   value?: string;
@@ -42,11 +43,11 @@ export function FormCombo<T>({
   getOptionValue,
   onOptionSelected,
   disabled = false,
+  loading = false,
 }: Props<T>) {
   const [open, setOpen] = useState(false);
 
-  // IDs accesibles
-  const fallbackId = useId(); // por si no pasan `id`
+  const fallbackId = useId();
   const triggerId = id ?? `combobox-${fallbackId}`;
   const listboxId = `listbox-${fallbackId}`;
 
@@ -56,79 +57,103 @@ export function FormCombo<T>({
   );
 
   return (
-    <>
-      <Popover open={open} onOpenChange={setOpen} modal={false}>
-        <PopoverTrigger asChild>
-          <Button
-            id={triggerId}
-            type="button"
-            variant="outline"
-            role="combobox"
-            aria-expanded={open}
-            aria-controls={listboxId}
-            aria-labelledby={labelId} // enlaza con el <label id="...">
-            disabled={disabled}
-            className="w-full justify-between h-10 px-3"
-          >
-            <span className="truncate max-w-[90%] text-left">
-              {value
-                ? selectedOption
-                  ? getOptionLabel(selectedOption)
-                  : placeholder
-                : placeholder}
-            </span>
-            <ChevronsUpDown className="opacity-50 h-4 w-4 ml-2 shrink-0" />
-          </Button>
-        </PopoverTrigger>
-
-        <PopoverContent
-          className="z-[70] p-0 w-[--radix-popover-trigger-width] pointer-events-auto"
-          align="start"
-          side="bottom"
-          sideOffset={2}
-          avoidCollisions={false}
-          collisionPadding={8}
+    <Popover
+      open={loading ? false : open}
+      onOpenChange={setOpen}
+      modal={false}
+    >
+      <PopoverTrigger asChild>
+        <Button
+          id={triggerId}
+          type="button"
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          aria-controls={listboxId}
+          aria-labelledby={labelId}
+          disabled={disabled || loading}
+          className="w-full h-10 px-3 justify-between"
         >
-          <Command>
-            {/* Importante: etiquetar el input de búsqueda */}
-            <CommandInput
-              disabled={disabled}
-              placeholder="Buscar…"
-              className="h-9"
-              aria-labelledby={labelId}
-            />
-            <CommandList id={listboxId} role="listbox">
-              <CommandEmpty>No se encontraron resultados.</CommandEmpty>
-              <CommandGroup className="max-h-[300px] overflow-auto">
-                {options.map((opt) => {
-                  const optValue = getOptionValue(opt);
-                  const optLabel = getOptionLabel(opt);
-                  const isSelected = value === optValue;
+          {/* CONTENIDO INTERNO — UN SOLO NODO */}
+          <div className="flex w-full items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              {loading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin shrink-0" />
+                  <span className="truncate text-muted-foreground animate-pulse">
+                    {placeholder || "Cargando..."}
+                  </span>
+                </>
+              ) : value && selectedOption ? (
+                <span className="truncate">
+                  {getOptionLabel(selectedOption)}
+                </span>
+              ) : (
+                <span className="truncate text-muted-foreground">
+                  {placeholder}
+                </span>
+              )}
+            </div>
 
-                  return (
-                    <CommandItem
-                      key={optValue}
-                      value={optLabel}
-                      role="option"
-                      aria-selected={isSelected}
-                      onSelect={() => {
-                        onChange(optValue);
-                        onOptionSelected?.(opt);
-                        setOpen(false);
-                      }}
-                    >
-                      {optLabel}
-                      <Check
-                        className={cn("ml-auto h-4 w-4", isSelected ? "opacity-100" : "opacity-0")}
-                      />
-                    </CommandItem>
-                  );
-                })}
-              </CommandGroup>
-            </CommandList>
-          </Command>
-        </PopoverContent>
-      </Popover>
-    </>
+            <ChevronsUpDown
+              className={cn(
+                "h-4 w-4 shrink-0 opacity-50 transition-transform",
+                open && "rotate-180"
+              )}
+            />
+          </div>
+        </Button>
+      </PopoverTrigger>
+
+      <PopoverContent
+        className="z-[70] p-0 w-[--radix-popover-trigger-width]"
+        align="start"
+        side="bottom"
+        sideOffset={2}
+      >
+        <Command>
+          <CommandInput
+            disabled={disabled}
+            placeholder="Buscar…"
+            className="h-9"
+            aria-labelledby={labelId}
+          />
+
+          <CommandList id={listboxId} role="listbox">
+            <CommandEmpty>No se encontraron resultados.</CommandEmpty>
+
+            <CommandGroup className="max-h-[300px] overflow-auto">
+              {options.map((opt) => {
+                const optValue = getOptionValue(opt);
+                const optLabel = getOptionLabel(opt);
+                const isSelected = value === optValue;
+
+                return (
+                  <CommandItem
+                    key={optValue}
+                    value={optLabel}
+                    role="option"
+                    aria-selected={isSelected}
+                    onSelect={() => {
+                      onChange(optValue);
+                      onOptionSelected?.(opt);
+                      setOpen(false);
+                    }}
+                  >
+                    {optLabel}
+                    <Check
+                      className={cn(
+                        "ml-auto h-4 w-4",
+                        isSelected ? "opacity-100" : "opacity-0"
+                      )}
+                    />
+                  </CommandItem>
+                );
+              })}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
   );
 }

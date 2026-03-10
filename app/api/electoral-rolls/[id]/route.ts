@@ -6,8 +6,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { electoralRollSchema } from "@/app/(dashboard)/electoral-rolls/lib";
 import { getAuthOrThrow } from "@/utils/auth";
+import { withActiveElection } from "@/lib/_server/withActiveElection";
+import { Prisma } from "@prisma/client";
+import { getUserIdFromRequest } from "@/lib/auth/getUserIdFromRequest";
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export const GET = withActiveElection(async (req, { params, election }) => {
   let userId: string;
 
   try {
@@ -17,13 +20,13 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     return new NextResponse((err as Response).statusText, { status: (err as Response).status });
   }
 
-  const id = parseInt(params.id);
+  const id = parseInt(params!.id);
     if (isNaN(id)) {
       return NextResponse.json({ error: "ID inválido" }, { status: 400 });
     }
 
   const elector = await db.padronElectoral.findFirst({
-    where: { id }
+    where: { id, eleccionId: election.id }
   });
 
   if (!elector) {
@@ -31,10 +34,10 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   }
 
   return NextResponse.json(elector);
-}
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+});
+export const PUT = withActiveElection(async (req, { params, election }) => {
   try {
-    const id = parseInt(params.id);
+    const id = parseInt(params!.id);
     if (isNaN(id)) {
       return NextResponse.json({ error: "ID inválido" }, { status: 400 });
     }
@@ -43,7 +46,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     const data = electoralRollSchema.parse(body);
 
     const updated = await db.padronElectoral.update({
-      where: { id },
+      where: { id, eleccionId: election.id },
       data,
     });
 
@@ -55,16 +58,23 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       { status: 500 }
     );
   }
+});
+
+async function softDelete(id: number,  eleccionId: number, userId?: string) {
+    const data: Prisma.PadronElectoralUpdateInput = { deletedAt: { set: new Date() } };
+    if (userId) data.userId = userId;
+    return db.padronElectoral.update({ where: { id,  eleccionId }, data });
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export const DELETE = withActiveElection(async (req, { params, election }) => {
   try {
-    const id = parseInt(params.id);
+    const id = parseInt(params!.id);
     if (isNaN(id)) {
       return NextResponse.json({ error: "ID inválido" }, { status: 400 });
     }
+    const userId = getUserIdFromRequest(req);
 
-    await db.padronElectoral.delete({ where: { id } });
+    await softDelete(id, election.id, userId || undefined );
 
     return NextResponse.json({ message: "Registro eliminado" });
   } catch (error: any) {
@@ -74,4 +84,4 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
       { status: 500 }
     );
   }
-}
+});

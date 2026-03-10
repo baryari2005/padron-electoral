@@ -7,8 +7,8 @@ import { Toaster } from "@/components/ui/sonner";
 const noto = Noto_Sans_Display({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Dashboard Elecciones Provinciales",
-  description: "Dashboard Elecciones Provinciales",
+  title: "Dashboard Elecciones Generales",
+  description: "Dashboard Elecciones Generales",
   icons: { icon: "/favicon.png" },
 };
 

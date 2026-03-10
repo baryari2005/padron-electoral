@@ -3,14 +3,21 @@ import { Prisma } from "@prisma/client";
 import { formatApiMessage } from "../utils/formatters";
 
 export function buildCargoPoliticoWhere(search: string): Prisma.CargoPoliticoWhereInput {
-  const terms = search.trim().split(/\s+/).filter(Boolean);
-  const where: Prisma.CargoPoliticoWhereInput = { deletedAt: null };
-  if (terms.length) {
-    where.OR = terms.map((term) => ({
-      nombre: { contains: term, mode: Prisma.QueryMode.insensitive },
-    }));
+  const terms = search.trim().split(/\s+/).filter(Boolean);  
+  if (!terms.length) return {};
+
+  return {
+    AND: [
+      {
+        OR: terms.map((term) => ({
+          nombre: { contains: term, mode: Prisma.QueryMode.insensitive },
+        })),
+      },
+      {
+        nombre: { contains: search, mode: Prisma.QueryMode.insensitive },
+      },
+    ],
   }
-  return where;
 }
 
 export async function findByNombreInsensitive(nombre: string) {
@@ -20,33 +27,42 @@ export async function findByNombreInsensitive(nombre: string) {
   });
 }
 
-export async function getCargoPoliticoById(id: number) {
-  return db.cargoPolitico.findFirst({ where: { id } });
+export async function getCargoPoliticoById(id: number, eleccionId: number) {
+  return db.cargoPolitico.findFirst({
+    where: {
+      id,
+      eleccionId,
+      deletedAt: null
+    }
+  });
 }
 
-export async function updateCargoPolitico(
+export async function updateCargoPolitico(data: {
   id: number,
   nombre: string,
   orden: number,
-  userId?: string
-) {
-  const data: Prisma.CargoPoliticoUpdateInput = { nombre, orden, userId };
+  userId?: string,
+  eleccionId: number,
+}) {
+  const id = data.id;
+  const eleccionId = data.eleccionId;
 
-  return db.cargoPolitico.update({ where: { id }, data });
+  return db.cargoPolitico.update({ where: { id, eleccionId }, data: { ...data } });
 }
 
-export async function softDeleteCargoPolitico(id: number, userId?: string) {
+export async function softDeleteCargoPolitico(id: number, eleccionId: number, userId?: string) {
   const data: Prisma.CargoPoliticoUpdateInput = { deletedAt: { set: new Date() } };
   if (userId) data.userId = userId;
-  return db.cargoPolitico.update({ where: { id }, data });
+  return db.cargoPolitico.update({ where: { id, eleccionId }, data });
 }
 
 export async function createCargoPolitico(input: {
   nombre: string;
   orden?: number;
-  userId: string;            // ⬅️ requerido
+  userId: string;
+  eleccionId: number;
 }) {
-  const { nombre, orden, userId } = input;
+  const { nombre, orden, userId, eleccionId } = input;
 
   if (!userId || typeof userId !== "string") {
     throw new Error(formatApiMessage("errors.userNotAuthenticated"));
@@ -57,6 +73,7 @@ export async function createCargoPolitico(input: {
       nombre,
       ...(typeof orden === "number" ? { orden } : {}),
       userId,
+      eleccionId
     },
   });
 }
@@ -85,14 +102,4 @@ export async function resurrectCargoPolitico(
     where: { id },
     data,
   });
-}
-
-export async function fetchCargosOrder(): Promise<string[]> {
-  const cargos = await db.cargoPolitico.findMany({
-    where: { deletedAt: null },
-    select: { nombre: true, orden: true },
-    orderBy: [{ orden: "asc" }, { id: "asc" }],
-  });
-  // normalizá casing si tus datos vienen mixtos
-  return cargos.map(c => c.nombre.toUpperCase());
 }

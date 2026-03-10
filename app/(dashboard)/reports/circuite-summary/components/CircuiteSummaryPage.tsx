@@ -18,6 +18,7 @@ export default function CircuiteSummaryPage() {
   const [selectedCircuite, setSelectedCircuite] = useState("__all__");
   const [stacked, setStacked] = useState(true);
   const canView = useHasPermission("ver_reportes");
+  const currentYear = new Date().getFullYear();
 
   useEffect(() => {
     axiosInstance
@@ -54,9 +55,9 @@ export default function CircuiteSummaryPage() {
   if (loading) return <CommonLoader
     logo="/logo.png"
     alternativeLogo="/logo-white.png"
-    alternativeText="Más San Miguel 2025"
-    title="Elecciones Provinciales"
-    subTitle="San Miguel 2025"
+    alternativeText={`Más San Miguel ${currentYear}`}
+    title="Elecciones Generales"
+    subTitle={`San Miguel ${currentYear}`}
     loaderText="Cargando Reportes por circuito..." />;
 
   return (

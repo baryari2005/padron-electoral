@@ -1,130 +1,123 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
-import { AlertTriangle, Component } from "lucide-react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils"; // si no tenés cn, podés removerlo
-import { Separator } from "../ui/separator";
+import { AlertTriangle, Component, Home } from "lucide-react";
 
-type AccessDeniedPageProps = {
-  fullScreen?: boolean;      // true: tapa toda la pantalla | false: tapa solo el contenedor padre (que debe ser relative)
-  showActions?: boolean;     // muestra botones opcionales
-  onPrimaryAction?: () => void;
-  primaryLabel?: string;
-  onSecondaryAction?: () => void;
-  secondaryLabel?: string;
-  title?: string;
-  subtitle?: string;
-  location?: string;         // ej: "San Miguel 2025"
-  message?: string;
-  className?: string;        // por si querés estilos extra
+type Props = {
+  code?: "401" | "403" | "404" | "409" | "501";
+  subtitle: string;
+  description?: string;
+  primaryAction?: { label: string; href: string };
+  secondaryAction?: { label: string; href: string };
 };
 
 export function AccessDeniedPage({
-  fullScreen = true,
-  showActions = true,
-  onPrimaryAction,
-  primaryLabel = "Ir al inicio",
-  onSecondaryAction,
-  secondaryLabel = "Volver",
-  title = "Elecciones Provinciales",
-  subtitle = "Informe de votos totales",
-  location = "San Miguel 2025",
-  message = "No tenés permiso para ver esta sección.",
-  className,
-}: AccessDeniedPageProps) {
-  const router = useRouter();
-  const focusRef = useRef<HTMLButtonElement | null>(null);
-
-  useEffect(() => {
-    // Le damos foco a un botón al montar para accesibilidad / navegación con teclado
-    focusRef.current?.focus();
-  }, []);
-
-  const WrapperTag = "div";
-  const coverClasses = fullScreen
-    ? "fixed inset-0 z-50"
-    : "absolute inset-0 z-50"; // recuerda: el padre debe tener `relative` si NO es fullScreen
+  code = "401",
+  subtitle,
+  description = "No tenés permisos para ver esta sección.",
+  primaryAction = { label: "Volver al inicio", href: "/" },
+  secondaryAction,
+}: Props) {
+  const location = `San Miguel ${new Date().getFullYear()}`;
+  const imageSrc = "/robot-ad2.png";
 
   return (
-    <WrapperTag
-      className={cn(
-        coverClasses,
-        "grid place-items-center bg-background/80 backdrop-blur-sm",
-        className
-      )}
-      role="alert"
-      aria-live="assertive"
-      aria-label="Acceso denegado"
-    >
-      <div className="w-full max-w-md mx-auto text-center rounded-2xl border bg-card p-8 shadow-lg">
-        {/* Logo que cambia según tema */}
-        <div className="relative w-[60px] h-[60px] mx-auto mb-3">
-          <Image
-            src="/logo.png"
-            alt="Logo"
-            sizes="160px"
-            fill
-            className="object-contain rounded-lg dark:hidden"
-            // priority
-          />
-          <Image
-            src="/logo-white.png"
-            alt="Logo blanco"
-            sizes="160px"
-            fill
-            className="object-contain hidden rounded-lg dark:block"
-            // priority
-          />
-        </div>
+    <div className="w-full min-h-[70vh] flex items-center justify-center px-6 py-12">
+      <div className="w-full max-w-6xl grid gap-12 md:grid-cols-2 items-center">
 
-        {/* Encabezado */}
-
-        <h1 className="text-2xl font-bold">{title}</h1>
-        <p className="text-muted-foreground">{location}</p>
-
-        <hr className="my-4 border-muted/50" />
-
-        <div className="flex items-center justify-center animate-pulse">
-          <Component className="w-4 h-4 mr-2" />
-          <h2 className="text-sm-plus text-muted-foreground">{subtitle}</h2>
-        </div>
-        {/* Mensaje de error */}
-        <div className="flex items-center justify-center gap-2 text-red-600 mb-6 animate-pulse">
-          <AlertTriangle className="shrink-0 " size={22} />
-          <p className="text-base font-medium ">{message}</p>
-        </div>
-
-        <Separator className="mb-6" />
-        {/* Acciones */}
-        {showActions && (
-          <div className="flex flex-wrap items-center justify-center gap-3">
-            <Button
-              ref={focusRef}
-              onClick={
-                onPrimaryAction
-                  ? onPrimaryAction
-                  : () => router.push("/") // acción por defecto
-              }
-            >
-              {primaryLabel}
-            </Button>
-
-            <Button
-              variant="outline"
-              onClick={
-                onSecondaryAction
-                  ? onSecondaryAction
-                  : () => router.back() // acción por defecto
-              }
-            >
-              {secondaryLabel}
-            </Button>
+        {/* Imagen */}
+        <div className="flex justify-center">
+          <div className="relative w-[520px] h-[420px] md:w-[600px] md:h-[480px]">
+            <Image
+              src={imageSrc}
+              alt={subtitle}
+              fill
+              className="object-contain drop-shadow-2xl animate-[float_4s_ease-in-out_infinite]"
+              priority
+            />
           </div>
-        )}
+        </div>
+
+        {/* Card */}
+        <div className="flex justify-center">
+          <div className="w-full max-w-md text-center flex flex-col items-center">
+
+            {/* Logo + Título Elecciones */}
+            <div className="flex items-center justify-center gap-4 mb-6">
+
+              <div className="relative w-[70px] h-[70px] shrink-0">
+                <Image
+                  src="/logo.png"
+                  alt="Logo"
+                  fill
+                  className="object-contain rounded-full dark:hidden"
+                />
+                <Image
+                  src="/logo-white.png"
+                  alt="Logo blanco"
+                  fill
+                  className="object-contain hidden rounded-full dark:block"
+                />
+              </div>
+
+              <div className="text-left">
+                <h2 className="text-xl font-semibold leading-tight">
+                  Elecciones
+                </h2>
+                <h2 className="text-2xl font-bold leading-tight">
+                  Generales
+                </h2>
+                <p className="text-muted-foreground text-sm">
+                  {location}
+                </p>
+              </div>
+
+            </div>
+
+            {/* Título principal */}
+            <div className="flex items-center justify-center gap-2 text-destructive mb-4">
+              <Component className="w-5 h-5" />
+              <h1 className="text-3xl font-semibold">
+                {subtitle}
+              </h1>
+            </div>
+
+            {/* Descripción */}
+            {description && (
+              <div className="flex items-center justify-center gap-2 text-destructive mb-6">
+                <AlertTriangle size={20} />
+                <p className="text-base font-medium text-center">
+                  {description}
+                </p>
+              </div>
+            )}
+
+            {/* Botones */}
+            <div className="mt-4 flex flex-wrap justify-center gap-3">
+              <Button asChild>
+                <Link
+                  href={primaryAction.href}
+                  className="inline-flex items-center gap-2"
+                >
+                  <Home className="w-4 h-4" />
+                  {primaryAction.label}
+                </Link>
+              </Button>
+
+              {secondaryAction && (
+                <Button asChild variant="outline">
+                  <Link href={secondaryAction.href}>
+                    {secondaryAction.label}
+                  </Link>
+                </Button>
+              )}
+            </div>
+
+          </div>
+        </div>
       </div>
-    </WrapperTag>
+    </div>
   );
 }

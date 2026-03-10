@@ -18,33 +18,39 @@ import {
 } from "@/lib/_server/circuites.service";
 import { getPagination } from "@/lib/_server/pagination";
 import { mergeAndWhere } from "@/lib/_server/helper.service";
+import { withActiveElection } from "@/lib/_server/withActiveElection";
 
-export async function GET(req: NextRequest) {
+export const GET = withActiveElection(async (req, { election }) => {
   try {
     const { searchParams } = new URL(req.url);
-    const { page, limit, skip } = getPagination(searchParams, 1, 10, 100);
+    const { limit, skip } = getPagination(searchParams, 1, 10, 100);
 
     const search = searchParams.get("search") || "";
     const all = searchParams.get("all") === "true";
 
-    // Sorting opcional (si no viene sortBy, queda el default)
-    const sortBy = searchParams.get("sortBy"); // "nombre" | "codigo" | undefined
-    const sortDir = (searchParams.get("sortDir") === "desc" ? "desc" : "asc") as "asc" | "desc";
+    const sortBy = searchParams.get("sortBy");
+    const sortDir = (searchParams.get("sortDir") === "desc" ? "desc" : "asc") as
+      | "asc"
+      | "desc";
+
     const orderBy = buildOrderBy(sortBy, sortDir);
 
-    let where: Prisma.CircuitoWhereInput = { deletedAt: null };
-    where = mergeAndWhere(where, buildCircuitoWhere(search));    
+    let where: Prisma.CircuitoWhereInput = {
+      eleccionId: election.id,
+      deletedAt: null,
+    };
 
-    // all=true → sin paginar (igualmente respeta orderBy para consistencia)
+    where = mergeAndWhere(where, buildCircuitoWhere(search));
+
     if (all) {
       const items = await db.circuito.findMany({
         where,
         orderBy,
       });
+
       return NextResponse.json({ items, total: items.length });
     }
 
-    // Paginado normal
     const [items, total] = await Promise.all([
       db.circuito.findMany({
         where,
@@ -59,24 +65,37 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     return handleError(error);
   }
-}
+});
 
-export async function POST(req: NextRequest) {
+export const POST = withActiveElection(async (req, { election }) => {
   try {
     const { nombre, codigo } = await req.json();
     const userId = getUserIdFromRequest(req);
 
     if (!nombre) {
-      return NextResponse.json({ error: formatApiMessage("required.name") }, { status: 400 });
-    }
-    if (!codigo) {
-      return NextResponse.json({ error: formatApiMessage("required.code") }, { status: 400 });
+      return NextResponse.json(
+        { error: formatApiMessage("required.name") },
+        { status: 400 }
+      );
     }
 
-    const existing = await findByNombreInsensitive(nombre);
+    if (!codigo) {
+      return NextResponse.json(
+        { error: formatApiMessage("required.code") },
+        { status: 400 }
+      );
+    }
+
+    const existing = await findByNombreInsensitive(nombre, election.id);
 
     if (!existing) {
-      const created = await createCircuito({ nombre, codigo, userId });
+      const created = await createCircuito({
+        nombre,
+        codigo,
+        userId,
+        eleccionId: election.id,
+      });
+
       return NextResponse.json(created, { status: 201 });
     }
 
@@ -90,13 +109,13 @@ export async function POST(req: NextRequest) {
       { status: 400 }
     );
   } catch (error: any) {
-    if (error instanceof NextResponse) return error;
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
       return NextResponse.json(
         { error: formatApiMessage("errors.circuiteExists") },
         { status: 400 }
       );
     }
+
     return handleError(error);
   }
-}
+});

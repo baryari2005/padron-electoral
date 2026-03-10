@@ -1,6 +1,5 @@
-import { LogOut, Menu, Search, UserRound } from 'lucide-react';
+import { LogOut, Menu, Search, Star, TriangleAlert, UserRound } from 'lucide-react';
 
-import { Input } from '@/components/ui/input';
 import {
     Sheet,
     SheetContent,
@@ -14,6 +13,9 @@ import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
 import { useAuthStore } from '@/auth';
 import { ContextualSearch } from '../ContextualSearch/ContextualSearch';
+import { Label } from '../ui/label';
+import { useActiveElection } from '@/hooks/useActiveElection';
+import { Cargando } from '../ui/upload';
 
 
 interface User {
@@ -24,7 +26,19 @@ interface User {
     userId?: string;
 }
 
+
 export function Navbar({ user }: { user: User | null }) {
+    const { electionType, electionId, electionDate, electionName, loading } = useActiveElection();
+
+    const formattedDate = electionDate
+        ? new Date(electionDate).toLocaleDateString("es-AR", {
+            timeZone: "UTC",
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+        })
+        : "";
+
     return (
         <nav className='flex items-center px-2 gap-x-4 md:px-6 
                     justify-between w-full 
@@ -41,8 +55,23 @@ export function Navbar({ user }: { user: User | null }) {
                     </SheetContent>
                 </Sheet>
             </div>
-            
+
             <ContextualSearch />
+
+            {loading ? (
+                <Cargando variant="page" label="Verificando elección activa..." labelSize='text-base' className='text-yellow-700'/>
+            ) : !electionId ? (
+                <Label className="flex items-center text-[13px] leading-5 text-center mt-1 text-red-700 animate-pulse">
+                    <TriangleAlert className="w-4 h-4 mr-2" />
+                    NO EXISTE UNA ELECCIÓN ACTIVA ACTUALMENTE.
+                </Label>
+            ) : (
+                <Label className="flex items-center text-[13px] leading-5 text-center mt-1 text-green-700 animate-pulse">
+                    <Star className="w-4 h-4 mr-2" />
+                    ELECCIÓN ACTIVA: Id: {electionId} - {electionName} - {electionType} - {formattedDate}
+                </Label>
+            )}
+
 
             <div className='flex gap-x-2 items-center'>
                 <ToggleTheme />

@@ -27,6 +27,12 @@ const MESA_KEYS = ["NUMERO_MESA", "NRO_MESA", "MESA"];
 const ORDEN_MESA_KEYS = ["NU_ORDEN_MESA", "ORDEN_MESA", "ORDEN"];
 const VOTO_KEYS = ["voto_sino", "VOTO", "VOTO_SI_NO"];
 
+const TELEFONO_KEYS = ["TELEFONO", "TELEFONO_AFILIADO"];
+const REFERENTE_KEYS = ["REFERENTE"];
+const PLANILLERO_KEYS = ["PLANILLERO"];
+const CHOFER_KEYS = ["CHOFER"];
+const PLANILLA_KEYS = ["N_PLANILLA", "NUMERO_PLANILLA"];
+
 // ===== Helpers =====
 const s = (val: any): string | null => {
   const out = (val ?? "").toString().trim();
@@ -105,7 +111,11 @@ function mapRowToPadron<T extends Record<string, any>>(row: T, ctx: {
 
   // Resto de campos (con defaults)
   const distrito = norm(s(getField(row, DISTRITO_KEYS)));
-  const tipoEjemplar = norm(s(getField(row, TIPO_EJEMPLAR_KEYS)));
+  const tipoEjemplarRaw = norm(s(getField(row, TIPO_EJEMPLAR_KEYS)));
+  const tipoEjemplar = tipoEjemplarRaw && tipoEjemplarRaw.trim() !== ""
+    ? tipoEjemplarRaw
+    : "DNI-EA";
+
   const clase = toInt(s(getField(row, CLASE_KEYS)));
   const genero = norm(s(getField(row, GENERO_KEYS)));
   const domicilio = norm(s(getField(row, DOMICILIO_KEYS)));
@@ -113,8 +123,26 @@ function mapRowToPadron<T extends Record<string, any>>(row: T, ctx: {
   const localidad = norm(s(getField(row, LOCALIDAD_KEYS))) || "San Miguel 2025";
   const codigoPostal = (s(getField(row, CP_KEYS)) || "") as string;
   const tipoNacionalidad = norm(s(getField(row, NACIONALIDAD_KEYS))) || "ARGENTINO";
-  const votoBruto = norm(s(getField(row, VOTO_KEYS)));
-  const votoSiNo = votoBruto || "S";
+
+  const referenteNombre = norm(s(getField(row, REFERENTE_KEYS)))?.toUpperCase();
+
+  let votoSiNo: "S" | "N" = "N"; // default seguro
+
+  if (!referenteNombre) {
+    const votoBruto = norm(s(getField(row, VOTO_KEYS)));
+
+    if (votoBruto === "S" || votoBruto === "SI") {
+      votoSiNo = "S";
+    } else {
+      votoSiNo = "N";
+    }
+  }
+  const telefono = norm(s(getField(row, TELEFONO_KEYS)));
+
+  
+  const planilleroNombre = norm(s(getField(row, PLANILLERO_KEYS)))?.toUpperCase();
+  const choferNombre = norm(s(getField(row, CHOFER_KEYS)))?.toUpperCase();
+  const planillaNumero = norm(s(getField(row, PLANILLA_KEYS)));
 
   return {
     distrito,
@@ -135,6 +163,11 @@ function mapRowToPadron<T extends Record<string, any>>(row: T, ctx: {
     circuitoId,
     establecimientoId,
     userId,
+    telefono,
+    referenteNombre,
+    planilleroNombre,
+    choferNombre,
+    planillaNumero,
   };
 }
 
@@ -185,6 +218,12 @@ export async function persistPadronFromRowsBatched<T extends Record<string, any>
     userId: string;
     circuitoMap: Map<string, number>;
     establecimientoMapByNombre: Map<string, number>;
+
+    // 🔥 NUEVOS
+    personaIdMap: Map<string, number>;
+    planillaIdMap: Map<string, number>;
+    eleccionId: number;
+
     batchSize?: number;
     skipDuplicates?: boolean;
     onError?: (e: AppImportErrorDetail) => void;
@@ -193,11 +232,19 @@ export async function persistPadronFromRowsBatched<T extends Record<string, any>
   }
 ) {
   const {
-    getField, norm, toInt, userId,
-    circuitoMap, establecimientoMapByNombre,
+    getField,
+    norm,
+    toInt,
+    userId,
+    circuitoMap,
+    establecimientoMapByNombre,
+    personaIdMap,
+    planillaIdMap,
+    eleccionId,
     batchSize = 1000,
     skipDuplicates = true,
-    onError, debug,
+    onError,
+    debug,
     mode = "append",
   } = opts;
 
@@ -206,35 +253,52 @@ export async function persistPadronFromRowsBatched<T extends Record<string, any>
   let errors = 0;
   const buffer: NuevoPadron[] = [];
 
+
   const flush = async () => {
     if (!buffer.length) return;
 
-    // 🔧 Convertimos NuevoPadron[] -> PadronElectoralCreateManyInput[]
-    const toCreate: Prisma.PadronElectoralCreateManyInput[] = buffer.map((r) => ({
-      // Si en tu schema estos campos son **requeridos**, asegurá string no nulo:
-      distrito: r.distrito ?? "",
-      tipoEjemplar: r.tipoEjemplar ?? "",
-      numeroMatricula: r.numeroMatricula,           // requerido
-      apellido: r.apellido ?? "",
-      nombre: r.nombre ?? "",
-      genero: r.genero ?? "",
-      domicilio: r.domicilio ?? "",
-      seccion: r.seccion ?? "",
-      localidad: r.localidad ?? "San Miguel 2025",
-      codigoPostal: r.codigoPostal ?? "",
-      tipoNacionalidad: r.tipoNacionalidad ?? "ARGENTINO",
-      votoSiNo: r.votoSiNo ?? "S",
+    const toCreate: Prisma.PadronElectoralCreateManyInput[] =
+      buffer.map((r) => ({
+        distrito: r.distrito ?? "",
+        tipoEjemplar: r.tipoEjemplar ?? "",
+        numeroMatricula: r.numeroMatricula,
+        apellido: r.apellido ?? "",
+        nombre: r.nombre ?? "",
+        genero: r.genero ?? "",
+        domicilio: r.domicilio ?? "",
+        seccion: r.seccion ?? "",
+        localidad: r.localidad ?? "San Miguel 2025",
+        codigoPostal: r.codigoPostal ?? "",
+        tipoNacionalidad: r.tipoNacionalidad ?? "ARGENTINO",
+        votoSiNo: r.votoSiNo ?? "S",
 
-      // Si en tu schema estos son opcionales (`Int?`), pasá `undefined` cuando vengan null:
-      clase: r.clase ?? 0,
-      numeroMesa: r.numeroMesa ?? 0,
-      ordenMesa: r.ordenMesa ?? 0,
+        clase: r.clase ?? 0,
+        numeroMesa: r.numeroMesa ?? 0,
+        ordenMesa: r.ordenMesa ?? 0,
 
-      // FKs y auditoría (ajusta si alguno es opcional):
-      circuitoId: r.circuitoId,
-      establecimientoId: r.establecimientoId,
-      userId: r.userId,
-    }));
+        telefono: r.telefono ?? null,
+
+        circuitoId: r.circuitoId,
+        establecimientoId: r.establecimientoId,
+        userId: r.userId,
+        eleccionId,
+
+        referenteId: r.referenteNombre
+          ? personaIdMap.get(`${r.referenteNombre}|REFERENTE`) ?? null
+          : null,
+
+        planilleroId: r.planilleroNombre
+          ? personaIdMap.get(`${r.planilleroNombre}|PLANILLERO`) ?? null
+          : null,
+
+        choferId: r.choferNombre
+          ? personaIdMap.get(`${r.choferNombre}|CHOFER`) ?? null
+          : null,
+
+        planillaId: r.planillaNumero
+          ? planillaIdMap.get(r.planillaNumero) ?? null
+          : null,
+      }));
 
     const doSkip = mode === "append" ? !!skipDuplicates : false;
 
@@ -244,26 +308,42 @@ export async function persistPadronFromRowsBatched<T extends Record<string, any>
     });
 
     inserted += res.count;
-    if (debug) console.log("📦 batch insertado. total acumulado:", inserted);
+
+    if (debug)
+      console.log("📦 batch insertado. total acumulado:", inserted);
+
     buffer.length = 0;
   };
 
   for (const row of data) {
     processed++;
+
     const rec = mapRowToPadron(row, {
-      getField, norm, toInt, userId, circuitoMap, establecimientoMapByNombre,
-      onError: (e) => { errors++; onError?.(e); }
+      getField,
+      norm,
+      toInt,
+      userId,
+      circuitoMap,
+      establecimientoMapByNombre,
+      onError: (e) => {
+        errors++;
+        onError?.(e);
+      },
     });
+
     if (!rec) continue;
 
     buffer.push(rec);
+
     if (buffer.length >= batchSize) await flush();
   }
 
   await flush();
 
   if (debug) {
-    console.log(`✅ padrón procesado | filas: ${processed} | insertadas: ${inserted} | errores: ${errors} | mode=${mode}`);
+    console.log(
+      `✅ padrón procesado | filas: ${processed} | insertadas: ${inserted} | errores: ${errors} | mode=${mode}`
+    );
   }
 
   return { inserted, processed, errors };

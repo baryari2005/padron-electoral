@@ -16,9 +16,10 @@ import {
   create as createEstab,
   findByNombreInsensitive,
 } from "@/lib/_server/establishments.service";
+import { withActiveElection } from "@/lib/_server/withActiveElection";
+import { mergeAndWhere } from '../../../lib/_server/helper.service';
 
-/** GET: listado con search/paginación/orden */
-export async function GET(req: NextRequest) {
+export const GET = withActiveElection(async (req, { election }) => {
   try {
     const { searchParams } = new URL(req.url);
     const search = searchParams.get("search") || "";
@@ -32,7 +33,12 @@ export async function GET(req: NextRequest) {
     const sortDir = (searchParams.get("sortDir") === "desc" ? "desc" : "asc") as "asc" | "desc";
     const orderBy = buildOrderBy(sortBy, sortDir);
 
-    const where = buildEstablecimientoWhere(search);
+    let where : Prisma.EstablecimientoWhereInput = {
+      eleccionId: election.id,
+      deletedAt: null
+    }
+
+    where = mergeAndWhere(where, buildEstablecimientoWhere(search));
 
     if (all) {
       const items = await db.establecimiento.findMany({
@@ -58,10 +64,9 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     return handleError(error);
   }
-}
+});
 
-/** POST: crear establecimiento (+ mesas) */
-export async function POST(req: NextRequest) {
+export const POST = withActiveElection(async (req, { election }) => {
   try {
     const body = await req.json();
     const { nombre, direccion, profileImage, circuitoId } = body as {
@@ -85,7 +90,7 @@ export async function POST(req: NextRequest) {
       )}&background=adf5d7&color=000&size=128&rounded=true&bold=true&format=png`;
 
     // (opcional) validación: no duplicar por nombre (insensitive)
-    const existing = await findByNombreInsensitive(nombre);
+    const existing = await findByNombreInsensitive(nombre, election.id);
     if (existing && !existing.deletedAt) {
       return NextResponse.json({ error: formatApiMessage("errors.establishmentExists") }, { status: 400 });
     }
@@ -97,6 +102,7 @@ export async function POST(req: NextRequest) {
       circuitoId: Number(circuitoId),
       numerosDeMesa: Array.isArray(body.numerosDeMesa) ? body.numerosDeMesa : undefined,
       userId,
+      eleccionId: election.id
     });
 
     return NextResponse.json(created, { status: 201 });
@@ -109,4 +115,4 @@ export async function POST(req: NextRequest) {
     }
     return handleError(error);
   }
-}
+});

@@ -5,6 +5,7 @@ export const fetchCache = 'force-no-store'; // (opcional) evita cache de fetch
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { Prisma } from "@prisma/client";
+import { withActiveElection } from "@/lib/_server/withActiveElection";
 
 /** Parse filters estilo 0[key]=...&0[value]=... */
 function parseIndexedFilters(searchParams: URLSearchParams) {
@@ -24,7 +25,7 @@ function parseIndexedFilters(searchParams: URLSearchParams) {
   return out;
 }
 
-export async function GET(req: NextRequest) {
+export const GET = withActiveElection(async (req, { election }) => {
   try {
     const { searchParams } = req.nextUrl; // ← usa nextUrl, está ok
 
@@ -68,7 +69,11 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    const AND: Prisma.PadronElectoralWhereInput[] = [];
+    const AND: Prisma.PadronElectoralWhereInput[] = [
+      {
+        eleccionId: election.id,
+      }
+    ];
     if (Number.isFinite(establecimientoId)) AND.push({ establecimientoId: establecimientoId as number });
     if (Number.isFinite(numeroMesa)) AND.push({ numeroMesa: numeroMesa as number });
 
@@ -81,7 +86,7 @@ export async function GET(req: NextRequest) {
         ],
       });
     }
-
+    
     const where: Prisma.PadronElectoralWhereInput | undefined = AND.length ? { AND } : undefined;
 
     const [items, total, totalVotaron] = await Promise.all([
@@ -123,5 +128,5 @@ export async function GET(req: NextRequest) {
     console.error(err);
     return NextResponse.json({ error: "Error interno" }, { status: 500 });
   }
-}
+});
 

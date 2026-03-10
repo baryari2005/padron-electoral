@@ -32,13 +32,20 @@ export async function GET(req: NextRequest) {
     if (terms.length > 0) {
       where = {
         AND: [
+          { deletedAt: null },
           {
             OR: terms.map((term) => ({
-              modulo: { contains: term, mode: Prisma.QueryMode.insensitive },
+              modulo: {
+                contains: term,
+                mode: Prisma.QueryMode.insensitive,
+              },
             })),
           },
           {
-            modulo: { contains: search, mode: Prisma.QueryMode.insensitive },
+            modulo: {
+              contains: search,
+              mode: Prisma.QueryMode.insensitive,
+            },
           },
         ],
       };
@@ -77,26 +84,66 @@ export async function POST(req: NextRequest) {
     const { clave, descripcion, modulo, accion } = await req.json();
     const userId = getUserIdFromRequest(req);
 
-    if (!clave) return NextResponse.json({ error: formatApiMessage("required.name") }, { status: 400 });
-    if (!descripcion) return NextResponse.json({ error: formatApiMessage("required.code") }, { status: 400 });
-    if (!modulo) return NextResponse.json({ error: formatApiMessage("required.code") }, { status: 400 });
-    if (!accion) return NextResponse.json({ error: formatApiMessage("required.code") }, { status: 400 });
+    if (!clave)
+      return NextResponse.json(
+        { error: formatApiMessage("required.name") },
+        { status: 400 }
+      );
 
+    if (!descripcion)
+      return NextResponse.json(
+        { error: formatApiMessage("required.code") },
+        { status: 400 }
+      );
 
-    const circuito = await db.permiso.create({
-      data: { clave, descripcion, modulo, accion },
+    if (!modulo)
+      return NextResponse.json(
+        { error: formatApiMessage("required.code") },
+        { status: 400 }
+      );
+
+    if (!accion)
+      return NextResponse.json(
+        { error: formatApiMessage("required.code") },
+        { status: 400 }
+      );
+
+    const existing = await db.permiso.findUnique({
+      where: { clave },
     });
 
-    return NextResponse.json(circuito, { status: 201 });
-  } catch (error: any) {
-    if (error instanceof NextResponse) return error;
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+    if (existing) {
+      if (existing.deletedAt !== null) {
+        const reactivated = await db.permiso.update({
+          where: { id: existing.id },
+          data: {
+            descripcion,
+            modulo,
+            accion,
+            deletedAt: null,
+          },
+        });
+
+        return NextResponse.json(reactivated, { status: 200 });
+      }
+
       return NextResponse.json(
         { error: formatApiMessage("errors.permissionKeyExists") },
         { status: 400 }
       );
     }
 
+    const permiso = await db.permiso.create({
+      data: {
+        clave,
+        descripcion,
+        modulo,
+        accion,
+      },
+    });
+
+    return NextResponse.json(permiso, { status: 201 });
+  } catch (error: any) {
     return handleError(error);
   }
 }

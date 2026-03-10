@@ -34,9 +34,9 @@ export function Logo() {
           {capitalizeEachWord("Elecciones")}
         </h1>
         <h1 className="font-semibold text-xl text-center">
-          {capitalizeEachWord("Provinciales")}
+          {capitalizeEachWord("Generales")}
         </h1>
-        <h2 className="text-xs-plus text-center">{capitalizeEachWord("San Miguel 2025")}</h2>
+        <h2 className="text-xs-plus text-center">{capitalizeEachWord(`San Miguel ${new Date().getFullYear()}`)}</h2>
       </div>
     </div>
   );

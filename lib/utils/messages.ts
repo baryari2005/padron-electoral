@@ -27,25 +27,34 @@ export const messages = {
     politicalGroupCreated: "Agrupación política creada correctamente.",
     "political-groupDeleted": "Agrupación política eliminada correctamente.",
     politicalGroupUpdated: "Agrupación política actualizada correctamente.",
-
+    
     circuiteCreated: "Circuito creado correctamente.",
     circuiteDeleted: "Circuito eliminado correctamente.",
     circuiteUpdated: "Circuito actualizado correctamente.",
-
+    
     establishmentCreated: "Establecimiento creado correctamente.",
     establishmentDeleted: "Establecimiento eliminado correctamente.",
     establishmentUpdated: "Establecimiento actualizado correctamente.",
-
+    
     userUpdated: "Usuario actualizado correctamente.",
     usersCreated: "Usuario creado correctamente.",
     userDeleted: "Usuario eliminado correctamente.",    
     "electoral-rollDeleted": "Elector eliminado correctamente.",
     "electoral-rollsUpdated": "Elector modificado correctamente.",
     "electoral-rollCreated": "Elector creado correctamente.",
-
+    "electoral-rollsCreated": "Elector creado correctamente.",
+    
     permissionsCreated: "Clave creada correctamente.",    
     "permissions/keyDeleted": "Clave eliminada correctamente.",    
-    permissionsUpdated: "Clave actualizada correctamente.",    
+    permissionsUpdated: "Clave actualizada correctamente.",   
+    electionCreated : "Elección creada correctamente.",
+    electionUpdated : "Elección actualizada.",
+
+    operationaPersonCreated: "Actor creado correctamente.",
+    operational_personUpdated: "Actor actualizado correctamente.",
+    operational_persoDeleted: "Actor eliminado correctamente.",
+    spreadsheetCreated: "Planilla creada correctamente.",
+    spreadsheeDeleted: "Planilla eliminada correctamente.",
   },
   errors: {
     fileNotFound: "Archivo no encontrado.",
@@ -76,6 +85,10 @@ export const messages = {
     tokenInvalid: "Token inválido.",
     tokenNotFound: "Token no proporcionado.",
     internal: "Error interno del servidor.",    
+    electionNotFound: "No existe elección activa.",
+    operationaPersonNotFound: "No existe el actor.",
+    Spreadsheetexists: "Ya existe una planilla con ese número",
+
 
   },
 } as const;

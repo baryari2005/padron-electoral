@@ -4,11 +4,15 @@ export const revalidate = 0;
 export const fetchCache = "force-no-store";
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { withActiveElection } from "@/lib/_server/withActiveElection";
 
-export async function GET() {
+export const GET = withActiveElection(async (req, {election}) => {
   try {
     const mesas = await db.mesaEscrutada.findMany({
-      where: { deletedAt: null },
+      where: {
+        eleccionId: election.id,
+        deletedAt: null
+      },
       include: {
         establecimiento: true,
         resultadosAgrupaciones: {
@@ -119,5 +123,5 @@ export async function GET() {
     console.error("❌ Error al generar resumen por escuela:", error);
     return NextResponse.json({ error: "Error interno" }, { status: 500 });
   }
-}
+});
 

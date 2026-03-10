@@ -28,6 +28,8 @@ import { VoterSeatMap, type VoterSeat } from "./components/VoterSeatMap";
 import { IconAzul, IconRojo, IconVerde } from "./components/icons/VoterIcons";
 import { cn } from "@/lib/utils";
 import { Cargando } from "@/components/ui/upload";
+import { useActiveElection } from "@/hooks/useActiveElection";
+import { StatusPage } from "@/components/status/StatusPage";
 
 type FormValues = { establecimientoId: string; mesaId: string; query: string };
 
@@ -316,6 +318,21 @@ export default function ElectoralQuickMarkingPage() {
   }, [canView, canList, establecimientoId, mesaId, refreshToken, query]);
 
 
+   const { loading: loadingElection, hasActive } = useActiveElection();
+  
+    if (loadingElection) return null;
+  
+    if (!hasActive) {
+      return (
+        <StatusPage
+          code="403"
+          title="Acceso denegado."
+          description="Para acceder a esta sección tiene que existir una elección activa."
+          imageSrc="/robot-nea.png"
+          primaryAction={{ label: "Ir al inicio", href: "/" }}
+        />
+      );
+    }
 
   // ✅ FIX: ahora recién acá corto la UI, después de haber llamado TODOS los hooks
   if (!canView) {

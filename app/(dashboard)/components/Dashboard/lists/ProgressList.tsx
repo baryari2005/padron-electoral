@@ -12,7 +12,7 @@ import { GradientProgress } from "@/components/ui/GradientProgress";
 export type ProgressListProps = {
   title: string;
   items: ProgresoItem[];
-  labelKey: "establecimiento" | "circuito";
+  labelKey: "establecimiento" | "circuito" | "referente";
   /** Ítems por página (también se usa para el modo estático) */
   limit?: number;
   icono?: LucideIcon;

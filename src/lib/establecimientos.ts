@@ -10,6 +10,7 @@ export type NuevoEstablecimiento = {
   direccion: string;
   circuitoId: number;
   userId: string;
+  eleccionId: number;
 };
 
 const CIRCUITO_KEYS = [
@@ -50,11 +51,12 @@ export function buildEstablecimientosFromRows<T extends Record<string, any>>(
     getField: (row: T, keys: string[]) => string;
     norm: (s: string) => string;
     userId: string;
-    circuitoMap: Map<string, number>; // codigoCircuito (sin ceros) -> id
+    circuitoMap: Map<string, number>; // codigoCircuito (sin ceros) -> id    
     debug?: boolean;
+    eleccionId: number;
   }
 ): NuevoEstablecimiento[] {
-  const { getField, norm, userId, circuitoMap, debug } = opts;
+  const { getField, norm, userId, circuitoMap, debug, eleccionId } = opts;
 
   let total = 0;
   let skipSinNombre = 0;
@@ -91,6 +93,7 @@ export function buildEstablecimientosFromRows<T extends Record<string, any>>(
         direccion: direccionUC,
         circuitoId,
         userId,
+        eleccionId,
       });
     } else {
       // Si ya existe, priorizamos mantener una dirección NO vacía
@@ -100,6 +103,7 @@ export function buildEstablecimientosFromRows<T extends Record<string, any>>(
           direccion: direccionUC,
           circuitoId,
           userId,
+          eleccionId,
         });
       }
       // (Opcional) actualizar circuitoId si lo querés “corregir” ante conflictos
@@ -165,7 +169,13 @@ export async function persistEstablecimientos(
       for (const e of establecimientos) {
         await prisma.establecimiento.upsert({
           // Si tenés UNIQUE(nombre):
-          where: { nombre_direccion: { nombre: e.nombre, direccion: e.direccion } },
+          where: {
+            nombre_direccion_eleccionId: {
+              nombre: e.nombre,
+              direccion: e.direccion,
+              eleccionId: e.eleccionId,
+            },
+          },
           create: e,
           update: {
             direccion: e.direccion,  // refrescá los campos que quieras actualizar
@@ -189,8 +199,13 @@ export async function persistEstablecimientos(
   // Traemos solo los nombres involucrados en esta importación
   const nombres = Array.from(new Set(establecimientos.map((e) => e.nombre)));
 
+  const eleccionId = establecimientos[0].eleccionId;
+
   const establecimientosDB = await prisma.establecimiento.findMany({
-    where: { nombre: { in: nombres } },
+    where: {
+      eleccionId,
+      nombre: { in: nombres },
+    },
     select: { id: true, nombre: true },
   });
 

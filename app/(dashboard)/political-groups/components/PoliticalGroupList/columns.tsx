@@ -6,16 +6,27 @@ import { buildActionsColumn } from "@/app/(dashboard)/utils/buildActionsColumn";
 import { AvatarLogo } from "@/app/(dashboard)/components/common/AvatarLogo";
 import { sortableHeader } from '../../../components/table/SortableHeader';
 
+function returnString(electionType: string | null, inPlural: boolean) {  
+  if (inPlural)
+    return (electionType != "INTERNA") ? "Agrupaciones Políticas" : "Listas Políticas";
+  else
+    return (electionType != "INTERNA") ? "Agrupación Política" : "Lista Política";
+}
+
 interface ColumnsProps {
     onDeleted?: () => void;
     canEdit?: boolean;
     canDelete?: boolean;
 }
-export const columns = ({
+
+export const columns = (
+  {
     onDeleted,
     canEdit,
     canDelete,
-}: ColumnsProps): ColumnDef<AgrupacionPolitica>[] => {
+  }: ColumnsProps,
+  electionType: string | null
+): ColumnDef<AgrupacionPolitica>[] => {
     const baseColumns: ColumnDef<AgrupacionPolitica>[] = [
         {
             accessorKey: "profileImage",
@@ -38,7 +49,7 @@ export const columns = ({
         },
         {
             accessorKey: "nombre",
-            header: sortableHeader("Agrupación Política"),
+            header: sortableHeader(returnString(electionType, false)),
 
         },
         {

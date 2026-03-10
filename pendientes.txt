@@ -1,0 +1,8 @@
+modulo              ver crear  editar  eliminar
+cargos politicos    ok  ok     OK        ok
+listas / agrupaciones ok ok ok ok
+actores politicos ok ok ok ok
+circuitos ok ok ok ok
+establecimiento ok ok ok ok
+elecciones ok ok ok ok
+padron electoral 
