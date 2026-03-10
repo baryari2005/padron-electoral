@@ -123,8 +123,8 @@ export default function RegisterForm() {
         <Logo />
 
         <div className="text-center">
-          <h1 className="text-3xl my-2 font-bold">Bienvenido al dashboard de Elecciones Provinciales</h1>
-          <h2 className="text-2xl mb-3 text-muted-foreground">Elecciones Provinciales</h2>
+          <h1 className="text-3xl my-2 font-bold">Bienvenido al dashboard de Elecciones Generales</h1>
+          <h2 className="text-2xl mb-3 text-muted-foreground">Elecciones Generales</h2>
         </div>
 
         <div className="bg-white rounded-2xl shadow-xl p-8 space-y-6 w-full">

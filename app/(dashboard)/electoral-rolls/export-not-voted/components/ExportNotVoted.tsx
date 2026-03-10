@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import axiosInstance from "@/utils/axios";
 import { Card } from "@/components/ui/card";
@@ -40,15 +40,19 @@ export default function ExportNoVotaronPage() {
         return `${parts.join("-")}-${Date.now()}.xlsx`;
     }, [establecimientoId, mesaId, q]);
 
-    // Si cambian filtros → resetea la pantalla
+    const downloadUrlRef = useRef<string>("");
+
     useEffect(() => {
         setPhase("idle");
         setCount(0);
         setErrorMsg("");
-        if (downloadUrl) {
-            URL.revokeObjectURL(downloadUrl);
-            setDownloadUrl("");
+
+        if (downloadUrlRef.current) {
+            URL.revokeObjectURL(downloadUrlRef.current);
+            downloadUrlRef.current = "";
         }
+
+        setDownloadUrl("");
     }, [establecimientoId, mesaId, q]);
 
     // Limpieza al desmontar
@@ -95,6 +99,7 @@ export default function ExportNoVotaronPage() {
                 type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             });
             const url = URL.createObjectURL(blob);
+            downloadUrlRef.current = url;
             setDownloadUrl(url);
             setFilename(niceName);
             setPhase("done");

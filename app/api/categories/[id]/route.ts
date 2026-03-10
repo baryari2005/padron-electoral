@@ -9,34 +9,36 @@ import { jsonError, parseIdOrThrow } from "@/lib/utils/api-helpers";
 import { formatApiMessage } from "@/lib/utils/formatters";
 import { handleError } from "@/lib/utils/request-helpers";
 import { getCargoPoliticoById, softDeleteCargoPolitico, updateCargoPolitico } from "@/lib/_server/categories.service";
+import { withActiveElection } from "@/lib/_server/withActiveElection";
 
 
+export const GET = withActiveElection(
+  async (req, { params, election }) => {
+    try {
+      const id = parseIdOrThrow(params!.id);
 
-// GET: obtener cargo político por ID
-export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
-  try {
-    const id = parseIdOrThrow(params.id); // asegurate que devuelva string si tu id es cuid
-    const cargo = await getCargoPoliticoById(id);
-    if (!cargo) return jsonError("errors.categoryNotFound", 404);
-    return NextResponse.json(cargo);
-  } catch (error) {
-    if (error instanceof Error && error.message === "INVALID_ID") {
-      return jsonError("errors.idInvalid");
+      const cargo = await getCargoPoliticoById(id, election.id);
+
+      if (!cargo) return jsonError("errors.categoryNotFound", 404);
+      return NextResponse.json(cargo);
+    } catch (error) {
+      if (error instanceof Error && error.message === "INVALID_ID") {
+        return jsonError("errors.idInvalid");
+      }
+      return handleError(error);
     }
-    return handleError(error);
-  }
-}
+  });
 
 // PUT: actualizar nombre
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export const PUT = withActiveElection(async (req, { params, election }) => {
   try {
     const userId = getUserIdFromRequest(req);
-    const id = parseIdOrThrow(params.id);
+    const id = parseIdOrThrow(params!.id);  
     const { nombre, orden } = await req.json();
 
     if (!nombre) return jsonError("required.name");
 
-    const updated = await updateCargoPolitico(id, nombre, orden, userId, );
+    const updated = await updateCargoPolitico({ id, nombre, orden, userId, eleccionId: election.id });
     return NextResponse.json(updated);
   } catch (error) {
     if (error instanceof NextResponse) return error;
@@ -45,15 +47,15 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     }
     return handleError(error);
   }
-}
+});
 
 // DELETE: borrado lógico
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export const DELETE = withActiveElection(async (req, { params, election }) => {
   try {
     const userId = getUserIdFromRequest(req);
-    const id = parseIdOrThrow(params.id);
-
-    await softDeleteCargoPolitico(id, userId || undefined);
+    const id = parseIdOrThrow(params!.id);
+    
+    await softDeleteCargoPolitico(id, election.id, userId || undefined);
     return NextResponse.json({ message: formatApiMessage("success.categoryDeleted") });
   } catch (error) {
     if (error instanceof NextResponse) return error;
@@ -62,4 +64,4 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
     }
     return handleError(error);
   }
-}
+});

@@ -18,6 +18,10 @@ export const MODULOS = [
     "importarpadron",
     "certificados",
     "resultados",
+    "elecciones",
+    "actores",
+    "planillas"
+
 
 
 ] as const;
@@ -35,6 +39,7 @@ export const MODULO_LABELS: Record<Modulo, string> = {
     mesas: "Mesas",
     categorias: "Cargos Políticos",
     votantes: "Electores",
+    elecciones: "Elecciones",
     reportes: "Reportes",
     estadoelector: "Flag Voto",
     generarusuario: "Generar usuarios",
@@ -44,7 +49,10 @@ export const MODULO_LABELS: Record<Modulo, string> = {
     estadisticas: "Estadisticas",
     importarpadron: "Importar Padrón",
     certificados: "Certificado Escrutinio",
-    resultados: "Resultados de Escrutinio"
+    resultados: "Resultados de Escrutinio",
+    actores: "Actores Presidenciales",
+    planillas: "Planillas",
+
 };
 
 export const ACCION_LABELS: Record<Accion, string> = {

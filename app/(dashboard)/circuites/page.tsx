@@ -8,6 +8,10 @@ import { MapPinned } from "lucide-react";
 import { useHasPermission } from "@/lib/permissions/useHasPermission";
 import { AccessDeniedPage } from "@/components/NoPermissions/AccessDeniedPage";
 
+import { StatusPage } from "@/components/status/StatusPage";
+import { useActiveElection } from "@/hooks/useActiveElection";
+
+
 export default function CircuitesPage() {
   const [refresh, setRefresh] = useState(false);
   const [search, setSearch] = useState("");
@@ -24,13 +28,28 @@ export default function CircuitesPage() {
   const components = "Circuitos";
   const component = "Circuito";
 
+  const { loading, hasActive } = useActiveElection();
   const canView = useHasPermission("ver_circuitos");
   const canCreate = useHasPermission("crear_circuitos");
   const canEdit = useHasPermission("editar_circuitos");
   const canDelete = useHasPermission("eliminar_circuitos");
 
+  if (loading) return null;
+
+  if (!hasActive) {
+    return (
+      <StatusPage
+        code="403"
+        title="Acceso denegado."
+        description="Para acceder a esta sección tiene que existir una elección activa."
+        imageSrc="/robot-nea.png"
+        primaryAction={{ label: "Ir al inicio", href: "/" }}
+      />
+    );
+  }
+
   if (!canView) {
-    return <AccessDeniedPage subtitle="Ver Circuitos."/>
+    return <AccessDeniedPage subtitle="Ver Circuitos." />
   }
 
   return (

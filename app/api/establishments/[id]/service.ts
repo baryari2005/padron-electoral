@@ -9,21 +9,22 @@ type UpdateInput = {
     circuitoId: number;
     userId: string;                // trazabilidad
     numerosDeMesa?: number[];      // opcional: si no viene, NO se tocan mesas
+    eleccionId: number
 };
 
 export async function updateEstablecimiento(input: UpdateInput) {
-    const { id, nombre, direccion, profileImage, circuitoId, userId, numerosDeMesa } = input;
+    const { id, nombre, direccion, profileImage, circuitoId, userId, numerosDeMesa, eleccionId } = input;
 
     return await db.$transaction(async (tx) => {
         // 1) Actualizar campos simples del establecimiento (sin tocar mesas aún)
         await tx.establecimiento.update({
-            where: { id },
+            where: { id, eleccionId },
             data: {
                 nombre,
                 direccion,
-                circuitoId,
-                // guardá el userId si tenés un campo de trazabilidad (ajustá el nombre del campo)
+                circuitoId,                
                 userId,
+                eleccionId,
                 ...(profileImage !== undefined ? { profileImage } : {}),
             },
         });
@@ -68,7 +69,8 @@ export async function updateEstablecimiento(input: UpdateInput) {
                 data: Array.from(toAdd).map((n) => ({
                     establecimientoId: id,
                     numero: n,
-                    userId,                // 👈 requerido por tu schema
+                    userId,
+                    eleccionId
                 })),
                 skipDuplicates: true,
             });
@@ -76,7 +78,7 @@ export async function updateEstablecimiento(input: UpdateInput) {
 
         if (toRemove.length) {
             await tx.mesasPorEstablecimiento.deleteMany({
-                where: { establecimientoId: id, numero: { in: toRemove } },
+                where: { establecimientoId: id, numero: { in: toRemove }, eleccionId },
             });
         }
 

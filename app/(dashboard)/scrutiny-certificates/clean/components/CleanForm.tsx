@@ -121,11 +121,6 @@ export default function CleanResultsForm() {
                 <CardContent className="space-y-4">
                     <Label className="text-sm text-muted-foreground animate-pulse">
                         Esta acción es irreversible y eliminará de manera permanente todos los registros de certificados de escrutinio cargados en el sistema. Proceda con precaución.
-                        {/* <span className="block mt-2">
-                            <code className="text-xs">
-                                {"ResultadoPorAgrupacionPolitica, ResultadoPorMesa, ResultadoVotosEspeciales, DiferenciasPorCargosPoliticos, MesaEscrutada"}
-                            </code>
-                        </span> */}
                     </Label>
 
                     <div className="flex items-center gap-2">

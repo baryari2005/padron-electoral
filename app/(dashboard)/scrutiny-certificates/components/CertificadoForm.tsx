@@ -69,6 +69,7 @@ export default function CertificadoForm({
     mode: "onChange",
   });
 
+  const currentYear = new Date().getFullYear();
   const { categorias, loadingCategorias } = useCategorias();
   const { agrupaciones, loadingAgrupaciones } = useAgrupaciones();
   const { habilitadosPorAgrupacion, loadingPermisos } = usePermisosMatriz({
@@ -111,9 +112,9 @@ export default function CertificadoForm({
       <CommonLoader
         logo="/logo.png"
         alternativeLogo="/logo-white.png"
-        alternativeText=""
-        title="Elecciones Provinciales"
-        subTitle="San Miguel 2025"
+        alternativeText={`Más San Miguel ${currentYear}`}
+        title="Elecciones Generales"
+        subTitle={`San Miguel ${currentYear}`}
         loaderText="Cargando certificado de escrutinio ..."
       />
     );
@@ -158,15 +159,19 @@ export default function CertificadoForm({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <MesaSelector
-          control={form.control}
-          setValue={form.setValue}
-          onEscuelaSeleccionada={onEscuelaSeleccionada}
-          disabled={modo === "editar"}             // bloquea SOLO el N° de mesa
-          fixedEscuela={escuelaFija || undefined}  // prefill si viene
-          restrictToFixed={!!escuelaFijaRestrictiva}
-        />
-        <Separator />
+        {modo === "crear" && (
+          <>
+            <MesaSelector
+              modo={modo}
+              control={form.control}
+              setValue={form.setValue}
+              onEscuelaSeleccionada={onEscuelaSeleccionada}
+              fixedEscuela={escuelaFija || undefined}
+              restrictToFixed={!!escuelaFijaRestrictiva}
+            />
+            <Separator />
+          </>
+        )}
 
         <TotalesForm control={form.control} setValue={form.setValue} />
         <Separator />

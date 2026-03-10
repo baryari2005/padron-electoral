@@ -10,17 +10,19 @@ interface Props {
     circuitoId?: number;
     establecimientoId?: number;
   };
+  electionType?: string;
   onDeleted?: () => void;
   refresh?: boolean;
   canEdit?: boolean;
   canDelete?: boolean;
 }
 
-export function ElectoralRollList({ search, filters, onDeleted, refresh,  canEdit, canDelete }: Props) {
+export function ElectoralRollList({ search, filters, electionType, onDeleted, refresh, canEdit, canDelete }: Props) {
+  console.log("ElectionType:", electionType);
   return (
     <GenericListWithTable
       endpoint="/api/electoral-rolls"
-      columns={columns({ onDeleted, canEdit, canDelete })}
+      columns={columns({ onDeleted, canEdit, canDelete, electionType,  })}
       filters={filters}
       externalSearch={search}
       refreshToken={refresh}

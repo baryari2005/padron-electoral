@@ -1,6 +1,4 @@
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from "../lib/prisma"
 
 async function main() {
   const bcrypt = (await import("bcryptjs")).default;
@@ -61,7 +59,8 @@ async function main() {
     "estadisticas",
     "importarpadron",
     "certificados",
-    "resultados"];
+    "resultados",
+    "elecciones"];
 
   const acciones = ["ver", "crear", "editar", "eliminar"] as const;
 

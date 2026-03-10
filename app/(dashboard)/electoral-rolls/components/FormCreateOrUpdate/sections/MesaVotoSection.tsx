@@ -8,9 +8,11 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { UseFormReturn } from "react-hook-form";
+import { useFormContext, UseFormReturn } from "react-hook-form";
 import { ElectoralRollFormValues } from "../../../lib";
 import { UppercaseInput } from "@/components/ui/uppercaseInput";
+import { useEffect, useState } from "react";
+import axiosInstance from "@/utils/axios";
 
 interface Props {
   control: UseFormReturn<ElectoralRollFormValues>["control"];
@@ -19,6 +21,21 @@ interface Props {
 
 export function MesaVotoSection({ control, modo = "editar" }: Props) {
   const isReadOnly = modo === "ver";
+  const { watch } = useFormContext<ElectoralRollFormValues>();
+  const establecimientoId = watch("establecimientoId");
+
+  const [mesas, setMesas] = useState<number[]>([]);
+
+  useEffect(() => {
+    if (!establecimientoId) return;
+
+    axiosInstance
+      .get(`/api/mesas?establecimientoId=${establecimientoId}`)
+      .then((res) => {
+        setMesas(res.data.items); // array de números
+      });
+  }, [establecimientoId]);
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <FormField
@@ -28,12 +45,18 @@ export function MesaVotoSection({ control, modo = "editar" }: Props) {
           <FormItem>
             <FormLabel>Número de Mesa</FormLabel>
             <FormControl>
-              <Input
-                inputMode="numeric"
-                className="text-center tracking-[0.5em] px-4 py-2 border border-input rounded-md shadow-sm caret-transparent"                
-                disabled = {isReadOnly}
+              <select
                 {...field}
-              />
+                disabled={isReadOnly}
+                className="w-full border rounded-md p-2 text-sm"
+              >
+                <option value="">Seleccionar mesa</option>
+                {mesas.map((m) => (
+                  <option key={m} value={m}>
+                    Mesa {m}
+                  </option>
+                ))}
+              </select>
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -42,14 +65,14 @@ export function MesaVotoSection({ control, modo = "editar" }: Props) {
       <FormField
         control={control}
         name="ordenMesa"
-        disabled = {isReadOnly}
+        disabled={isReadOnly}
         render={({ field }) => (
           <FormItem>
             <FormLabel>Orden en la Mesa</FormLabel>
             <FormControl>
               <Input
                 inputMode="numeric"
-                className="text-center tracking-[0.5em] px-4 py-2 border border-input rounded-md shadow-sm caret-transparent"                
+                className="text-center tracking-[0.5em] px-4 py-2 border border-input rounded-md shadow-sm caret-transparent"
                 {...field}
               />
             </FormControl>
@@ -60,17 +83,17 @@ export function MesaVotoSection({ control, modo = "editar" }: Props) {
       <FormField
         control={control}
         name="votoSiNo"
-        disabled = {isReadOnly}
+        disabled={isReadOnly}
         render={({ field }) => (
           <FormItem>
             <FormLabel>¿Votó?</FormLabel>
             <FormControl>
-              <select {...field} className="w-full border rounded-md p-2 text-sm" disabled = {isReadOnly}>
-                <option value="SI">Sí</option>
-                <option value="NO">No</option>
+              <select {...field} className="w-full border rounded-md p-2 text-sm" disabled={isReadOnly}>
+                <option value="S">Sí</option>
+                <option value="N">No</option>
               </select>
             </FormControl>
-            <FormMessage />            
+            <FormMessage />
           </FormItem>
         )}
       />
@@ -81,25 +104,25 @@ export function MesaVotoSection({ control, modo = "editar" }: Props) {
           <FormItem>
             <FormLabel>Tipo de Ejemplar</FormLabel>
             <FormControl>
-              <UppercaseInput {...field} disabled = {isReadOnly}/>
+              <UppercaseInput {...field} disabled={isReadOnly} />
             </FormControl>
             <FormMessage />
           </FormItem>
         )}
       />
-      <FormField
+      {/* <FormField
         control={control}
         name="distrito"
         render={({ field }) => (
           <FormItem>
             <FormLabel>Distrito</FormLabel>
             <FormControl>
-              <UppercaseInput {...field} disabled = {isReadOnly}/>
+              <UppercaseInput {...field} disabled={isReadOnly} />
             </FormControl>
             <FormMessage />
           </FormItem>
         )}
-      />
+      /> */}
     </div>
   );
 }

@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     title: "Limpieza de resultados | Herramientas",
 };
 
-export default function CleanPage() {
+export default function CleanPage() {    
     return (
         <div className="space-y-6">
             {/* Breadcrumb */}

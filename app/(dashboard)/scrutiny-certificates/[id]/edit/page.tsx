@@ -11,21 +11,25 @@ import Link from "next/link";
 
 
 export default function EditCertificadoPage() {
-  const [metadata, setMetadata] = useState({ seccion: "", circuito: "", mesa: "" });
+  const [metadata, setMetadata] = useState({
+    seccion: "", 
+    circuito: "", 
+    mesa: ""
+  });
   const router = useRouter();
   const params = useParams();
   const mesaId = Number(params.id);
 
   return (
     <div className="max-w-6xl mx-auto py-8 px-4 font-sans"> {/* font-sans opcional */}
-      
+
       <div className="mb-6">
         <Link
           href="/scrutiny-certificates/summary"
           className="inline-flex items-center text-sm text-muted-foreground hover:text-primary transition-colors"
         >
           <ArrowBigLeft className="w-5 h-5 mr-1" />
-          Volver 
+          Volver
         </Link>
       </div>
 

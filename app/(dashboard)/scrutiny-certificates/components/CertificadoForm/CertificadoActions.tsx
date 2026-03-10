@@ -2,7 +2,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { ReceiptText } from "lucide-react";
+import { Loader2, ReceiptText } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -49,10 +49,20 @@ export function CertificadoActions({
           type="button"
           onClick={handleTrySubmit}
           disabled={isSubmitting}
-          className={`h-12 px-6 text-base ${hayInconsistencias ? "bg-red-600 hover:bg-red-700" : ""}`}
+          className={`h-12 px-6 text-base ${hayInconsistencias ? "bg-red-600 hover:bg-red-700" : ""
+            }`}
         >
-          <ReceiptText className="w-5 h-5 mr-2" />
-          {isSubmitting ? "Guardando..." : "Guardar certificado"}
+          {isSubmitting ? (
+            <>
+              <Loader2 className="w-5 h-5 animate-spin" />
+              <span className="animate-pulse">Guardando...</span>
+            </>
+          ) : (
+            <>
+              <ReceiptText className="w-5 h-5" />
+              Guardar certificados
+            </>
+          )}
         </Button>
       </div>
 

@@ -3,10 +3,7 @@ export const dynamic = 'force-dynamic';// desactiva static render
 export const revalidate = 0; 
 
 import { NextRequest } from "next/server";
-import { PrismaClient } from "@prisma/client";
-
-// Si preferís, usa un prisma singleton:
-const prisma = new PrismaClient();
+import { prisma } from "@/lib/prisma"
 
 export async function GET(req: NextRequest) {
   try {

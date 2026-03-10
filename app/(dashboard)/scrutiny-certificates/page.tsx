@@ -8,6 +8,8 @@ import { EstablecimientoConCircuito } from "./components/types";
 import { useHasPermission } from "@/lib/permissions/useHasPermission";
 import { AccessDeniedPage } from "@/components/NoPermissions/AccessDeniedPage";
 import { useAuthStore } from "@/auth";
+import { useActiveElection } from "@/hooks/useActiveElection";
+import { StatusPage } from "@/components/status/StatusPage";
 
 type UsuarioEstablecimientoLite = {
   principal?: boolean;
@@ -37,6 +39,7 @@ export default function ScrutinyCertificatePage() {
   const canCreate = useHasPermission("crear_certificados");
 
   const user = useAuthStore((s) => s.user);
+  const { loading, hasActive } = useActiveElection();
 
   // Intentamos resolver la escuela por defecto directamente del user
   const defaultEscuela = getDefaultEscuelaFromUser(user);
@@ -50,6 +53,20 @@ export default function ScrutinyCertificatePage() {
 
   if (!canCreate) {
     return <AccessDeniedPage subtitle="Alta Certificado Escrutinio." />;
+  }
+
+  if (loading) return null;
+
+  if (!hasActive) {
+    return (
+      <StatusPage
+        code="403"
+        title="Acceso denegado."
+        description="Para acceder a esta sección tiene que existir una elección activa."
+        imageSrc="/robot-nea.png"
+        primaryAction={{ label: "Ir al inicio", href: "/" }}
+      />
+    );
   }
 
   return (

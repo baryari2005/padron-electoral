@@ -9,24 +9,25 @@ import { handleError } from "@/lib/utils/request-helpers";
 import { formatApiMessage } from "@/lib/utils/formatters";
 import { getUserIdFromRequest } from "@/lib/auth/getUserIdFromRequest";
 import { getPagination } from "@/lib/_server/pagination";
-import { buildOrderBy, create, existItem, findByNameInsensitive, findByNumber, resurrect, SearchWhere } from "@/lib/_server/political-group.service";
+import { buildOrderBy, create, existItem, resurrect, SearchWhere } from "@/lib/_server/political-group.service";
 import { mergeAndWhere } from "@/lib/_server/helper.service";
+import { withActiveElection } from "@/lib/_server/withActiveElection";
 
 
-// GET: listar agrupaciones con paginación + búsqueda
-export async function GET(req: NextRequest) {
+
+export const GET = withActiveElection(async (req, { election }) => {
   try {
-    const { searchParams } = new URL(req.url);
-    const { page, limit, skip } = getPagination(searchParams, 1, 10, 100);
-
+    const { searchParams } = new URL(req.url);  
     const search = searchParams.get("search") || "";
     const all = searchParams.get("all") === "true";
+
+    const { page, limit, skip } = getPagination(searchParams, 1, 10, 100);
 
     const sortBy = searchParams.get("sortBy"); // "nombre" | "codigo" | undefined
     const sortDir = (searchParams.get("sortDir") === "desc" ? "desc" : "asc") as "asc" | "desc";
     const orderBy = buildOrderBy(sortBy, sortDir);
 
-    let where: Prisma.AgrupacionPoliticaWhereInput = { deletedAt: null };
+    let where: Prisma.AgrupacionPoliticaWhereInput = { eleccionId: election.id, deletedAt: null };
     where = mergeAndWhere(where, SearchWhere(search));
 
     if (all) {
@@ -47,14 +48,14 @@ export async function GET(req: NextRequest) {
       db.agrupacionPolitica.count({ where }),
     ]);
 
-    return NextResponse.json({ items, total });
+    return NextResponse.json({ items, total, page, limit });
   } catch (error) {
     return handleError(error);
   }
-}
+});
 
 // POST: crear agrupación política
-export async function POST(req: NextRequest) {
+export const POST = withActiveElection(async (req, { election }) => {
   try {
     const { nombre, numero, profileImage, color_hex, orden, cargoIds } = await req.json();
     const userId = getUserIdFromRequest(req);
@@ -78,11 +79,11 @@ export async function POST(req: NextRequest) {
         nombre
       )}&background=adf5d7&color=000&size=128&rounded=true&bold=true&format=png`;
 
-    const existing = (await existItem(nombre, numero));
+    const existing = (await existItem(nombre, numero, election.id));
 
     if (!existing) {
       const created = await create({
-        nombre, numero, profileImage: finalProfileImage, color_hex, orden, userId, cargoIds
+        nombre, numero, profileImage: finalProfileImage, color_hex, orden, userId, cargoIds, eleccionId: election.id
       });
       return NextResponse.json(created, { status: 201 });
     }
@@ -103,4 +104,4 @@ export async function POST(req: NextRequest) {
 
     return handleError(error);
   }
-}
+});

@@ -5,11 +5,14 @@ export const fetchCache = "force-no-store";
 import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { mapMesasToResumenPorCircuito } from "./mapMesasToResumenPorCircuito";
+import { withActiveElection } from "@/lib/_server/withActiveElection";
 
-export async function GET() {
+export const GET = withActiveElection(async (req, {election}) => {
   try {
     const mesas = await db.mesaEscrutada.findMany({
-      where: { deletedAt: null },
+      where: { 
+        eleccionId: election.id,
+        deletedAt: null },
       include: {
         establecimiento: {
           include: {
@@ -39,5 +42,5 @@ export async function GET() {
     console.error("[GET /reports/mesa-vote-summary]", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
-}
+});
 

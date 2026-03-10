@@ -1,6 +1,13 @@
-# 📌 Sistema de Padrón Electoral
+# 📌 Sistema de Padrón Electoral (Ctrl + Shift + V)
+Atajos para ver el el README.md en modo con formato gráfico (estilo GitHub), tienes tres formas rápidas:
+1. El Atajo de Teclado: Con el archivo abierto, presiona Ctrl + Shift + V (en Windows/Linux) o Cmd + Shift + V (en Mac).
+2. Vista en Paralelo: Si quieres escribir y ver los cambios en tiempo real, presiona Ctrl + K y luego suelta y presiona V. Esto abrirá una pestaña al lado con la previsualización.
+3. Botón del Editor: En la esquina superior derecha de la pestaña del archivo, busca un icono que parece un cuadro con una lupa (Open Preview).
+
 Este repositorio contiene el sistema de padrón electoral.  
 Aquí se documenta el flujo de trabajo con **Git**, convenciones y comandos más usados.
+
+
 
 ## 🚀 Flujo de trabajo con ramas
 1. **Actualizar la rama principal (`main`):**
@@ -54,6 +61,36 @@ Aquí se documenta el flujo de trabajo con **Git**, convenciones y comandos más
     git push origin main
    ```
 
+## Agregar cambios a una nueva rama
+**Como ya tenés los cambios locales, lo más simple es:**
+  1. **Importante:**
+    Tus cambios no se pierden al crear la rama nueva.
+
+  ```bash
+    # crea la rama nueva desde donde estás ahora y se lleva tus cambios actuales
+    git switch -c nombre-de-tu-rama
+    # prepara todos los cambios
+    git add .
+    # crea el commit
+    git commit -m "feat: cambios varios"
+    #la sube al remoto y la deja vinculada
+    git push -u origin nombre-de-tu-rama
+
+    # Ejemplo
+    git switch -c feature/internal-voting
+    git add .
+    git commit -m "feat: internal voting, planillas y operativos"
+    git push -u origin feature/internal-voting
+  ```
+
+
+## Antes de subir a prod.
+Corré en este orden:
+
+npx prisma validate
+npx prisma generate
+npx tsc --noEmit
+npm run build
 
 ## Correr en dev
 

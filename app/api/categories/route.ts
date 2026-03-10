@@ -7,11 +7,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { handleError } from "@/lib/utils/request-helpers";
 import { formatApiMessage } from "@/lib/utils/formatters";
-import { getUserIdFromRequest } from "@/lib/auth/getUserIdFromRequest";
+
 
 import { db } from "@/lib/db";
 import { getPagination } from "@/lib/_server/pagination";
 import { buildCargoPoliticoWhere, createCargoPolitico, findByNombreInsensitive, resurrectCargoPolitico } from "@/lib/_server/categories.service";
+import { getUserIdFromRequest } from '@/lib/auth/getUserIdFromRequest';
+
+import { mergeAndWhere } from "@/lib/_server/helper.service";
+import { withActiveElection } from "@/lib/_server/withActiveElection";
 
 function buildOrderBy(
   sortBy?: string | null,
@@ -25,8 +29,7 @@ function buildOrderBy(
   }
 }
 
-/* GET */
-export async function GET(req: NextRequest) {
+export const GET = withActiveElection(async (req, { election }) => {
   try {
     const { searchParams } = new URL(req.url);
 
@@ -40,7 +43,9 @@ export async function GET(req: NextRequest) {
     const sortDir = (searchParams.get("sortDir") === "desc" ? "desc" : "asc") as "asc" | "desc";
     const orderBy = buildOrderBy(sortBy, sortDir);
 
-    const where = buildCargoPoliticoWhere(search);
+    let where: Prisma.CargoPoliticoWhereInput = { eleccionId: election.id, deletedAt: null };
+    where = mergeAndWhere(where, buildCargoPoliticoWhere(search));
+    //const where = buildCargoPoliticoWhere(search);
 
     if (all) {
       const items = await db.cargoPolitico.findMany({
@@ -64,10 +69,9 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     return handleError(error);
   }
-}
+});
 
-/* POST: crear o “resucitar” si estaba soft-deleted */
-export async function POST(req: NextRequest) {
+export const POST = withActiveElection(async (req, { election }) => {
   try {
     const body = await req.json();
     const userId = getUserIdFromRequest(req);
@@ -80,7 +84,7 @@ export async function POST(req: NextRequest) {
     const existing = await findByNombreInsensitive(nombre);
 
     if (!existing) {
-      const created = await createCargoPolitico({ nombre, orden, userId });
+      const created = await createCargoPolitico({ nombre, orden, userId, eleccionId: election.id });
       return NextResponse.json(created, { status: 201 });
     }
 
@@ -97,4 +101,4 @@ export async function POST(req: NextRequest) {
     }
     return handleError(error);
   }
-}
+});

@@ -21,21 +21,6 @@ export function SearchWhere(search: string): Prisma.AgrupacionPoliticaWhereInput
   };
 }
 
-// export function buildOrderBy(
-//   sortBy?: string | null,
-//   sortDir: "asc" | "desc" = "asc"
-// ): Prisma.AgrupacionPoliticaOrderByWithRelationInput {
-//   switch (sortBy) {
-//     case "nombre":
-//       return { nombre: sortDir };
-//     case "numero":
-//       return { numero: sortDir };
-//     // podés agregar más campos acá
-//     default:
-//       return { nombre: "asc" }; // orden por defecto
-//   }
-// }
-
 export function buildOrderBy(
   sortBy?: string | null,
   sortDir: "asc" | "desc" = "asc"
@@ -62,23 +47,26 @@ export async function findByNumber(numero: number) {
   });
 }
 
-export async function existItem(nombre: string, numero: number) {
+export async function existItem(nombre: string, numero: number, eleccionId: number) {
   return await db.agrupacionPolitica.findFirst({
     where: {
       OR: [
         { nombre: { equals: nombre, mode: "insensitive" } },
-        { numero },
+        {
+          numero,
+          eleccionId
+        },
       ],
     },
   });
 }
 
-export async function getById(id: number) {
+export async function getById(id: number, eleccionId: number) {
   return db.agrupacionPolitica.findUnique({
-    where: { id },
+    where: { id, eleccionId, deletedAt: null },
     include: {
       AgrupacionCargoPerm: {
-        where: { eleccionId: null, allowed: true }, // permisos globales
+        where: { eleccionId: eleccionId, allowed: true }, // permisos globales
         select: { cargoId: true },
       },
     },
@@ -92,24 +80,25 @@ export async function update(id: number, input: {
   color_hex: string;
   userId?: string;
   orden?: number;
-  cargoIds?: number[]; // 👈 puede venir undefined
+  cargoIds?: number[]; 
+  eleccionId: number;
 }) {
   const agrupacionId = Number(id);
   if (!agrupacionId) throw new Error("ID inválido");
 
   // 👇 sacamos cargoIds y ponemos default seguro
-  const { cargoIds = [], ...data } = input;
+  const { cargoIds = [], eleccionId, ...data } = input;
 
   const result = await db.$transaction(async (tx) => {
     // 1) actualizar datos básicos
     const g = await tx.agrupacionPolitica.update({
-      where: { id: agrupacionId },
+      where: { id: agrupacionId, eleccionId: eleccionId },
       data,
     });
 
     // 2) reemplazar permisos GLOBALes (eleccionId: null)
     await tx.agrupacionCargoPerm.deleteMany({
-      where: { agrupacionId, eleccionId: null },
+      where: { agrupacionId, eleccionId: eleccionId },
     });
 
     if (Array.isArray(cargoIds) && cargoIds.length > 0) {
@@ -117,7 +106,7 @@ export async function update(id: number, input: {
         data: cargoIds.map((cargoId) => ({
           agrupacionId,
           cargoId,
-          eleccionId: null,
+          eleccionId,
           allowed: true,
         })),
       });
@@ -174,6 +163,7 @@ export async function create(input: {
   orden?: number;
   userId: string;
   cargoIds: number[];
+  eleccionId: number;
 }) {
   const { userId } = input;
 
@@ -181,22 +171,19 @@ export async function create(input: {
     throw new Error(formatApiMessage("errors.userNotAuthenticated"));
   }
 
-  // ❌ No podemos pasar cargoIds al create de agrupacion
   const { cargoIds, ...data } = input;
 
   const group = await db.$transaction(async (tx) => {
-    // 1) Crear la agrupación sin cargoIds
     const g = await tx.agrupacionPolitica.create({
-      data, // nombre, numero, color_hex, profileImage?, userId
+      data,
     });
 
-    // 2) Crear permisos globales (eleccionId = null)
     if (cargoIds?.length) {
       await tx.agrupacionCargoPerm.createMany({
         data: cargoIds.map((cargoId) => ({
           agrupacionId: g.id,
           cargoId,
-          eleccionId: null,
+          eleccionId: g.eleccionId,
           allowed: true,
         })),
         skipDuplicates: true,

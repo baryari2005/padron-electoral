@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { useUploadThing } from "@/utils/uploadthingClient";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -13,19 +12,32 @@ interface AvatarUploaderProps {
   setIsUploading?: (value: boolean) => void;
 }
 
-export const AvatarUploader = ({ onAvatarUploaded, setIsUploading }: AvatarUploaderProps) => {
+export const AvatarUploader = ({
+  onAvatarUploaded,
+  setIsUploading,
+}: AvatarUploaderProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
-  const { startUpload } = useUploadThing("profileImage");
   const [localUploading, setLocalUploading] = useState(false);
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     const maxSize = 200 * 1024;
 
     if (file.size > maxSize) {
-      toast.error(formatMessage("La imagen es demasiado grande (máx. 200KB)"));
+      toast.error(
+        formatMessage("La imagen es demasiado grande (máx. 200KB)")
+      );
+      return;
+    }
+
+    if (!file.type.startsWith("image/")) {
+      toast.error(
+        formatMessage("Solo se permiten imágenes")
+      );
       return;
     }
 
@@ -33,14 +45,31 @@ export const AvatarUploader = ({ onAvatarUploaded, setIsUploading }: AvatarUploa
       setLocalUploading(true);
       setIsUploading?.(true);
 
-      const res = await startUpload([file]);
-      if (res && res.length > 0) {
-        const url = res[0].ufsUrl;
-        onAvatarUploaded(url);
-        toast.success("¡Avatar subido con éxito!");
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        throw new Error("Upload failed");
       }
+
+      const data = await res.json();
+
+      if (!data.url) {
+        throw new Error("Invalid response");
+      }
+
+      onAvatarUploaded(data.url);
+
+      toast.success("¡Avatar subido con éxito!");
     } catch (error) {
-      toast.error(formatMessage("Error al subir la imagen"));
+      toast.error(
+        formatMessage("Error al subir la imagen")
+      );
     } finally {
       setLocalUploading(false);
       setIsUploading?.(false);

@@ -1,47 +1,42 @@
 // lib/_server/establishments.service.ts
+
 import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { formatApiMessage } from "@/lib/utils/formatters";
 
 /* =========================
- * Helpers de búsqueda/orden
- * ========================= */
+   Filters
+========================= */
 
-export function buildEstablecimientoWhere(search: string): Prisma.EstablecimientoWhereInput {
+export function buildEstablecimientoWhere(
+  search: string
+): Prisma.EstablecimientoWhereInput {
   const terms = search.trim().split(/\s+/).filter(Boolean);
 
-  const where: Prisma.EstablecimientoWhereInput = { deletedAt: null };
+  if (!terms.length) return {};
 
-  if (!terms.length) return where;
-
-  // AND existente + condiciones nuevas
-  const prevAnd = Array.isArray(where.AND) ? where.AND : where.AND ? [where.AND] : [];
-
-  where.AND = [
-    ...prevAnd,
-    {
-      // OR entre términos en nombre / dirección / circuito.nombre
-      OR: terms.map((term) => ({
+  return {
+    AND: [
+      {
+        OR: terms.map((term) => ({
+          OR: [
+            { nombre: { contains: term, mode: Prisma.QueryMode.insensitive } },
+            { direccion: { contains: term, mode: Prisma.QueryMode.insensitive } },
+            { circuito: { nombre: { contains: term, mode: Prisma.QueryMode.insensitive } } },
+            { circuito: { codigo: { contains: term, mode: Prisma.QueryMode.insensitive } } },
+          ],
+        })),
+      },
+      {
         OR: [
-          { nombre: { contains: term, mode: Prisma.QueryMode.insensitive } },
-          { direccion: { contains: term, mode: Prisma.QueryMode.insensitive } },
-          { circuito: { nombre: { contains: term, mode: Prisma.QueryMode.insensitive } } },
-          { circuito: { codigo: { contains: term, mode: Prisma.QueryMode.insensitive } } },
+          { nombre: { contains: search, mode: Prisma.QueryMode.insensitive } },
+          { direccion: { contains: search, mode: Prisma.QueryMode.insensitive } },
+          { circuito: { nombre: { contains: search, mode: Prisma.QueryMode.insensitive } } },
+          { circuito: { codigo: { contains: search, mode: Prisma.QueryMode.insensitive } } },
         ],
-      })),
-    },
-    // opcional: también frase completa
-    {
-      OR: [
-        { nombre: { contains: search, mode: Prisma.QueryMode.insensitive } },
-        { direccion: { contains: search, mode: Prisma.QueryMode.insensitive } },
-        { circuito: { nombre: { contains: search, mode: Prisma.QueryMode.insensitive } } },
-        { circuito: { codigo: { contains: search, mode: Prisma.QueryMode.insensitive } } },
-      ],
-    },
-  ];
-
-  return where;
+      },
+    ],
+  };
 }
 
 export function buildOrderBy(
@@ -54,26 +49,32 @@ export function buildOrderBy(
     case "direccion":
       return { direccion: sortDir };
     case "circuitoCodigo":
-      return { circuito: { codigo: sortDir } }; // requiere include/join de circuito
+      return { circuito: { codigo: sortDir } };
     default:
-      return { nombre: "asc" }; // orden por defecto
+      return { nombre: "asc" };
   }
 }
 
-/* ===============
- * Consultas utils
- * =============== */
+/* =========================
+   Queries
+========================= */
 
-export async function findByNombreInsensitive(nombre: string) {
+export async function findByNombreInsensitive(
+  nombre: string,
+  eleccionId: number
+) {
   return db.establecimiento.findFirst({
-    where: { nombre: { equals: nombre, mode: Prisma.QueryMode.insensitive } },
+    where: {
+      nombre: { equals: nombre, mode: Prisma.QueryMode.insensitive },
+      eleccionId,
+    },
     select: { id: true, deletedAt: true },
   });
 }
 
-export async function getById(id: number) {
+export async function getById(id: number, eleccionId: number) {
   return db.establecimiento.findFirst({
-    where: { id },
+    where: { id, eleccionId },
     include: {
       circuito: true,
       mesasPorEstablecimiento: true,
@@ -81,44 +82,46 @@ export async function getById(id: number) {
   });
 }
 
-/* ==========
- * DTOs
- * ========== */
+/* =========================
+   DTOs
+========================= */
 
 export type CreateEstablecimientoDTO = {
   nombre: string;
   direccion: string;
-  profileImage: string;
+  profileImage?: string;
   circuitoId: number;
-  numerosDeMesa?: number[]; // array de números de mesa (opcional)
+  numerosDeMesa?: number[];
   userId: string;
+  eleccionId: number;
 };
 
 export type UpdateEstablecimientoDTO = {
   id: number;
   nombre: string;
   direccion: string;
-  profileImage: string;
+  profileImage?: string;
   circuitoId: number;
   numerosDeMesa: number[];
-  userId: string; // requerido por el esquema
+  userId: string;
+  eleccionId: number;
 };
 
-/* ========================
- * Operaciones de escritura
- * ======================== */
+/* =========================
+   Create
+========================= */
 
 export async function create(input: CreateEstablecimientoDTO) {
-  const { userId } = input;
-  if (!userId || typeof userId !== "string") {
+  const { userId, eleccionId } = input;
+
+  if (!userId) {
     throw new Error(formatApiMessage("errors.userNotAuthenticated"));
   }
 
   const mesasNums = (input.numerosDeMesa ?? []).filter(
     (n) => Number.isFinite(n) && n > 0
-  ) as number[];
+  );
 
-  // Transacción: crea establecimiento + mesas
   return db.$transaction(async (tx) => {
     const establecimiento = await tx.establecimiento.create({
       data: {
@@ -126,36 +129,57 @@ export async function create(input: CreateEstablecimientoDTO) {
         direccion: input.direccion,
         profileImage: input.profileImage,
         circuito: { connect: { id: input.circuitoId } },
+        eleccion: { connect: { id: eleccionId } },
         userId,
       },
     });
 
-    if (mesasNums.length) {
+    if (mesasNums.length > 0) {
       await tx.mesasPorEstablecimiento.createMany({
         data: mesasNums.map((numero) => ({
           numero,
           establecimientoId: establecimiento.id,
           userId,
+          eleccionId,
         })),
-        skipDuplicates: true, // respeta @@unique([establecimientoId, numero])
+        skipDuplicates: true,
       });
     }
 
     return tx.establecimiento.findUnique({
       where: { id: establecimiento.id },
-      include: { mesasPorEstablecimiento: true, circuito: true },
+      include: {
+        mesasPorEstablecimiento: true,
+        circuito: true,
+      },
     });
   });
 }
 
+/* =========================
+   Update
+========================= */
+
 export async function update(input: UpdateEstablecimientoDTO) {
-  const { id, nombre, direccion, profileImage, circuitoId, numerosDeMesa, userId } = input;
+  const {
+    id,
+    nombre,
+    direccion,
+    profileImage,
+    circuitoId,
+    numerosDeMesa,
+    userId,
+    eleccionId,
+  } = input;
 
   if (!userId) {
     throw new Error(formatApiMessage("errors.userNotAuthenticated"));
   }
 
-  // Update atómico con nested ops
+  const mesasFiltradas = numerosDeMesa.filter(
+    (n) => Number.isFinite(n) && n > 0
+  );
+
   return db.establecimiento.update({
     where: { id },
     data: {
@@ -165,21 +189,33 @@ export async function update(input: UpdateEstablecimientoDTO) {
       circuitoId,
       userId,
       mesasPorEstablecimiento: {
-        deleteMany: {}, // borra todas las mesas actuales
-        create: numerosDeMesa
-          .filter((n) => Number.isFinite(n) && n > 0)
-          .map((numero) => ({ numero, userId })),
+        deleteMany: { eleccionId },
+        create: mesasFiltradas.map((numero) => ({
+          numero,
+          userId,
+          eleccionId,
+        })),
       },
     },
-    include: { mesasPorEstablecimiento: true, circuito: true },
+    include: {
+      mesasPorEstablecimiento: true,
+      circuito: true,
+    },
   });
 }
 
-export async function softDelete(id: number, userId?: string) {
-  // marca establecimiento + mesas como borradas (soft)
+/* =========================
+   Soft Delete
+========================= */
+
+export async function softDelete(
+  id: number,
+  eleccionId: number,
+  userId?: string
+) {
   return db.$transaction([
     db.mesasPorEstablecimiento.updateMany({
-      where: { establecimientoId: id },
+      where: { establecimientoId: id, eleccionId },
       data: { deletedAt: new Date(), userId },
     }),
     db.establecimiento.update({
@@ -189,16 +225,24 @@ export async function softDelete(id: number, userId?: string) {
   ]);
 }
 
-export async function resurrect(id: number, userId: string) {
-  if (!userId || typeof userId !== "string") {
+/* =========================
+   Resurrect
+========================= */
+
+export async function resurrect(
+  id: number,
+  eleccionId: number,
+  userId: string
+) {
+  if (!userId) {
     throw new Error(formatApiMessage("errors.userNotAuthenticated"));
   }
 
   return db.establecimiento.update({
     where: { id },
     data: {
-      userId,
       deletedAt: null,
+      userId,
     },
   });
 }

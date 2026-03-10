@@ -27,7 +27,7 @@ export function useCertificadoEdicion(
 
         opts.onMetadataLoaded?.({
           seccion: "53 - San Miguel 2025",
-          circuito: data.mesa.circuitoId,
+          circuito: data.mesa.circuitoNombre + " (" + data.mesa.circuitoCodigo +  ")",
           mesa: data.mesa.numeroMesa,
         });
 

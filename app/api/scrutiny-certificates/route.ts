@@ -5,8 +5,9 @@ export const fetchCache = "force-no-store";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getUserIdFromRequest } from "@/lib/auth/getUserIdFromRequest";
+import { withActiveElection } from "@/lib/_server/withActiveElection";
 
-export async function POST(req: NextRequest) {
+export const POST = withActiveElection(async (req, { election }) => {
   try {
     const body = await req.json();
 
@@ -43,6 +44,7 @@ export async function POST(req: NextRequest) {
         numero: mesaNumero,
         establecimientoId,
         circuitoId,
+        eleccionId: election.id
       },
     });
 
@@ -61,6 +63,7 @@ export async function POST(req: NextRequest) {
           establecimientoId,
           userId,
           circuitoId,
+          eleccionId : election.id
         },
       });
 
@@ -70,40 +73,17 @@ export async function POST(req: NextRequest) {
       await tx.resultadoPorMesa.create({
         data: {
           mesaId,
+          eleccionId: election.id,
           sobresEnUrna: totales.sobres,
           electoresVotaron: totales.votantes,
           diferencia: totales.diferencia,
         },
       });
 
-      // Insertar votos especiales
-      // const votosEspecialesData = Object.entries(votosEspeciales).map(
-      //   ([categoriaIdStr, valores]: [string, any]) => ({
-      //     mesaId,
-      //     categoriaId: parseInt(categoriaIdStr),
-      //     // votosNulos: valores.nulos,
-      //     // votosRecurridos: valores.recurridos,
-      //     votosImpugnados: valores.impugnados,
-      //     // votosComandoElectoral: valores.comandoElectoral,
-      //     votosEnBlanco: valores.blancos,
-      //   })
-      // );
-
-      // const votosEspecialesData = Object.entries(votosEspeciales).map(
-      //   ([categoriaIdStr, valores]: [string, any]) => ({
-      //     mesaId,
-      //     categoriaId: parseInt(categoriaIdStr),
-      //     votosNulos: 0,
-      //     votosRecurridos: 0,
-      //     votosImpugnados: valores.impugnados,
-      //     votosComandoElectoral: 0,
-      //     votosEnBlanco: valores.blancos,
-      //   })
-      // );
-
       const votosEspecialesData = Object.entries(votosEspeciales).map(
         ([categoriaIdStr, valores]: [string, any]) => ({
           mesaId,
+          eleccionId: election.id,
           categoriaId: parseInt(categoriaIdStr),
           votosNulos: valores.nulos,
           votosRecurridos: valores.recurridos,
@@ -112,7 +92,6 @@ export async function POST(req: NextRequest) {
           votosEnBlanco: valores.blancos,
         })
       );
-
 
       await tx.resultadoVotosEspeciales.createMany({
         data: votosEspecialesData,
@@ -127,6 +106,7 @@ export async function POST(req: NextRequest) {
         for (const key of Object.keys(agrupacion)) {
           if (!isNaN(Number(key))) {
             resultadosData.push({
+              eleccionId: election.id, 
               mesaId,
               categoriaId: Number(key),
               agrupacionId,
@@ -166,13 +146,14 @@ export async function POST(req: NextRequest) {
         const diferencia = sobresEnUrna - suma;
 
         return {
+          eleccionId: election.id,
           mesaId,
           categoriaId,
           diferencia,
         };
       });
 
-      await tx.diferenciasPorCargosPoliticos.createMany({
+      await tx.diferenciasPorCargosPoliticos.createMany({        
         data: diferenciasData,
       });
 
@@ -187,5 +168,5 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 

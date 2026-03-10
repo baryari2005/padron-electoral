@@ -20,6 +20,7 @@ export default function MesaSummaryPage() {
     const [loading, setLoading] = useState(true);
     const [selectedEscuela, setSelectedEscuela] = useState<string>("__all__");
     const [stacked, setStacked] = useState(true);
+    const currentYear = new Date().getFullYear();
 
     const canView = useHasPermission("ver_reportes");
 
@@ -63,9 +64,9 @@ export default function MesaSummaryPage() {
 
     if (loading) return <CommonLoader logo="/logo.png"
         alternativeLogo="/logo-white.png"
-        alternativeText="Más San Miguel 2025"
-        title="Elecciones Provinciales"
-        subTitle="San Miguel 2025"
+        alternativeText={`Más San Miguel ${currentYear}`}
+        title="Elecciones Generales"
+        subTitle={`San Miguel ${currentYear}`}
         loaderText="Cargando Reportes por mesa..." />;
 
     return (

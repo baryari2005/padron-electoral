@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  images: {
+  images: {    
     remotePatterns: [
       {
         protocol: "https",
@@ -16,6 +16,11 @@ const nextConfig = {
         protocol: "https",
         hostname: "1ypfpxokgs.ufs.sh",
         pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "zrfngizmhyhosuluewnc.supabase.co",
+        pathname: "/storage/v1/object/public/**",
       },
     ],
   },

@@ -18,23 +18,47 @@ import { Separator } from "@/components/ui/separator";
 import { useState } from "react";
 import { SubmitButton } from "@/app/(dashboard)/components/FormsCreate";
 import { formatApiMessage } from "@/lib/utils/formatters";
+import { AsignacionesSection } from "./sections/AsignacionesSection";
 
 export function FormCreateOrUpdateElectoralRoll({
   padron,
   modo = "editar",
   onSuccess,
   onClose,
+  electionType,
 }: FormElectoralRollProps) {
   const isReadOnly = modo === "ver";
   const isEdit = !!padron;
   const [isUploading, setIsUploading] = useState(false);
+  const isInterna = electionType?.toUpperCase() === "INTERNA";
 
   const form = useForm<ElectoralRollFormValues>({
     resolver: zodResolver(electoralRollSchema),
     defaultValues: padron
       ? {
-        ...padron,
-        genero: padron.genero as "M" | "F" | "X", // conversión segura
+        distrito: padron.distrito,
+        tipoEjemplar: padron.tipoEjemplar,
+        numeroMatricula: padron.numeroMatricula,
+        apellido: padron.apellido,
+        nombre: padron.nombre,
+        clase: padron.clase,
+        genero: padron.genero as "M" | "F" | "X",
+        domicilio: padron.domicilio,
+        seccion: padron.seccion,
+        circuitoId: padron.circuitoId,
+        localidad: padron.localidad,
+        codigoPostal: padron.codigoPostal,
+        tipoNacionalidad: padron.tipoNacionalidad,
+        numeroMesa: padron.numeroMesa,
+        ordenMesa: padron.ordenMesa,
+        establecimientoId: padron.establecimientoId,
+        telefono: padron.telefono ?? "",
+        votoSiNo: padron.votoSiNo as "S" | "N",
+
+        referenteId: padron.referenteId ?? undefined,
+        planilleroId: padron.planilleroId ?? undefined,
+        choferId: padron.choferId ?? undefined,
+        planillaId: padron.planillaId ?? undefined,
       }
       : {
         distrito: "BUENOS AIRES",
@@ -43,7 +67,7 @@ export function FormCreateOrUpdateElectoralRoll({
         apellido: "",
         nombre: "",
         clase: new Date().getFullYear() - 16,
-        genero: "M", // o el que quieras por defecto
+        genero: "M",
         domicilio: "",
         seccion: "53 - San Miguel 2025",
         circuitoId: 0,
@@ -53,8 +77,14 @@ export function FormCreateOrUpdateElectoralRoll({
         numeroMesa: 1,
         ordenMesa: 1,
         establecimientoId: 0,
-        votoSiNo: "SI",
-      },
+        telefono: "",
+        votoSiNo: "S",
+
+        referenteId: undefined,
+        planilleroId: undefined,
+        choferId: undefined,
+        planillaId: undefined,
+      }
   });
 
   const { control } = form;
@@ -68,14 +98,22 @@ export function FormCreateOrUpdateElectoralRoll({
     !!watch.domicilio && !!watch.localidad && !!watch.circuitoId;
   const isMesaCompleta =
     !!watch.numeroMesa && !!watch.votoSiNo && !!watch.distrito;
+  const isDataTypeComplite =
+    !!watch.referenteId && !!watch.planilleroId && !!watch.choferId;
+    //  && !!watch.planillaId;
 
   const onSubmit = async (values: ElectoralRollFormValues) => {
     try {
+      const payload = {
+        ...values,
+        votoSiNo: values.votoSiNo === "S" ? "S" : "N",
+      };
+
       if (padron) {
-        await axiosInstance.put(`/api/electoral-rolls/${padron.id}`, values);
+        await axiosInstance.put(`/api/electoral-rolls/${padron.id}`, payload);
         toast.success(formatApiMessage("success.electoral-rollsUpdated"));
       } else {
-        await axiosInstance.post("/api/electoral-rolls", values);
+        await axiosInstance.post("/api/electoral-rolls", payload);
         toast.success(formatApiMessage("success.electoral-rollsCreated"));
       }
 
@@ -115,12 +153,21 @@ export function FormCreateOrUpdateElectoralRoll({
               Mesa y voto
               {isMesaCompleta && <Check className="ml-1 w-4 h-4 text-green-600" />}
             </TabsTrigger>
+            {isInterna && (
+              <TabsTrigger
+                value="asignaciones"
+                className="data-[state=active]:border-b-2 data-[state=active]:text-primary rounded-none px-2 py-1"
+              >
+                Asignaciones
+                {isDataTypeComplite && <Check className="ml-1 w-4 h-4 text-green-600" />}
+              </TabsTrigger>
+            )}
           </TabsList>
 
           <Separator className="mb-6" />
 
           <TabsContent value="datos">
-            <PersonalDataSection control={form.control} isEdit={isEdit} modo={modo}/>
+            <PersonalDataSection control={form.control} isEdit={isEdit} modo={modo} />
           </TabsContent>
 
           <TabsContent value="domicilio">
@@ -128,8 +175,14 @@ export function FormCreateOrUpdateElectoralRoll({
           </TabsContent>
 
           <TabsContent value="mesa">
-            <MesaVotoSection control={form.control} modo={modo}/>
+            <MesaVotoSection control={form.control} modo={modo} />
           </TabsContent>
+
+          {isInterna && (
+            <TabsContent value="asignaciones">
+              <AsignacionesSection control={form.control} modo={modo} />
+            </TabsContent>
+          )}
         </Tabs>
         {!isReadOnly && (
           <div className="mt-4">

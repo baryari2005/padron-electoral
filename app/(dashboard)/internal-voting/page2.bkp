@@ -1,0 +1,439 @@
+// "use client";
+
+// import { useEffect, useMemo, useState } from "react";
+// import { useForm } from "react-hook-form";
+// import axiosInstance from "@/utils/axios";
+// import { toast } from "sonner";
+// import { Button } from "@/components/ui/button";
+// import { ChevronDown, ChevronUp, Loader2 } from "lucide-react";
+// import { useHasPermission } from "@/lib/permissions/useHasPermission";
+// import { AccessDeniedPage } from "@/components/NoPermissions/AccessDeniedPage";
+// import { Card } from "@/components/ui/card";
+// import { Form } from "@/components/ui/form";
+
+// import {
+//     EstablishmentOption,
+//     GroupSummary,
+//     InternalVoter,
+//     InternalVotingFormValues,
+//     InternalVotingStats as InternalVotingStatsType,
+//     Mesa,
+//     PendingMark,
+//     PersonOption,
+// } from "./components/types";
+
+// import { InternalVotingFilters } from "./components/InternalVotingFilters";
+// import { InternalVotingStats } from "./components/InternalVotingStats";
+// import { InternalVotingSummaryCards } from "./components/InternalVotingSummaryCards";
+// import { InternalVotingDetailPanel } from "./components/InternalVotingDetailPanel";
+
+
+// export default function InternalVotingPage() {
+//     const canView = useHasPermission("ver_estadoelector");
+//     const canEdit = useHasPermission("editar_estadoelector");
+
+//     const form = useForm<InternalVotingFormValues>({
+//         defaultValues: {
+//             establecimientoId: "",
+//             mesaId: "",
+//             query: "",
+//             groupBy: "planilla",
+//             referenteId: "",
+//             planilleroId: "",
+//         },
+//     });
+
+//     const establecimientoId = form.watch("establecimientoId");
+//     const mesaId = form.watch("mesaId");
+//     const query = form.watch("query");
+//     const groupBy = form.watch("groupBy");
+//     const referenteId = form.watch("referenteId");
+//     const planilleroId = form.watch("planilleroId");
+
+//     const [establecimientos, setEstablecimientos] = useState<EstablishmentOption[]>([]);
+//     const [mesas, setMesas] = useState<Mesa[]>([]);
+//     const [referentes, setReferentes] = useState<PersonOption[]>([]);
+//     const [planilleros, setPlanilleros] = useState<PersonOption[]>([]);
+
+//     const [summaryItems, setSummaryItems] = useState<GroupSummary[]>([]);
+//     const [selectedGroupId, setSelectedGroupId] = useState("");
+//     const [selectedGroupVoters, setSelectedGroupVoters] = useState<InternalVoter[]>([]);
+//     const [pendingMarks, setPendingMarks] = useState<PendingMark[]>([]);
+
+//     const [loadingEstabs, setLoadingEstabs] = useState(true);
+//     const [loadingMesas, setLoadingMesas] = useState(false);
+//     const [loadingPersons, setLoadingPersons] = useState(true);
+//     const [loadingSummary, setLoadingSummary] = useState(false);
+//     const [loadingVoters, setLoadingVoters] = useState(false);
+//     const [saving, setSaving] = useState(false);
+
+//     const [refreshToken, setRefreshToken] = useState(0);
+
+//     const [groupsCollapsed, setGroupsCollapsed] = useState(false);
+
+//     const canSearch = true;
+
+//     function triggerRefresh() {
+//         setRefreshToken((x) => x + 1);
+//     }
+
+//     function resetPending() {
+//         setPendingMarks([]);
+//     }
+
+//     function upsertPending(electorId: string, voted: boolean) {
+//         setPendingMarks((prev) => {
+//             const idx = prev.findIndex((x) => x.electorId === electorId);
+//             if (idx >= 0) {
+//                 const next = [...prev];
+//                 next[idx] = { electorId, voted };
+//                 return next;
+//             }
+//             return [...prev, { electorId, voted }];
+//         });
+//     }
+
+//     function markAllCurrentGroupAsVoted(electorIds: string[]) {
+//         setPendingMarks((prev) => {
+//             const map = new Map(prev.map((item) => [item.electorId, item.voted]));
+
+//             for (const electorId of electorIds) {
+//                 map.set(electorId, true);
+//             }
+
+//             return Array.from(map.entries()).map(([electorId, voted]) => ({
+//                 electorId,
+//                 voted,
+//             }));
+//         });
+//     }
+
+//     const pendingMap = useMemo(() => {
+//         const map = new Map<string, boolean>();
+//         for (const item of pendingMarks) {
+//             map.set(item.electorId, item.voted);
+//         }
+//         return map;
+//     }, [pendingMarks]);
+
+//     const stats: InternalVotingStatsType = useMemo(() => {
+//         const total = summaryItems.reduce((acc, item) => acc + item.total, 0);
+//         const voted = summaryItems.reduce((acc, item) => acc + item.voted, 0);
+//         const notVoted = summaryItems.reduce((acc, item) => acc + item.notVoted, 0);
+
+//         return {
+//             total,
+//             voted,
+//             notVoted,
+//             pending: pendingMarks.length,
+//         };
+//     }, [summaryItems, pendingMarks.length]);
+
+//     useEffect(() => {
+//         if (!canView) return;
+
+//         (async () => {
+//             try {
+//                 setLoadingEstabs(true);
+//                 const { data } = await axiosInstance.get("/api/establishments?all=true");
+//                 setEstablecimientos(data.items ?? data ?? []);
+//             } catch (error) {
+//                 console.error(error);
+//                 toast.error("No se pudieron cargar los establecimientos");
+//             } finally {
+//                 setLoadingEstabs(false);
+//             }
+//         })();
+//     }, [canView]);
+
+//     useEffect(() => {
+//         if (!canView) return;
+
+//         (async () => {
+//             try {
+//                 setLoadingPersons(true);
+
+//                 const { data } = await axiosInstance.get("/api/internal-voting/filter-options", {
+//                     params: {
+//                         referenteId: referenteId || undefined,
+//                     },
+//                 });
+
+//                 setReferentes(data.referentes ?? []);
+//                 setPlanilleros(data.planilleros ?? []);
+//             } catch (error) {
+//                 console.error(error);
+//                 toast.error("No se pudieron cargar los filtros de referente y planillero");
+//             } finally {
+//                 setLoadingPersons(false);
+//             }
+//         })();
+//     }, [canView, referenteId]);
+
+//     useEffect(() => {
+//         if (!canView) return;
+
+//         if (!establecimientoId) {
+//             setMesas([]);
+//             form.setValue("mesaId", "");
+//             return;
+//         }
+
+//         useEffect(() => {
+//             form.setValue("planilleroId", "");
+//         }, [referenteId, form]);
+
+//         (async () => {
+//             try {
+//                 setLoadingMesas(true);
+
+//                 const { data } = await axiosInstance.get(
+//                     `/api/electoral-rolls/mesas?establecimientoId=${establecimientoId}`
+//                 );
+
+//                 setMesas(data.items ?? data ?? []);
+//             } catch (error) {
+//                 console.error(error);
+//                 toast.error("No se pudieron cargar las mesas");
+//             } finally {
+//                 setLoadingMesas(false);
+//             }
+//         })();
+//     }, [canView, establecimientoId, form]);
+
+//     useEffect(() => {
+//         if (!canView || !canSearch) {
+//             setSummaryItems([]);
+//             setSelectedGroupId("");
+//             return;
+//         }
+
+//         (async () => {
+//             try {
+//                 setLoadingSummary(true);
+
+//                 const { data } = await axiosInstance.get("/api/internal-voting/summary", {
+//                     params: {
+//                         establecimientoId: establecimientoId || undefined,
+//                         mesaId: mesaId || undefined,
+//                         referenteId: referenteId || undefined,
+//                         planilleroId: planilleroId || undefined,
+//                         groupBy,
+//                         q: query?.trim() || undefined,
+//                     },
+//                 });
+
+//                 const items = Array.isArray(data) ? data : data.items ?? [];
+//                 setSummaryItems(items);
+
+//                 if (items.length > 0) {
+//                     setSelectedGroupId((prev) =>
+//                         prev && items.some((x: GroupSummary) => x.id === prev) ? prev : items[0].id
+//                     );
+//                 } else {
+//                     setSelectedGroupId("");
+//                 }
+//             } catch (error) {
+//                 console.error(error);
+//                 toast.error("No se pudo cargar el resumen");
+//                 setSummaryItems([]);
+//                 setSelectedGroupId("");
+//             } finally {
+//                 setLoadingSummary(false);
+//             }
+//         })();
+//     }, [
+//         canView,
+//         canSearch,
+//         establecimientoId,
+//         mesaId,
+//         referenteId,
+//         planilleroId,
+//         groupBy,
+//         query,
+//         refreshToken,
+//     ]);
+
+//     useEffect(() => {
+//         if (!canView || !canSearch || !selectedGroupId) {
+//             setSelectedGroupVoters([]);
+//             return;
+//         }
+
+//         (async () => {
+//             try {
+//                 setLoadingVoters(true);
+
+//                 const { data } = await axiosInstance.get("/api/internal-voting/voters", {
+//                     params: {
+//                         establecimientoId: establecimientoId || undefined,
+//                         mesaId: mesaId || undefined,
+//                         referenteId: referenteId || undefined,
+//                         planilleroId: planilleroId || undefined,
+//                         groupBy,
+//                         groupValue: selectedGroupId,
+//                         q: query?.trim() || undefined,
+//                     },
+//                 });
+
+//                 setSelectedGroupVoters(Array.isArray(data) ? data : data.items ?? []);
+//             } catch (error) {
+//                 console.error(error);
+//                 toast.error("No se pudieron cargar los votantes del grupo");
+//                 setSelectedGroupVoters([]);
+//             } finally {
+//                 setLoadingVoters(false);
+//             }
+//         })();
+//     }, [
+//         canView,
+//         canSearch,
+//         establecimientoId,
+//         mesaId,
+//         referenteId,
+//         planilleroId,
+//         groupBy,
+//         selectedGroupId,
+//         query,
+//         refreshToken,
+//     ]);
+
+//     async function handleSave() {
+//         if (!pendingMarks.length) return;
+
+//         try {
+//             setSaving(true);
+
+//             await axiosInstance.post("/api/internal-voting/batch", {
+//                 mesaId: mesaId || null,
+//                 changes: pendingMarks,
+//             });
+
+//             toast.success("Cambios guardados");
+//             setPendingMarks([]);
+//             triggerRefresh();
+//         } catch (error) {
+//             console.error(error);
+//             toast.error("No se pudieron guardar los cambios");
+//         } finally {
+//             setSaving(false);
+//         }
+//     }
+
+//     if (!canView) {
+//         return <AccessDeniedPage subtitle="Ver Electores que votaron." />;
+//     }
+
+//     return (
+//         <Form {...form}>
+//             <div className="space-y-4">
+//                 <div className="flex items-center justify-between gap-3">
+//                     <div>
+//                         <h1 className="text-2xl font-semibold">Votación interna</h1>
+//                         <p className="text-sm text-muted-foreground">
+//                             Podés agrupar por referente, planillero, planilla u orden de padrón
+//                             en toda la elección, o acotar por escuela y mesa si lo necesitás.
+//                         </p>
+//                     </div>
+
+//                     <div className="flex items-center gap-2">
+//                         <Button
+//                             type="button"
+//                             variant="secondary"
+//                             onClick={() => {
+//                                 setPendingMarks([]);
+//                                 triggerRefresh();
+//                             }}
+//                             disabled={!pendingMarks.length}
+//                         >
+//                             Descartar
+//                         </Button>
+
+//                         <Button
+//                             type="button"
+//                             onClick={handleSave}
+//                             disabled={!pendingMarks.length || !canEdit || saving}
+//                         >
+//                             {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+//                             Guardar cambios {pendingMarks.length ? `(${pendingMarks.length})` : ""}
+//                         </Button>
+//                     </div>
+//                 </div>
+
+//                 <InternalVotingFilters
+//                     control={form.control}
+//                     setValue={form.setValue}
+//                     establecimientos={establecimientos}
+//                     mesas={mesas}
+//                     referentes={referentes}
+//                     planilleros={planilleros}
+//                     loadingEstabs={loadingEstabs}
+//                     loadingMesas={loadingMesas}
+//                     loadingPersons={loadingPersons}
+//                     loadingSearch={loadingSummary || loadingVoters}
+//                     onRefresh={triggerRefresh}
+//                     onResetPending={resetPending}
+//                 />
+
+//                 <InternalVotingStats stats={stats} />
+
+//                 <div className="space-y-3">
+//                     <div className="flex items-center justify-between gap-3">
+//                         <div>
+//                             <h2 className="text-lg font-medium">Resumen por grupo</h2>
+//                             <p className="text-sm text-muted-foreground">
+//                                 Elegí un grupo para cargar solo ese subconjunto de electores.
+//                             </p>
+//                         </div>
+
+//                         <Button
+//                             type="button"
+//                             variant="outline"
+//                             onClick={() => setGroupsCollapsed((prev) => !prev)}
+//                         >
+//                             {groupsCollapsed ? (
+//                                 <>
+//                                     <ChevronDown className="mr-2 h-4 w-4" />
+//                                     Expandir grupos
+//                                 </>
+//                             ) : (
+//                                 <>
+//                                     <ChevronUp className="mr-2 h-4 w-4" />
+//                                     Colapsar grupos
+//                                 </>
+//                             )}
+//                         </Button>
+//                     </div>
+
+//                     {!groupsCollapsed && (
+//                         <>
+//                             {loadingSummary ? (
+//                                 <Card className="p-8 text-center text-muted-foreground">
+//                                     Cargando resumen...
+//                                 </Card>
+//                             ) : (
+//                                 <InternalVotingSummaryCards
+//                                     items={summaryItems}
+//                                     selectedGroupId={selectedGroupId}
+//                                     onSelect={setSelectedGroupId}
+//                                 />
+//                             )}
+//                         </>
+//                     )}
+//                 </div>
+
+//                 <InternalVotingDetailPanel
+//                     loading={loadingVoters}
+//                     selectedGroupId={selectedGroupId}
+//                     selectedGroupLabel={
+//                         summaryItems.find((item) => item.id === selectedGroupId)?.label
+//                     }
+//                     voters={selectedGroupVoters}
+//                     pendingMap={pendingMap}
+//                     onToggle={upsertPending}
+//                     onMarkAllVoted={markAllCurrentGroupAsVoted}
+//                 />
+//             </div>
+//         </Form>
+//     );
+// }

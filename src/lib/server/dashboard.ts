@@ -1,20 +1,35 @@
 // src/lib/server/dashboard.ts
 import "server-only";
 import { db } from "@/lib/db";
+import { pct } from "./dashboard/utils";
 
-const pct = (n: number, d: number) => (d > 0 ? +((n / d) * 100).toFixed(1) : 0);
+export async function getDashboardSummary(eleccionId: number, electionType: string) {
+  if (!eleccionId) {
+    throw new Error("eleccionId inválido");
+  }
 
-export async function getDashboardSummary() {
+  const isInternal = String(electionType ?? "").toUpperCase() === "INTERNA";
+
   // --------- GLOBALES ----------
-  const global = await db.globalStats.findUnique({ where: { id: 1 } });
+  const global = await db.globalStats.findUnique({
+    where: { eleccionId },
+  });
+
   const padronTotal = global?.padronTotal ?? 0;
   const mesasTotales = global?.mesasTotales ?? 0;
 
-  const mesasEscrutadas = await db.mesaEscrutada.count({ where: { deletedAt: null } });
+  const mesasEscrutadas = await db.mesaEscrutada.count({
+    where: {
+      deletedAt: null,
+      eleccionId,
+    },
+  });
 
   const aggRM = await db.resultadoPorMesa.aggregate({
+    where: { eleccionId },
     _sum: { electoresVotaron: true, sobresEnUrna: true },
   });
+
   const votantesRegistrados =
     (aggRM._sum.electoresVotaron ?? 0) || (aggRM._sum.sobresEnUrna ?? 0);
 
@@ -23,7 +38,10 @@ export async function getDashboardSummary() {
 
   // --------- MAPA mesaId -> (establecimientoId, circuitoId) ----------
   const mesas = await db.mesaEscrutada.findMany({
-    where: { deletedAt: null },
+    where: {
+      deletedAt: null,
+      eleccionId,
+    },
     select: { id: true, establecimientoId: true, circuitoId: true },
   });
   const mesaInfo = new Map(mesas.map((m) => [m.id, m]));
@@ -31,6 +49,7 @@ export async function getDashboardSummary() {
   // --------- VOTOS por mesa (para TOPs) ----------
   const votosPorMesa = await db.resultadoPorAgrupacionPolitica.groupBy({
     by: ["mesaId"],
+    where: { eleccionId },
     _sum: { votos: true },
   });
 
@@ -46,10 +65,12 @@ export async function getDashboardSummary() {
 
   // --------- VOTANTES por mesa ----------
   const votantesPorMesa = await db.resultadoPorMesa.findMany({
+    where: { eleccionId },
     select: { mesaId: true, electoresVotaron: true, sobresEnUrna: true },
   });
   const votantesPorEst: Record<number, number> = {};
   const votantesPorCir: Record<number, number> = {};
+
   for (const r of votantesPorMesa) {
     const info = mesaInfo.get(r.mesaId);
     if (!info) continue;
@@ -61,10 +82,10 @@ export async function getDashboardSummary() {
   // --------- PADRON y MESAS TOTALES por escuela/circuito ----------
   const [estStats, circStats] = await Promise.all([
     db.establecimientoStats.findMany({
-      select: { establecimientoId: true, padronTotal: true, mesasCount: true },
+      where: { eleccionId }, select: { establecimientoId: true, padronTotal: true, mesasCount: true },
     }),
     db.circuitoStats.findMany({
-      select: { circuitoId: true, padronTotal: true, mesasCount: true },
+      where: { eleccionId }, select: { circuitoId: true, padronTotal: true, mesasCount: true },
     }),
   ]);
 
@@ -72,12 +93,18 @@ export async function getDashboardSummary() {
   const [escrEst, escrCir] = await Promise.all([
     db.mesaEscrutada.groupBy({
       by: ["establecimientoId"],
-      where: { deletedAt: null },
+      where: {
+        eleccionId,
+        deletedAt: null
+      },
       _count: { _all: true },
     }),
     db.mesaEscrutada.groupBy({
       by: ["circuitoId"],
-      where: { deletedAt: null },
+      where: {
+        eleccionId,
+        deletedAt: null
+      },
       _count: { _all: true },
     }),
   ]);
@@ -88,6 +115,7 @@ export async function getDashboardSummary() {
   const [ests, circs] = await Promise.all([
     db.establecimiento.findMany({
       where: {
+        eleccionId,
         id: {
           in: Array.from(
             new Set([
@@ -101,6 +129,7 @@ export async function getDashboardSummary() {
     }),
     db.circuito.findMany({
       where: {
+        eleccionId,
         id: {
           in: Array.from(
             new Set([
@@ -164,6 +193,73 @@ export async function getDashboardSummary() {
     })
     .sort((a, b) => b.porcentaje - a.porcentaje);
 
+  // --------- PROGRESO POR REFERENTE (solo interna) ----------
+  let progresoPorReferente: {
+    referente: string;
+    mesasEscrutadas: number;
+    mesasTotales: number;
+    porcentaje: number;
+    faltan: number;
+  }[] = [];
+
+  if (isInternal) {
+    const padronReferentes = await db.padronElectoral.findMany({
+      where: {
+        eleccionId,
+        deletedAt: null,
+        referenteId: { not: null },
+      },
+      select: {
+        votoSiNo: true,
+        referenteId: true,
+        referente: {
+          select: {
+            nombre: true,
+          },
+        },
+      },
+    });
+
+    const referenteMap = new Map<
+      number,
+      {
+        referente: string;
+        mesasEscrutadas: number;
+        mesasTotales: number;
+        porcentaje: number;
+        faltan: number;
+      }
+    >();
+
+    for (const row of padronReferentes) {
+      if (!row.referenteId || !row.referente) continue;
+
+      const voted = row.votoSiNo === "S" ? 1 : 0;
+      const current = referenteMap.get(row.referenteId);
+
+      if (current) {
+        current.mesasTotales += 1;
+        current.mesasEscrutadas += voted;
+      } else {
+        referenteMap.set(row.referenteId, {
+          referente: row.referente.nombre,
+          mesasTotales: 1,
+          mesasEscrutadas: voted,
+          porcentaje: 0,
+          faltan: 0,
+        });
+      }
+    }
+
+    progresoPorReferente = Array.from(referenteMap.values())
+      .map((item) => ({
+        ...item,
+        porcentaje: pct(item.mesasEscrutadas, item.mesasTotales),
+        faltan: Math.max(item.mesasTotales - item.mesasEscrutadas, 0),
+      }))
+      .sort((a, b) => b.porcentaje - a.porcentaje);
+  }
+
   // --------- PARTICIPACIÓN ----------
   const participacionEscuelas = estStats
     .map((s) => {
@@ -193,6 +289,7 @@ export async function getDashboardSummary() {
 
   // --------- VOTOS ESPECIALES ----------
   const especialesAgg = await db.resultadoVotosEspeciales.aggregate({
+    where: { eleccionId },
     _sum: {
       votosNulos: true,
       votosEnBlanco: true,
@@ -214,9 +311,11 @@ export async function getDashboardSummary() {
   // --------- LÍDER POR CATEGORÍA ----------
   const aggCatAgr = await db.resultadoPorAgrupacionPolitica.groupBy({
     by: ["categoriaId", "agrupacionId"],
+    where: { eleccionId },
     _sum: { votos: true },
   });
   const categorias = await db.cargoPolitico.findMany({
+    where: { eleccionId },
     select: { id: true, nombre: true, orden: true },
   });
 
@@ -236,6 +335,7 @@ export async function getDashboardSummary() {
     .sort((a, b) => (a.orden ?? 9999) - (b.orden ?? 9999));
 
   const agrupaciones = await db.agrupacionPolitica.findMany({
+    where: { eleccionId },
     select: { id: true, nombre: true, profileImage: true, color_hex: true },
   });
   const catById = new Map(categorias.map((c) => [c.id, c]));
@@ -299,6 +399,7 @@ export async function getDashboardSummary() {
     progreso: {
       porEscuela: progresoPorEscuela,
       porCircuito: progresoPorCircuito,
+      porReferente: progresoPorReferente,
     },
     participacion: {
       porEscuela: participacionEscuelas,

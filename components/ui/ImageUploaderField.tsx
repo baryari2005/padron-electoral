@@ -1,11 +1,10 @@
 "use client";
 
-import { useUploadThing } from "@/utils/uploadthingClient";
 import { Label } from "@/components/ui/label";
 import { FormControl, FormMessage } from "@/components/ui/form";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { UseFormReturn } from "react-hook-form";
 
 type Props = {
@@ -24,7 +23,7 @@ export const ImageUploaderField = ({
   onImageUploaded,
 }: Props) => {
   const inputRef = useRef<HTMLInputElement>(null);
-  const { startUpload } = useUploadThing("profileImage");
+  const [uploading, setUploading] = useState(false);
 
   const handleFileChange = async (
     e: React.ChangeEvent<HTMLInputElement>
@@ -39,31 +38,60 @@ export const ImageUploaderField = ({
       return;
     }
 
-    try {
-      const res = await startUpload([file]);
-      if (res && res.length > 0) {
-        const url = res[0].url;
-        form.setValue(name, url);
-        toast.success("¡Imagen subida correctamente!");
+    if (!file.type.startsWith("image/")) {
+      toast.error("Solo se permiten imágenes");
+      return;
+    }
 
-        if (onImageUploaded) {
-          onImageUploaded(url);
-        }
+    try {
+      setUploading(true);
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        throw new Error("Upload failed");
+      }
+
+      const data = await res.json();
+
+      if (!data.url) {
+        throw new Error("Invalid response");
+      }
+
+      form.setValue(name, data.url, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+
+      toast.success("¡Imagen subida correctamente!");
+
+      if (onImageUploaded) {
+        onImageUploaded(data.url);
       }
     } catch {
       toast.error("Error al subir la imagen");
+    } finally {
+      setUploading(false);
     }
   };
 
   return (
     <div className="flex flex-col space-y-1">
       <Label htmlFor={name}>{label}</Label>
+
       <label
         htmlFor={`${name}-input`}
         className="underline text-sm text-blue-600 hover:text-blue-800 cursor-pointer"
       >
-        Seleccionar imagen
+        {uploading ? "Subiendo..." : "Seleccionar imagen"}
       </label>
+
       <input
         ref={inputRef}
         id={`${name}-input`}
@@ -71,17 +99,21 @@ export const ImageUploaderField = ({
         accept="image/*"
         className="hidden"
         onChange={handleFileChange}
+        disabled={uploading}
       />
+
       <FormControl>
         <Input
-          value={form.watch(name)}
+          value={form.watch(name) ?? ""}
           readOnly
           className="bg-slate-100 text-muted-foreground"
         />
       </FormControl>
+
       <p className="text-xs text-muted-foreground">
         JPG, PNG (máx. {maxSizeKB}KB)
       </p>
+
       <FormMessage />
     </div>
   );

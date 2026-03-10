@@ -9,6 +9,8 @@ export function AuthRehydrationProvider() {
   const { loading, hasHydrated } = useAuthStore(); // usamos loading del store central
   const pathname = usePathname();
 
+  const year = new Date().getFullYear();
+
   const isLoginPage = pathname === "/sign-in";
 
   if (!hasHydrated || (loading && !isLoginPage)) {
@@ -31,8 +33,8 @@ export function AuthRehydrationProvider() {
           />
         </div>
 
-        <h1 className="text-2xl font-bold">Elecciones Provinciales</h1>
-        <p className="text-muted-foreground">San Miguel 2025</p>
+        <h1 className="text-2xl font-bold">Elecciones Generales</h1>
+        <p className="text-muted-foreground">San Miguel {year}</p>
         <hr className="w-1/4 border-muted my-6" />
         <div className="flex items-center gap-3">
           <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />

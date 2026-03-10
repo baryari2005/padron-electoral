@@ -2,14 +2,15 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 export const fetchCache = "force-no-store";
-// app/api/electoral-rolls/votes/batch/route.ts
+
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getUserIdFromRequest } from "@/lib/auth/getUserIdFromRequest";
+import { withActiveElection } from "@/lib/_server/withActiveElection";
 
 type Change = { electorId: string | number; voted: boolean };
 
-export async function POST(req: NextRequest) {
+export const POST = withActiveElection(async (req, { election }) => {
   try {
     const userId = getUserIdFromRequest(req);
     const body = (await req.json()) as { mesaId?: string | number | null; changes?: Change[] };
@@ -74,7 +75,10 @@ export async function POST(req: NextRequest) {
     if (eligVoteIds.size) {
       tx.push(
         db.padronElectoral.updateMany({
-          where: { id: { in: Array.from(eligVoteIds) }, ...mesaGuard },
+          where: {
+            eleccionId: election.id,
+            id: { in: Array.from(eligVoteIds) }, ...mesaGuard
+          },
           data: { votoSiNo: "S", votedAt: now, votedBy: userId },
         })
       );
@@ -83,7 +87,10 @@ export async function POST(req: NextRequest) {
     if (eligUnvoteIds.size) {
       tx.push(
         db.padronElectoral.updateMany({
-          where: { id: { in: Array.from(eligUnvoteIds) }, ...mesaGuard },
+          where: {
+            eleccionId: election.id,
+            id: { in: Array.from(eligUnvoteIds) }, ...mesaGuard
+          },
           data: { votoSiNo: "N", votedAt: now, votedBy: userId },
         })
       );
@@ -130,5 +137,5 @@ export async function POST(req: NextRequest) {
     console.error("Error en batch votes:", error);
     return NextResponse.json({ error: "Error interno al registrar votos" }, { status: 500 });
   }
-}
+});
 

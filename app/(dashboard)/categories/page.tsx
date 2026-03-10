@@ -6,7 +6,8 @@ import { CategoryList, FormCategory } from "./components";
 import { BookUser } from "lucide-react";
 import { useHasPermission } from "@/lib/permissions/useHasPermission";
 import { AccessDeniedPage } from "@/components/NoPermissions/AccessDeniedPage";
-
+import { StatusPage } from "@/components/status/StatusPage";
+import { useActiveElection } from "@/hooks/useActiveElection";
 
 
 export default function CategoriesPage() {
@@ -24,13 +25,29 @@ export default function CategoriesPage() {
   const components = "Cargos Políticos";
   const component = "Cargo Político";
 
+  const { loading, hasActive } = useActiveElection();
+
   const canView = useHasPermission("ver_categorias");
   const canCreate = useHasPermission("crear_categorias");
   const canEdit = useHasPermission("editar_categorias");
   const canDelete = useHasPermission("eliminar_categorias");
 
+  if (loading) return null;
+
+  if (!hasActive) {
+    return (
+       <StatusPage
+            code="403"
+            title="Acceso denegado."
+            description="Para acceder a esta sección tiene que existir una elección activa."
+            imageSrc="/robot-nea.png"
+            primaryAction={{ label: "Ir al inicio", href: "/" }}
+          />
+    );
+  }
+
   if (!canView) {
-    return <AccessDeniedPage subtitle="Ver Cargos Políticos."/>
+    return <AccessDeniedPage subtitle="Ver Cargos Políticos." />
   }
 
   return (

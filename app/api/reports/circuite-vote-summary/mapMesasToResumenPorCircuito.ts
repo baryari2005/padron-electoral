@@ -54,9 +54,9 @@ export function mapMesasToResumenPorCircuito(mesas: MesaEscrutadaConDatosComplet
 
       // resumen general
       if (mesa.resultadoFinal) {
-        resumen.sobresEnUrna += mesa.resultadoFinal.sobresEnUrna;
-        resumen.electoresVotaron += mesa.resultadoFinal.electoresVotaron;
-        resumen.diferencia += mesa.resultadoFinal.diferencia;
+        resumen.sobresEnUrna += mesa.resultadoFinal[0].sobresEnUrna;
+        resumen.electoresVotaron += mesa.resultadoFinal[0].electoresVotaron;
+        resumen.diferencia += mesa.resultadoFinal[0].diferencia;
       }
     }
 

@@ -3,10 +3,9 @@ export const dynamic = 'force-dynamic';// desactiva static render
 export const revalidate = 0; 
 
 import { NextRequest } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma"
 import ExcelJS from "exceljs";
 
-const prisma = new PrismaClient();
 
 export async function GET(req: NextRequest) {
   try {

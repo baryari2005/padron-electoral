@@ -1,3 +1,4 @@
+import { withActiveElection } from "@/lib/_server/withActiveElection";
 import { getDashboardSummary } from "@/src/lib/server/dashboard";
 import { NextResponse } from "next/server";
 
@@ -7,8 +8,8 @@ export const revalidate = 0;
 export const fetchCache = "force-no-store";
 export const runtime = "nodejs";
 
-export async function GET() {
-  const data = await getDashboardSummary();
+export const GET = withActiveElection(async (req, { election }) => {  
+  const data = await getDashboardSummary(election.id, election.tipo);
   return NextResponse.json(data, {
     headers: {
       "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
@@ -16,4 +17,4 @@ export async function GET() {
       Expires: "0",
     },
   });
-}
+});
