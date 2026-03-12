@@ -3,6 +3,9 @@ import { db } from "@/lib/db";
 import { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export const GET = withActiveElection(async (req, { election }) => {
   const url = new URL(req.url);

@@ -2,6 +2,7 @@
 import "server-only";
 import { db } from "@/lib/db";
 import { pct } from "./dashboard/utils";
+import { ProgresoItem } from "@/app/(dashboard)/components/Dashboard/types/types";
 
 export async function getDashboardSummary(eleccionId: number, electionType: string) {
   if (!eleccionId) {
@@ -194,13 +195,14 @@ export async function getDashboardSummary(eleccionId: number, electionType: stri
     .sort((a, b) => b.porcentaje - a.porcentaje);
 
   // --------- PROGRESO POR REFERENTE (solo interna) ----------
-  let progresoPorReferente: {
-    referente: string;
-    mesasEscrutadas: number;
-    mesasTotales: number;
-    porcentaje: number;
-    faltan: number;
-  }[] = [];
+  // let progresoPorReferente: {
+  //   referente: string;
+  //   mesasEscrutadas: number;
+  //   mesasTotales: number;
+  //   porcentaje: number;
+  //   faltan: number;
+  // }[] = [];
+  let progresoPorReferente: ProgresoItem[] = [];
 
   if (isInternal) {
     const padronReferentes = await db.padronElectoral.findMany({
@@ -220,16 +222,7 @@ export async function getDashboardSummary(eleccionId: number, electionType: stri
       },
     });
 
-    const referenteMap = new Map<
-      number,
-      {
-        referente: string;
-        mesasEscrutadas: number;
-        mesasTotales: number;
-        porcentaje: number;
-        faltan: number;
-      }
-    >();
+    const referenteMap = new Map<number, ProgresoItem>();
 
     for (const row of padronReferentes) {
       if (!row.referenteId || !row.referente) continue;
@@ -242,6 +235,7 @@ export async function getDashboardSummary(eleccionId: number, electionType: stri
         current.mesasEscrutadas += voted;
       } else {
         referenteMap.set(row.referenteId, {
+          referenteId: row.referenteId,
           referente: row.referente.nombre,
           mesasTotales: 1,
           mesasEscrutadas: voted,
@@ -259,6 +253,64 @@ export async function getDashboardSummary(eleccionId: number, electionType: stri
       }))
       .sort((a, b) => b.porcentaje - a.porcentaje);
   }
+
+  // if (isInternal) {
+  //   const padronReferentes = await db.padronElectoral.findMany({
+  //     where: {
+  //       eleccionId,
+  //       deletedAt: null,
+  //       referenteId: { not: null },
+  //     },
+  //     select: {
+  //       votoSiNo: true,
+  //       referenteId: true,
+  //       referente: {
+  //         select: {
+  //           nombre: true,
+  //         },
+  //       },
+  //     },
+  //   });
+
+  //   const referenteMap = new Map<
+  //     number,
+  //     {
+  //       referente: string;
+  //       mesasEscrutadas: number;
+  //       mesasTotales: number;
+  //       porcentaje: number;
+  //       faltan: number;
+  //     }
+  //   >();
+
+  //   for (const row of padronReferentes) {
+  //     if (!row.referenteId || !row.referente) continue;
+
+  //     const voted = row.votoSiNo === "S" ? 1 : 0;
+  //     const current = referenteMap.get(row.referenteId);
+
+  //     if (current) {
+  //       current.mesasTotales += 1;
+  //       current.mesasEscrutadas += voted;
+  //     } else {
+  //       referenteMap.set(row.referenteId, {
+  //         referente: row.referente.nombre,
+  //         mesasTotales: 1,
+  //         mesasEscrutadas: voted,
+  //         porcentaje: 0,
+  //         faltan: 0,
+  //       });
+  //     }
+  //   }
+
+  //   progresoPorReferente = Array.from(referenteMap.values())
+  //     .map((item) => ({
+  //       ...item,
+  //       porcentaje: pct(item.mesasEscrutadas, item.mesasTotales),
+  //       faltan: Math.max(item.mesasTotales - item.mesasEscrutadas, 0),
+  //     }))
+  //     .sort((a, b) => b.porcentaje - a.porcentaje);
+  // }
 
   // --------- PARTICIPACIÓN ----------
   const participacionEscuelas = estStats

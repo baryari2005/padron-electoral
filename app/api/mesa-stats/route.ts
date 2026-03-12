@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { withActiveElection } from "@/lib/_server/withActiveElection";
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export const GET = withActiveElection(async (req, { election }) => {
   const { searchParams } = new URL(req.url);
 

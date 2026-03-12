@@ -18,7 +18,7 @@ type Props = {
   onMarkAllVoted: (electorIds: string[]) => void;
 };
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 30;
 
 export function InternalVotingDetailPanel({
   loading,
@@ -32,13 +32,36 @@ export function InternalVotingDetailPanel({
 }: Props) {
   const [page, setPage] = useState(1);
 
+  // const sortedVoters = useMemo(() => {
+  //   return [...voters].sort((a, b) => {
+  //     const oa = Number(a.numeroOrden ?? 999999);
+  //     const ob = Number(b.numeroOrden ?? 999999);
+  //     return oa - ob;
+  //   });
+  // }, [voters]);
+
   const sortedVoters = useMemo(() => {
     return [...voters].sort((a, b) => {
+      const aPending = pendingMap.get(a.id);
+      const bPending = pendingMap.get(b.id);
+
+      const aVoted =
+        typeof aPending === "boolean" ? aPending : Boolean(a.votoSiNo);
+      const bVoted =
+        typeof bPending === "boolean" ? bPending : Boolean(b.votoSiNo);
+
+      // Primero los que NO votaron, al final los que SÍ votaron
+      if (aVoted !== bVoted) {
+        return Number(aVoted) - Number(bVoted);
+      }
+
+      // Dentro de cada grupo, ordenar por número de orden
       const oa = Number(a.numeroOrden ?? 999999);
       const ob = Number(b.numeroOrden ?? 999999);
+
       return oa - ob;
     });
-  }, [voters]);
+  }, [voters, pendingMap]);
 
   const totalPages = Math.max(1, Math.ceil(sortedVoters.length / PAGE_SIZE));
 
@@ -215,8 +238,8 @@ export function InternalVotingDetailPanel({
             >
               <div className="min-w-0 space-y-1">
                 <div className="flex flex-wrap items-center gap-2">
-                   <span className="inline-flex rounded-md border px-2 py-0.5 text-xs font-medium justify-center">
-                    <School className="w-4 h-4 mr-2"/> {voter.establecimientoNombre ?? "-"}
+                  <span className="inline-flex rounded-md border px-2 py-0.5 text-xs font-medium justify-center">
+                    <School className="w-4 h-4 mr-2" /> {voter.establecimientoNombre ?? "-"}
                   </span>
 
                   <span className="inline-flex rounded-md border px-2 py-0.5 text-xs font-medium">
@@ -238,7 +261,7 @@ export function InternalVotingDetailPanel({
                 </div>
 
                 <div className="font-medium break-words flex items-center">
-                  <IdCard className="w-4 h-4 mr-2"/>{voter.apellido}, {voter.nombre} <span className="font-xs text-muted-foreground ml-2"> - DNI: {voter.dni ?? "-"} </span>
+                  <IdCard className="w-4 h-4 mr-2" />{voter.apellido}, {voter.nombre} <span className="font-xs text-muted-foreground ml-2"> - DNI: {voter.dni ?? "-"} </span>
                 </div>
 
                 {/* <div className="text-sm text-muted-foreground break-words">

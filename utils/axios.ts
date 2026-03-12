@@ -2,7 +2,7 @@ import axios from "axios";
 import { toast } from "sonner"; // o el sistema de notificaciones que uses
 import router from "next/router"; // si querés redirigir en errores
 
-console.log("🧩 API BASE URL:", process.env.NEXT_PUBLIC_API_BASE);
+// console.log("🧩 API BASE URL:", process.env.NEXT_PUBLIC_API_BASE);
 
 const axiosInstance = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE || "",

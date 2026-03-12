@@ -20,11 +20,11 @@ function PersonBase({ className, children, fill }: React.PropsWithChildren<{ cla
 
 // ✅ VERDE (votó) — check
 export const IconVerde: React.FC<Props> = ({ className }) => (
-  <PersonBase className={className} fill="#007F0E">
+  <PersonBase className={className} fill="#4CAD00">
     <path
       d="M18.5 12.5l1.8 1.8 3.2-3.2"
       fill="none"
-      stroke="#007F0E"
+      stroke="#4CAD00"
       strokeWidth="2.2"
       strokeLinecap="round"
       strokeLinejoin="round"
@@ -34,11 +34,11 @@ export const IconVerde: React.FC<Props> = ({ className }) => (
 
 // ❌ ROJO (no votó) — cruz
 export const IconRojo: React.FC<Props> = ({ className }) => (
-  <PersonBase className={className} fill="#8B1D1D">
+  <PersonBase className={className} fill="#FF0000">
     <path
       d="M19 11l3 3M22 11l-3 3"
       fill="none"
-      stroke="#8B1D1D"
+      stroke="#FF0000"
       strokeWidth="2.2"
       strokeLinecap="round"
     />
@@ -47,7 +47,7 @@ export const IconRojo: React.FC<Props> = ({ className }) => (
 
 // 🔵 AZUL (pendiente local) — punto
 export const IconAzul: React.FC<Props> = ({ className }) => (
-  <PersonBase className={className} fill="#0B4A91">
-    <circle cx="20.5" cy="12.5" r="2.2" fill="#0B4A91" />
+  <PersonBase className={className} fill="#0094FF">
+    <circle cx="20.5" cy="12.5" r="2.2" fill="#0094FF" />
   </PersonBase>
 );
