@@ -175,6 +175,13 @@ export const GET = withActiveElection(async (req, { election }) => {
           },
         },
         orderBy: [
+          { votoSiNo: "asc" },
+          {
+            votedAt: {
+              sort: "asc",
+              nulls: "first",
+            },
+          },
           { ordenMesa: "asc" },
           { apellido: "asc" },
           { nombre: "asc" },
