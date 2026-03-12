@@ -14,6 +14,7 @@ import { ParticipationList } from "./components/Dashboard/lists/ParticipationLis
 import { LeadersGrid } from "./components/Dashboard/LeadersGrid";
 import { DashboardRefreshBridge } from "./components/Dashboard/DashboardRefreshBridge";
 import { GradientProgress } from "@/components/ui/GradientProgress";
+import { ActorProgressColumns } from "./components/Dashboard/lists/ActorProgressColumns";
 
 interface DashboardProps {
     data: SummaryResponse;
@@ -125,7 +126,18 @@ export default function DashboardClient({
 
             <LeadersGrid items={lideresPorCategoria} />
 
-            <div className={`grid grid-cols-1 gap-4 ${isInternal ? "md:grid-cols-3" : "md:grid-cols-2"}`}>
+            {isInternal ? (
+                <div className="md:col-span-3">
+                    <ActorProgressColumns
+                        title="Progreso por referente"
+                        icono={Users}
+                        items={progreso.porReferente ?? []}
+                    />
+                </div>
+            ) : null}
+
+            {/* <div className={`grid grid-cols-1 gap-4 ${isInternal ? "md:grid-cols-3" : "md:grid-cols-2"}`}> */}
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <ProgressList
                     title="Progreso por establecimiento (mesas escrutadas)"
                     items={progreso.porEscuela}
@@ -146,7 +158,7 @@ export default function DashboardClient({
                     icono={MapPinned}
                 />
 
-                {isInternal ? (
+                {/* {isInternal ? (
                     <ProgressList
                         title="Progreso por referente"
                         items={progreso.porReferente ?? []}
@@ -159,7 +171,7 @@ export default function DashboardClient({
                         showControls
                         icono={Users}
                     />
-                ) : ""}
+                ) : ""} */}
 
             </div>
 

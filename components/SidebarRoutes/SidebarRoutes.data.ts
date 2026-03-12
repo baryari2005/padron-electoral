@@ -134,6 +134,12 @@ export const getToolsSidebar = (electionType?: string, electionState?: string) =
             visible: electionState === "ACTIVE",
         },
         {
+            icon: BookmarkCheck,
+            label: "Modificar estado de votación grafica",
+            href: "/internal-voting-graphic",
+            visible: electionState === "ACTIVE" && electionType === "INTERNA",
+        },
+        {
             icon: BrushCleaning,
             label: "Reiniciar certificados de escrutinio.",
             href: "/scrutiny-certificates/clean",

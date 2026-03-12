@@ -83,7 +83,7 @@ export default function InternalVotingPage() {
     canView,
     establecimientoId,
     referenteId,
-    planilleroId,
+    // planilleroId,
     mesaId,
     setMesaId,
     setPlanilleroId,
