@@ -10,9 +10,9 @@ export type ProgresoItem = {
     circuito?: string;
     referente?: string;
     mesasEscrutadas: number;
-    mesasTotales: number; 
-    porcentaje: number; 
-    faltan: number
+    mesasTotales: number;
+    porcentaje: number;
+    faltan: number;
 };
 export type ParticipacionItem = { establecimientoId?: number; circuitoId?: number; establecimiento?: string; circuito?: string; votantes: number; padron: number; participacion: number };
 export type LiderCategoria = { categoriaId: number; categoria: string; agrupacionId: number; agrupacion: string; votos: number; color: string; logo: string | null; orden?: number };
@@ -28,6 +28,9 @@ export type SummaryResponse = {
         votantesRegistrados: number;
         participacionMunicipal: number;
         faltanMesas: number;
+        votaronTotal: number;
+        votaronConReferente: number;
+        votaronSinReferente: number;
     };
     top: {
         establecimientos: TopItem[];

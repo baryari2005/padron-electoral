@@ -8,7 +8,7 @@ import AutoRefresh from "./components/Dashboard/AutoRefresh";
 import { SummaryResponse } from "./components/Dashboard/types/types";
 import { KPIStat } from "./components/Dashboard/KPIStat";
 import { fmtAR, fmtPct } from "./lib/format";
-import { MapPinned, School, Table, Users } from "lucide-react";
+import { Info, MapPinned, School, Table, Users } from "lucide-react";
 import { ProgressList } from "./components/Dashboard/lists/ProgressList";
 import { ParticipationList } from "./components/Dashboard/lists/ParticipationList";
 import { LeadersGrid } from "./components/Dashboard/LeadersGrid";
@@ -77,7 +77,7 @@ export default function DashboardClient({
 
             <DashboardRefreshBridge />
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-4 lg:grid-cols-4 gap-4">
                 <KPIStat
                     title="Mesas escrutadas de Total de mesas."
                     value={`${municipio.mesasEscrutadas} / ${municipio.mesasTotales}`}
@@ -101,13 +101,36 @@ export default function DashboardClient({
                 </KPIStat>
 
                 <KPIStat
+                    title="Votos computados de Cantidad de electores."
+                    value={`${fmtAR.format(municipio.votaronTotal)} / ${fmtAR.format(
+                        municipio.padronTotal
+                    )}`}
+                    subValue={`${fmtAR.format(municipio.votaronConReferente)} con referente ·
+                        ${fmtAR.format(municipio.votaronSinReferente)} sin referente`}
+                    sub={`${fmtPct(
+                        (municipio.votaronTotal / municipio.padronTotal) * 100
+                    )} del padrón`}
+                    icono={Users}
+                    iconoDescription={Info}
+                    description="Solo electores registrados con estado de votación."
+                >
+                    {/* <div className="text-xs text-muted-foreground mt-1">
+                        {fmtAR.format(municipio.votaronConReferente)} con referente ·{" "}
+                        {fmtAR.format(municipio.votaronSinReferente)} sin referente
+                    </div> */}
+                </KPIStat>
+
+                <KPIStat
                     title="Votantes registrados de Cantidad de electores."
                     value={`${fmtAR.format(municipio.votantesRegistrados)} / ${fmtAR.format(
                         municipio.padronTotal
                     )}`}
                     sub={`${fmtPct(municipio.participacionMunicipal)} del padrón`}
                     icono={Users}
+                    iconoDescription={Info}
+                    description="Datos obtenidos de las altas de certificados de escrutinio."
                 />
+
 
                 <KPIStat
                     title="Participación municipal"

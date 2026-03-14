@@ -2,6 +2,7 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
+import { sortableHeader } from "@/app/(dashboard)/components/table/SortableHeader";
 
 export type VoterRow = {
   id: string;
@@ -68,32 +69,32 @@ export function columns({
   const cols: ColumnDef<VoterRow>[] = [
     {
       accessorKey: "apellido",
-      header: "Apellido",
+      header: sortableHeader("Apellido"),
       cell: ({ row }) => row.original.apellido ?? "-",
     },
     {
       accessorKey: "nombre",
-      header: "Nombre",
+      header: sortableHeader("Nombre"),
       cell: ({ row }) => row.original.nombre ?? "-",
     },
     {
       accessorKey: "dni",
-      header: "DNI",
+      header: sortableHeader("DNI"),
       cell: ({ row }) => row.original.dni ?? "-",
     },
     {
       accessorKey: "numeroOrden",
-      header: "Orden",
+      header: sortableHeader("Orden"),
       cell: ({ row }) => row.original.numeroOrden ?? "-",
     },
     {
       accessorKey: "establecimientoNombre",
-      header: "Establecimiento",
+      header: sortableHeader("Establecimiento"),
       cell: ({ row }) => row.original.establecimientoNombre ?? "-",
     },
     {
       accessorKey: "numeroPlanilla",
-      header: "Planilla",
+      header: sortableHeader("Planilla"),
       cell: ({ row }) => {
         const numero = row.original.numeroPlanilla;
         const nombre = row.original.nombrePlanilla;
@@ -105,12 +106,12 @@ export function columns({
     },
     {
       accessorKey: "planillero",
-      header: "Planillero",
+      header: sortableHeader("Planillero"),
       cell: ({ row }) => row.original.planillero ?? "-",
     },
     {
       accessorKey: "chofer",
-      header: "Chofer",
+      header: sortableHeader("Chofer"),
       cell: ({ row }) => row.original.chofer ?? "-",
     },
     {
@@ -120,7 +121,7 @@ export function columns({
     },
     {
       accessorKey: "votoSiNo",
-      header: "Estado",
+      header: sortableHeader("Estado"),
       cell: ({ row }) => renderVoto(row.original.votoSiNo),
     },
     {
