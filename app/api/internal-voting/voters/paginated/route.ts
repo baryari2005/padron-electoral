@@ -25,9 +25,7 @@ function buildGroupWhere(
 ): Prisma.PadronElectoralWhereInput {
   if (groupBy === "orden") {
     if (groupValue === "sin-orden") {
-      return {
-        OR: [{ ordenMesa: 0 }],
-      };
+      return { OR: [{ ordenMesa: 0 }] };
     }
 
     const [fromRaw, toRaw] = groupValue.split("-");
@@ -47,45 +45,98 @@ function buildGroupWhere(
   }
 
   if (groupBy === "planilla") {
-    if (groupValue === "0") {
-      return { planillaId: null };
-    }
-
+    if (groupValue === "0") return { planillaId: null };
     const planillaId = Number(groupValue);
-    if (!Number.isNaN(planillaId)) {
-      return { planillaId };
-    }
-
+    if (!Number.isNaN(planillaId)) return { planillaId };
     return {};
   }
 
   if (groupBy === "referente") {
-    if (groupValue === "0") {
-      return { referenteId: null };
-    }
-
+    if (groupValue === "0") return { referenteId: null };
     const referenteId = Number(groupValue);
-    if (!Number.isNaN(referenteId)) {
-      return { referenteId };
-    }
-
+    if (!Number.isNaN(referenteId)) return { referenteId };
     return {};
   }
 
   if (groupBy === "planillero") {
-    if (groupValue === "0") {
-      return { planilleroId: null };
-    }
-
+    if (groupValue === "0") return { planilleroId: null };
     const planilleroId = Number(groupValue);
-    if (!Number.isNaN(planilleroId)) {
-      return { planilleroId };
-    }
-
+    if (!Number.isNaN(planilleroId)) return { planilleroId };
     return {};
   }
 
   return {};
+}
+
+function buildOrderBy(
+  sortBy: string | null,
+  sortDir: "asc" | "desc"
+): Prisma.PadronElectoralOrderByWithRelationInput[] {
+  const sortableFields: Record<
+    string,
+    Prisma.PadronElectoralOrderByWithRelationInput
+  > = {
+    apellido: { apellido: sortDir },
+    nombre: { nombre: sortDir },
+    dni: { numeroMatricula: sortDir },
+    numeroMatricula: { numeroMatricula: sortDir },
+    numeroOrden: { ordenMesa: sortDir },
+    ordenMesa: { ordenMesa: sortDir },
+    telefono: { telefono: sortDir },
+
+    votedAt: {
+      votedAt: {
+        sort: sortDir,
+        nulls: "first",
+      },
+    },
+
+    estado: { votoSiNo: sortDir },
+    votoSiNo: { votoSiNo: sortDir },
+
+    establecimiento: {
+      establecimiento: {
+        nombre: sortDir,
+      },
+    },
+
+    numeroPlanilla: {
+      planilla: {
+        numero: sortDir,
+      },
+    },
+
+    planillero: {
+      planillero: {
+        nombre: sortDir,
+      },
+    },
+
+    referente: {
+      referente: {
+        nombre: sortDir,
+      },
+    },
+
+    chofer: {
+      chofer: {
+        nombre: sortDir,
+      },
+    },
+  };
+
+  const dynamicOrder =
+    sortBy && sortableFields[sortBy]
+      ? [sortableFields[sortBy]]
+      : [];
+
+  return [
+    { votoSiNo: "asc" },
+    ...dynamicOrder,
+    { ordenMesa: "asc" },
+    { apellido: "asc" },
+    { nombre: "asc" },
+  ];
 }
 
 export const GET = withActiveElection(async (req, { election }) => {
@@ -97,7 +148,6 @@ export const GET = withActiveElection(async (req, { election }) => {
     const referenteId = Number(searchParams.get("referenteId") || "");
     const planilleroId = Number(searchParams.get("planilleroId") || "");
 
-    // Soporta ambos nombres para no quedar atado a un solo componente
     const q =
       (searchParams.get("q") || searchParams.get("search") || "").trim();
 
@@ -108,14 +158,22 @@ export const GET = withActiveElection(async (req, { election }) => {
     const limit = Math.min(parsePositiveInt(searchParams.get("limit"), 10), 100);
     const skip = (page - 1) * limit;
 
+    const sortBy = searchParams.get("sortBy");
+    const sortDir =
+      searchParams.get("sortDir") === "desc" ? "desc" : "asc";
+
     const { where } = await buildInternalVotingBase({
       electionId: election.id,
       establecimientoId: Number.isNaN(establecimientoId)
         ? undefined
         : establecimientoId,
       mesaId: Number.isNaN(mesaId) ? undefined : mesaId,
-      referenteId: Number.isNaN(referenteId) ? undefined : referenteId,
-      planilleroId: Number.isNaN(planilleroId) ? undefined : planilleroId,
+      referenteId: Number.isNaN(referenteId)
+        ? undefined
+        : referenteId,
+      planilleroId: Number.isNaN(planilleroId)
+        ? undefined
+        : planilleroId,
       q,
     });
 
@@ -130,6 +188,8 @@ export const GET = withActiveElection(async (req, { election }) => {
       AND: andFilters,
     };
 
+    const orderBy = buildOrderBy(sortBy, sortDir);
+
     const [rows, total] = await Promise.all([
       db.padronElectoral.findMany({
         where: finalWhere,
@@ -142,50 +202,13 @@ export const GET = withActiveElection(async (req, { election }) => {
           votoSiNo: true,
           votedAt: true,
           telefono: true,
-
-          establecimiento: {
-            select: {
-              nombre: true,
-            },
-          },
-
-          planilla: {
-            select: {
-              numero: true,
-              nombre: true,
-            },
-          },
-
-          referente: {
-            select: {
-              nombre: true,
-            },
-          },
-
-          planillero: {
-            select: {
-              nombre: true,
-            },
-          },
-
-          chofer: {
-            select: {
-              nombre: true,
-            },
-          },
+          establecimiento: { select: { nombre: true } },
+          planilla: { select: { numero: true, nombre: true } },
+          referente: { select: { nombre: true } },
+          planillero: { select: { nombre: true } },
+          chofer: { select: { nombre: true } },
         },
-        orderBy: [
-          { votoSiNo: "asc" },
-          {
-            votedAt: {
-              sort: "asc",
-              nulls: "first",
-            },
-          },
-          { ordenMesa: "asc" },
-          { apellido: "asc" },
-          { nombre: "asc" },
-        ],
+        orderBy,
         skip,
         take: limit,
       }),

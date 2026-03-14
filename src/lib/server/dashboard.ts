@@ -37,6 +37,33 @@ export async function getDashboardSummary(eleccionId: number, electionType: stri
   const porcentajeEscrutado = pct(mesasEscrutadas, mesasTotales);
   const participacionMunicipal = pct(votantesRegistrados, padronTotal);
 
+  // --------- VOTARON (PADRÓN - INTERNA) ----------
+  let votaronTotal = 0;
+  let votaronConReferente = 0;
+  let votaronSinReferente = 0;
+
+  if (isInternal) {
+    const grouped = await db.padronElectoral.groupBy({
+      by: ["referenteId"],
+      where: {
+        eleccionId,
+        deletedAt: null,
+        votoSiNo: "S",
+      },
+      _count: { _all: true },
+    });
+
+    for (const g of grouped) {
+      if (g.referenteId === null) {
+        votaronSinReferente = g._count._all;
+      } else {
+        votaronConReferente += g._count._all;
+      }
+    }
+
+    votaronTotal = votaronConReferente + votaronSinReferente;
+  }
+
   // --------- MAPA mesaId -> (establecimientoId, circuitoId) ----------
   const mesas = await db.mesaEscrutada.findMany({
     where: {
@@ -443,6 +470,10 @@ export async function getDashboardSummary(eleccionId: number, electionType: stri
       votantesRegistrados,
       participacionMunicipal,
       faltanMesas: Math.max(mesasTotales - mesasEscrutadas, 0),
+
+      votaronTotal,
+      votaronConReferente,
+      votaronSinReferente
     },
     top: {
       establecimientos: topEstablecimientos,
